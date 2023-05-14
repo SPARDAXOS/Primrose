@@ -1,0 +1,6 @@
+
+#Ignore visual studio user specific files
+*.vs
+
+#Ignore visual studio user specific settings
+*Primrose/Primrose.vcxproj
