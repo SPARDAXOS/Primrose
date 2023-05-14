@@ -163,6 +163,10 @@
     <ClInclude Include="Include\Utility.hpp" />
     <ClInclude Include="Include\Window.hpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Shaders\Fragment.Shader" />
+    <None Include="Resources\Shaders\Vertex.Shader" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
