@@ -17,8 +17,10 @@
 //System ---> Subsystem --->  Windows (/SUBSYSTEM:WINDOWS) ---> CANT COMPILE!
 //System ---> Subsystem --->  Console (/SUBSYSTEM:CONSOLE) ---> OK!
 int main(int argc, char* argv[]) {
+    std::unique_ptr<Core> Engine(new Core);
 
-    std::string Shader = FileManagement::Read("Resources/Shaders/Vertex.Shader");
+
+    std::string Shader = FileManagement::CRead("Resources/Shaders/Vertex.Shader");
     std::cout << Shader;
     return 0;
 }   

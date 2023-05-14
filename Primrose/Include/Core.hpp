@@ -25,6 +25,9 @@ private:
 	void SetupCore();
 
 
+	//TODO: Rule of 6 - define special member functions 
+
+
 public:
 	std::unique_ptr<Renderer> m_Renderer;
 	std::unique_ptr<Window> m_Window;
