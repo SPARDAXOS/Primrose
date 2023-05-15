@@ -18,11 +18,11 @@
 //System ---> Subsystem --->  Console (/SUBSYSTEM:CONSOLE) ---> OK!
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) {
     
-    FileManagement::Read("Resources/Shaders/Vertex.Shader");
-    FileManagement::CRead("Resources/Shaders/Vertex.Shader");
+    //FileManagement::Read("Resources/Shaders/Vertex.Shader");
+    //FileManagement::CRead("Resources/Shaders/Vertex.Shader");
 
     try {
-        const std::unique_ptr<Core> Engine(new Core);
+        const std::unique_ptr<Core> Engine = std::make_unique<Core>();
         Engine->Run();
     }
     catch (const std::exception& exception) {

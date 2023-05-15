@@ -3,7 +3,8 @@
 
 
 
-Window::Window() noexcept {
+Window::Window() {
+
 
     SetupGLFW();
     SetupOpenGLFlags();
@@ -11,24 +12,125 @@ Window::Window() noexcept {
     SetupGLAD();
     SetupViewport();
     PrintMessage(glGetString(GL_VERSION));
+
+
+
+    m_VertexShaderFilePath = "Resources/Shaders/Vertex.Shader";
+    m_FragmentShaderFilePath = "Resources/Shaders/Fragment.Shader";
+
+    LoadShaders();
+
+    if (!CompileShader(GL_VERTEX_SHADER, m_VertexShaderSource, m_VertexShader)) {
+        PrintMessage("Vertex shader failed to compile!");
+    }
+    if (!CompileShader(GL_FRAGMENT_SHADER, m_FragmentShaderSource, m_FragmentShader)) {
+        PrintMessage("Fragment shader failed to compile!");
+    }
+
+    m_DefaultShaderProgram = CreateShaderProgram();
+    if (!LinkToShaderProgram(m_DefaultShaderProgram, m_VertexShader)) {
+        PrintMessage("Vertex shader failed to link to program!");
+    }
+    if (!LinkToShaderProgram(m_DefaultShaderProgram, m_FragmentShader)) {
+        PrintMessage("Fragment shader failed to link to program!");
+    }
+
+    if (!LinkShaderProgram(m_DefaultShaderProgram)) {
+        PrintMessage("Failed to link program!");
+    }
+    UseShaderProgram(m_DefaultShaderProgram);
 }
+
+void Window::LoadShaders() {
+    //TODO: Create some wrapper for shaders
+
+    if (!FileManagement::CRead(m_VertexShaderFilePath, m_VertexShaderSource)) {
+        PrintMessage("Vertex shader source failed to load!");
+    }
+    if (!FileManagement::CRead(m_FragmentShaderFilePath, m_FragmentShaderSource)) {
+        PrintMessage("Fragment shader source failed to load!");
+    }
+}
+GLuint Window::CreateShaderProgram() {
+    return glCreateProgram();
+}
+bool Window::LinkToShaderProgram(const GLuint& program, const GLuint& shader) {
+    glAttachShader(program, shader);
+    glDeleteShader(shader);
+    return true;
+}
+bool Window::LinkShaderProgram(const GLuint& program) {
+    glLinkProgram(program);
+
+    int LinkResults;
+    glGetShaderiv(program, GL_LINK_STATUS, &LinkResults);
+    if (LinkResults == GL_FALSE) {
+        char ErrorMessage[512];
+        glGetProgramInfoLog(program, 512, nullptr, ErrorMessage);
+        PrintMessage(ErrorMessage);
+
+        //glDeleteShader(ID);
+        return false;
+    }
+
+
+
+    //glValidateProgram(program);
+    return true;
+}
+void Window::UseShaderProgram(const GLuint& program) {
+    glUseProgram(program);
+}
+
+bool Window::CompileShader(GLenum type, const std::string_view& source, GLuint& ID) {
+
+    ID = glCreateShader(type);
+    const GLchar* PointerToSource = source.data();
+    glShaderSource(ID, 1, &PointerToSource, nullptr);
+    glCompileShader(ID);
+
+
+    //TODO: make this into a reusable function
+    int CompilationResults;
+    glGetShaderiv(ID, GL_COMPILE_STATUS, &CompilationResults);
+    if (CompilationResults == GL_FALSE) {
+        char ErrorMessage[512];
+        glGetShaderInfoLog(ID, 512, nullptr, ErrorMessage);
+        PrintMessage(ErrorMessage);
+
+        glDeleteShader(ID);
+        return false;
+    }
+
+    return true;
+}
+
+
+
 
 
 bool Window::UpdateWindow() noexcept {
 
     const VBO VertexBufferObject;
-    const Triangle Data;
-    glBindBuffer(GL_ARRAY_BUFFER, VertexBufferObject.m_BufferID);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Data), &Data, GL_STATIC_DRAW);
+    const VAO VertexArrayObject;
+    const Triangle Triangle;
+
+    glBindVertexArray(VertexArrayObject.m_ID);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VertexBufferObject.m_ID);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Triangle), &Triangle.m_Data, GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
     glEnableVertexAttribArray(0);
 
-    while (!glfwWindowShouldClose(m_Window.get()->m_ptr)) {
+    glBindVertexArray(0);
+
+    while (!glfwWindowShouldClose(m_Window->m_ptr)) {
         Clear();
 
         ProcessInput();
 
+        glBindVertexArray(VertexArrayObject.m_ID);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
         glfwSwapBuffers(m_Window->m_ptr);
@@ -37,6 +139,7 @@ bool Window::UpdateWindow() noexcept {
     }
 
     glfwTerminate(); //Delete this from here?
+    glDeleteProgram(m_DefaultShaderProgram); //TODO: setup some RAII instead
 
     return false;
 }

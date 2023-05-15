@@ -46,7 +46,7 @@ namespace FileManagement {
 		P.EndProfile("C++ file reading method");
 		return TargetFileData.str();
 	}
-	inline std::string CRead(const std::string_view& filePath) {
+	[[nodiscard]] inline bool CRead(const std::string_view& filePath, std::string& buffer) {
 		//std::ifstream t("file.txt");
 		//t.seekg(0, std::ios::end);
 		//size_t size = t.tellg();
@@ -64,7 +64,7 @@ namespace FileManagement {
 		fopen_s(&TargetFile, filePath.data(), "r");
 		if (TargetFile == nullptr) {
 			PrintMessages("File failed to open! ", filePath.data());
-			return TargetFileData;
+			return false;
 		}
 
 		fseek(TargetFile, 0, SEEK_END);
@@ -77,7 +77,9 @@ namespace FileManagement {
 		fclose(TargetFile);
 		TargetFile = nullptr;
 
+
+		buffer = TargetFileData;
 		P.EndProfile("C file reading method");
-		return TargetFileData;
+		return true;
 	}
 }

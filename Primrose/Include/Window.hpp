@@ -12,7 +12,7 @@
 
 class Window final {
 public:
-	Window() noexcept;
+	Window();
 
 private:
 	struct WindowResource {
@@ -73,6 +73,33 @@ private:
 
 private:
 	void Clear() noexcept;
+
+private:
+	void LoadShaders();
+	[[nodiscard]] GLuint CreateShaderProgram();
+	[[nodiscard]] bool LinkToShaderProgram(const GLuint& program, const GLuint& shader);
+	[[nodiscard]] bool LinkShaderProgram(const GLuint& program);
+	void UseShaderProgram(const GLuint& program);
+
+	[[nodiscard]] bool CompileShader(GLenum type, const std::string_view& sourcecode, GLuint& ID);
+	//[[nodiscard]] GLuint CreateShaderProgram(); //How many and which types are they!
+
+
+private:
+	std::string_view m_VertexShaderFilePath;
+	std::string_view m_FragmentShaderFilePath;
+
+private:
+	std::string m_VertexShaderSource;
+	std::string m_FragmentShaderSource;
+
+
+private:
+	GLuint m_VertexShader;
+	GLuint m_FragmentShader;
+
+private:
+	GLuint m_DefaultShaderProgram;
 
 private:
 	std::unique_ptr<GLFWResource> m_GLFW;

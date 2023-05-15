@@ -8,15 +8,22 @@ struct Vertex {
 };
 
 struct Triangle {
-	Vertex m_Data[3] = {	1.0f, 0.0f, 0.0f,
-						   -1.0f, 0.0f, 0.0f,
-							0.0f, 1.0f, 0.0f	};
+	Vertex m_Data[3] = {	0.5f, -0.5f, 0.0f,
+						   -0.5f, -0.5f, 0.0f,
+							0.0f,  0.5f, 0.0f	};
 };
 
 struct VBO {
 	VBO() noexcept {
-		glGenBuffers(1, &m_BufferID);
+		glGenBuffers(1, &m_ID);
 	}
 
-	GLuint m_BufferID;
+	GLuint m_ID;
+};
+struct VAO {
+	VAO() noexcept {
+		glGenVertexArrays(1, &m_ID);
+	}
+
+	GLuint m_ID;
 };
