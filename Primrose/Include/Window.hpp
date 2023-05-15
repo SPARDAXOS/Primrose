@@ -11,7 +11,7 @@
 
 class Window final {
 public:
-	Window();
+	Window() noexcept;
 
 private:
 	struct WindowResource {
@@ -57,11 +57,18 @@ private:
 	};
 
 public:
-	[[nodiscard]] bool UpdateWindow() const noexcept;
+	[[nodiscard]] bool UpdateWindow() noexcept;
 
 
 private:
 	void CreateWindow();
+	void SetupGLFW();
+	void SetupOpenGLFlags() noexcept;
+	void SetupGLAD();
+	void SetupViewport() noexcept;
+
+private:
+	void Clear() noexcept;
 
 private:
 	std::unique_ptr<GLFWResource> m_GLFW;
