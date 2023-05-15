@@ -15,10 +15,21 @@ Window::Window() noexcept {
 
 
 bool Window::UpdateWindow() noexcept {
+
+    const VBO VertexBufferObject;
+    const Triangle Data;
+    glBindBuffer(GL_ARRAY_BUFFER, VertexBufferObject.m_BufferID);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Data), &Data, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
+    glEnableVertexAttribArray(0);
+
     while (!glfwWindowShouldClose(m_Window.get()->m_ptr)) {
         Clear();
 
+        ProcessInput();
 
+        glDrawArrays(GL_TRIANGLES, 0, 3);
 
         glfwSwapBuffers(m_Window->m_ptr);
         glfwPollEvents();
@@ -28,6 +39,13 @@ bool Window::UpdateWindow() noexcept {
     glfwTerminate(); //Delete this from here?
 
     return false;
+}
+
+
+void Window::ProcessInput() {
+    if (glfwGetKey(m_Window->m_ptr, GLFW_KEY_ESCAPE)) {
+        glfwSetWindowShouldClose(m_Window->m_ptr, true);
+    }
 }
 
 

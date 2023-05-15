@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <memory>
 #include "Utility.hpp"
+#include <GraphicsResources.hpp>
 
 
 
@@ -66,6 +67,9 @@ private:
 	void SetupOpenGLFlags() noexcept;
 	void SetupGLAD();
 	void SetupViewport() noexcept;
+
+private:
+	void ProcessInput();
 
 private:
 	void Clear() noexcept;

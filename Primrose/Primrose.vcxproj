@@ -159,6 +159,7 @@
     <ClCompile Include="Dependencies\Includes\GLAD\glad.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Include\GraphicsResources.hpp" />
     <ClInclude Include="Include\Profiler.hpp" />
     <ClInclude Include="Include\Core.hpp" />
     <ClInclude Include="Include\Renderer.hpp" />
