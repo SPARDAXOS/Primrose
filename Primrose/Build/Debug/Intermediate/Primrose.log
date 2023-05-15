@@ -1,7 +1,2 @@
-﻿  Core.cpp
-  Main.cpp
-  Renderer.cpp
-  Window.cpp
-  Generating Code...
-  glad.c
+﻿  Main.cpp
   Primrose.vcxproj -> C:\Users\alexm\Primrose\Primrose\Build\Debug\Primrose.exe

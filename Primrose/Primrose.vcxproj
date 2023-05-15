@@ -153,11 +153,13 @@
   <ItemGroup>
     <ClCompile Include="Source\Core.cpp" />
     <ClCompile Include="Source\Main.cpp" />
+    <ClCompile Include="Source\Profiler.cpp" />
     <ClCompile Include="Source\Renderer.cpp" />
     <ClCompile Include="Source\Window.cpp" />
     <ClCompile Include="Dependencies\Includes\GLAD\glad.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Include\Profiler.hpp" />
     <ClInclude Include="Include\Core.hpp" />
     <ClInclude Include="Include\Renderer.hpp" />
     <ClInclude Include="Include\Utility.hpp" />

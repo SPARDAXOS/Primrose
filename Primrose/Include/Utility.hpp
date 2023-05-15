@@ -4,6 +4,8 @@
 #include <sstream>
 #include <fstream>
 
+#include "Profiler.hpp" //For testing
+
 
 #define PrintMessage(message) printf("%s \n", message);
 #define PrintMessages(message1, message2) printf("%s %s \n", message1, message2);
@@ -23,34 +25,9 @@ using int64 = signed long long;
 namespace FileManagement {
 	inline std::string Read(const std::string_view& filePath) {
 
-		//std::ifstream t("file.txt");
-		//t.seekg(0, std::ios::end);
-		//size_t size = t.tellg();
-		//std::string buffer(size, ' ');
-		//t.seekg(0);
-		//t.read(&buffer[0], size);
-
-
-
-		//std::size_t size = 0;
-		//FILE* fin = nullptr;
-
-		//fopen_s(&fin, vertex_filename, "r");
-		//if (fin == nullptr) {
-		//	return false;
-		//}
-
-		//fseek(fin, 0, SEEK_END);
-		//size = ftell(fin);
-		//fseek(fin, 0, SEEK_SET);
-		//std::string vertex_source;
-		//vertex_source.resize(size + 1);
-		//fread(vertex_source.data(), 1, size, fin);
-		//fclose(fin);
-		//fin = nullptr;
-
-
-
+		Profiler P;
+		
+		P.StartProfile("C++ file reading method");
 		std::stringstream TargetFileData;
 		std::ifstream TargetFile(filePath.data(), std::ios::in);
 		if (!TargetFile.is_open()) {
@@ -65,6 +42,8 @@ namespace FileManagement {
 		}
 
 		TargetFile.close();
+
+		P.EndProfile("C++ file reading method");
 		return TargetFileData.str();
 	}
 	inline std::string CRead(const std::string_view& filePath) {
@@ -74,6 +53,10 @@ namespace FileManagement {
 		//std::string buffer(size, ' ');
 		//t.seekg(0);
 		//t.read(&buffer[0], size);
+
+		Profiler P;
+
+		P.StartProfile("C file reading method");
 
 		std::string TargetFileData;
 
@@ -94,6 +77,7 @@ namespace FileManagement {
 		fclose(TargetFile);
 		TargetFile = nullptr;
 
+		P.EndProfile("C file reading method");
 		return TargetFileData;
 	}
 }
