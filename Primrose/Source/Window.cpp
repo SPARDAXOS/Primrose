@@ -113,17 +113,33 @@ bool Window::UpdateWindow() noexcept {
 
     const VBO VertexBufferObject;
     const VAO VertexArrayObject;
+    const EBO ElementBufferObject;
     const Triangle Triangle;
+    const Square Square;
 
     glBindVertexArray(VertexArrayObject.m_ID);
 
+
+
     glBindBuffer(GL_ARRAY_BUFFER, VertexBufferObject.m_ID);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Triangle), &Triangle.m_Data, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Square.m_Data), &Square.m_Data, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ElementBufferObject.m_ID);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Square.m_Indices), Square.m_Indices, GL_STATIC_DRAW);
+
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
     glEnableVertexAttribArray(0);
 
+
+
     glBindVertexArray(0);
+
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     while (!glfwWindowShouldClose(m_Window->m_ptr)) {
         Clear();
@@ -131,7 +147,9 @@ bool Window::UpdateWindow() noexcept {
         ProcessInput();
 
         glBindVertexArray(VertexArrayObject.m_ID);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ElementBufferObject.m_ID);
+        //glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(m_Window->m_ptr);
         glfwPollEvents();
