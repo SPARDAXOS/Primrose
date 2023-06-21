@@ -9,7 +9,7 @@
 
 #define PrintMessage(message) printf("%s \n", message);
 #define PrintMessages(message1, message2) printf("%s %s \n", message1, message2);
-
+#define PrintGLError(number) printf("[OpenGL Error] %d \n", number);
 
 using uint8 = unsigned char;
 using uint16 = unsigned short;

@@ -108,7 +108,6 @@ bool Window::CompileShader(GLenum type, const std::string_view& source, GLuint& 
 
 
 
-
 bool Window::UpdateWindow() noexcept {
 
     const VBO VertexBufferObject;
@@ -120,7 +119,7 @@ bool Window::UpdateWindow() noexcept {
     glBindVertexArray(VertexArrayObject.m_ID);
 
 
-
+    //Leaks VRAM like crazy
     glBindBuffer(GL_ARRAY_BUFFER, VertexBufferObject.m_ID);
     glBufferData(GL_ARRAY_BUFFER, sizeof(Square.m_Data), &Square.m_Data, GL_STATIC_DRAW);
 
@@ -141,7 +140,9 @@ bool Window::UpdateWindow() noexcept {
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-    while (!glfwWindowShouldClose(m_Window->m_ptr)) {
+    bool State = glfwWindowShouldClose(m_Window->m_ptr);
+    if (!State) {
+        //Do window shit
         Clear();
 
         ProcessInput();
@@ -155,11 +156,13 @@ bool Window::UpdateWindow() noexcept {
         glfwPollEvents();
         return true;
     }
-
-    glfwTerminate(); //Delete this from here?
-    glDeleteProgram(m_DefaultShaderProgram); //TODO: setup some RAII instead
-
-    return false;
+    else {
+        //Clean up window
+        RegisterExitMessage("Window closed");
+        glfwTerminate();
+        glDeleteProgram(m_DefaultShaderProgram); //TODO: setup some RAII instead
+        return false;
+    }
 }
 
 
@@ -167,6 +170,8 @@ void Window::ProcessInput() {
     if (glfwGetKey(m_Window->m_ptr, GLFW_KEY_ESCAPE)) {
         glfwSetWindowShouldClose(m_Window->m_ptr, true);
     }
+
+
 }
 
 

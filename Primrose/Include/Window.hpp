@@ -12,7 +12,7 @@
 
 class Window final {
 public:
-	Window();
+	explicit Window();
 
 private:
 	struct WindowResource {
@@ -60,6 +60,9 @@ private:
 public:
 	[[nodiscard]] bool UpdateWindow() noexcept;
 
+public:
+	inline std::string GetLastExitMessage() noexcept { return m_LastExitMessage; };
+
 
 private:
 	void CreateWindow();
@@ -73,6 +76,9 @@ private:
 
 private:
 	void Clear() noexcept;
+
+private:
+	inline void RegisterExitMessage(std::string message) noexcept { m_LastExitMessage = message; };
 
 private:
 	void LoadShaders();
@@ -100,6 +106,9 @@ private:
 
 private:
 	GLuint m_DefaultShaderProgram;
+
+private:
+	std::string m_LastExitMessage;
 
 private:
 	std::unique_ptr<GLFWResource> m_GLFW;
