@@ -26,7 +26,7 @@ public:
 		TargetFile.close();
 		return TargetFileData.str();
 	}
-	[[nodiscard]] inline bool CRead(const std::string_view& filePath, std::string& buffer) {
+	[[nodiscard]] inline bool CRead(const std::string_view& filePath, std::string& buffer) const {
 		//std::ifstream t("file.txt");
 		//t.seekg(0, std::ios::end);
 		//size_t size = t.tellg();

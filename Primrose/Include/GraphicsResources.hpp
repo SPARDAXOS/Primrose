@@ -1,6 +1,6 @@
 #pragma once
 #include <GLAD/glad/glad.h>
-#include "OpenGLResources.hpp"
+#include "GLErrorHandling.hpp"
 
 
 //TODO: Use bits instead since these are in NDC so -1.0 -> 1.0
@@ -33,7 +33,9 @@ public:
 	VBO(const void* data, const GLuint size) noexcept {
 		GLCall(glGenBuffers(1, &m_ID));
 		Bind();
-		GLCall(glBufferData(GL_ARRAY_BUFFER, size, &data, GL_STATIC_DRAW));
+		GLCall(glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW));
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+		glEnableVertexAttribArray(0);
 		Unbind();
 	}
 	~VBO() {

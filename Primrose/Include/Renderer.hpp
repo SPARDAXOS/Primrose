@@ -1,6 +1,6 @@
 #pragma once
-#include <GLAD/glad/glad.h>
 #include "Utility.hpp"
+#include "GraphicsResources.hpp"
 
 
 
@@ -17,10 +17,11 @@ public:
 
 public:
 	void Render() const;
+	void TestRender(const VAO& vao) const;
 
 
 private:
-	void Clear() noexcept;
+	void Clear() const noexcept;
 
 
 private:

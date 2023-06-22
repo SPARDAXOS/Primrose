@@ -61,6 +61,10 @@ public:
 	[[nodiscard]] bool UpdateWindow() noexcept;
 
 public:
+	//[[nodiscard]] inline const GLFWwindow& GetWindowResource() const noexcept { return *m_Window.get()->m_ptr; }
+	void SwapBuffers() const;
+
+public:
 	inline std::string GetLastExitMessage() noexcept { return m_LastExitMessage; };
 
 

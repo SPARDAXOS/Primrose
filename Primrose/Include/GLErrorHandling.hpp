@@ -2,12 +2,12 @@
 #include <GLAD/glad/glad.h>
 #include "Utility.hpp"
 
-#define GLCall(x) CheckGLError(#x, __FILE__, __LINE__); x;
+#define GLCall(x) ClearGLErrors(); x; CheckGLError(#x, __FILE__, __LINE__);
 
-//static void ClearGLErrors() noexcept {
-//
-//    while (glGetError() != GL_NO_ERROR);
-//}
+static void ClearGLErrors() noexcept {
+
+    while (glGetError() != GL_NO_ERROR);
+}
 static void CheckGLError(const char* function, const char* file, int line) noexcept {
 
     GLenum Error = glGetError();
