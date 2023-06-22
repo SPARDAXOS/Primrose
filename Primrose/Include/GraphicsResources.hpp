@@ -1,5 +1,7 @@
 #pragma once
 #include <GLAD/glad/glad.h>
+#include "OpenGLResources.hpp"
+
 
 //TODO: Use bits instead since these are in NDC so -1.0 -> 1.0
 
@@ -25,24 +27,75 @@ struct Square {
 							1, 0, 3	};
 };
 
-struct VBO {
-	VBO() noexcept {
-		glGenBuffers(1, &m_ID);
+class VBO final {
+public:
+	VBO() = delete;
+	VBO(const void* data, const GLuint size) noexcept {
+		GLCall(glGenBuffers(1, &m_ID));
+		Bind();
+		GLCall(glBufferData(GL_ARRAY_BUFFER, size, &data, GL_STATIC_DRAW));
+		Unbind();
+	}
+	~VBO() {
+		GLCall(glDeleteBuffers(1, &m_ID));
 	}
 
+public:
+	void Bind() const noexcept {
+		GLCall(glBindBuffer(GL_ARRAY_BUFFER, m_ID));
+	}
+	void Unbind() const noexcept {
+		GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
+	}
+
+private:
 	GLuint m_ID;
 };
-struct VAO {
+
+
+class VAO final {
+public:
 	VAO() noexcept {
-		glGenVertexArrays(1, &m_ID);
+		GLCall(glGenVertexArrays(1, &m_ID));
+	}
+	~VAO() {
+		GLCall(glDeleteBuffers(1, &m_ID));
 	}
 
+public:
+	void Bind() const noexcept {
+		GLCall(glBindVertexArray(m_ID));
+	}
+	void Unbind() const noexcept {
+		GLCall(glBindVertexArray(0));
+	}
+
+private:
 	GLuint m_ID;
 };
-struct EBO {
-	EBO() noexcept {
-		glGenBuffers(1, &m_ID);
+
+
+class EBO final {
+public:
+	EBO() = delete;
+	EBO(const GLuint* data, const GLuint size) noexcept { //Could make smaller ones with shorts for better perf
+		GLCall(glGenBuffers(1, &m_ID));
+		Bind();
+		GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, GL_STATIC_DRAW));
+		Unbind();
+	}
+	~EBO() {
+		GLCall(glDeleteBuffers(1, &m_ID));
 	}
 
+public:
+	void Bind() const noexcept {
+		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ID));
+	}
+	void Unbind() const noexcept {
+		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+	}
+
+private:
 	GLuint m_ID;
 };

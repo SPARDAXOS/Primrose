@@ -15,8 +15,8 @@ Window::Window() {
 
 
 
-    m_VertexShaderFilePath = "Resources/Shaders/Vertex.Shader";
-    m_FragmentShaderFilePath = "Resources/Shaders/Fragment.Shader";
+    m_VertexShaderFilePath = "Resources/Shaders/Vertex.txt";
+    m_FragmentShaderFilePath = "Resources/Shaders/Fragment.txt";
 
     LoadShaders();
 
@@ -52,15 +52,17 @@ void Window::LoadShaders() {
     }
 }
 GLuint Window::CreateShaderProgram() {
-    return glCreateProgram();
+    const auto Program = glCreateProgram();
+    CheckGLError("CreateShaderProgram", __FILE__, __LINE__);
+    return Program;
 }
 bool Window::LinkToShaderProgram(const GLuint& program, const GLuint& shader) {
-    glAttachShader(program, shader);
-    glDeleteShader(shader);
+    GLCall(glAttachShader(program, shader));
+    GLCall(glDeleteShader(shader));
     return true;
 }
 bool Window::LinkShaderProgram(const GLuint& program) {
-    glLinkProgram(program);
+    GLCall(glLinkProgram(program));
 
     int LinkResults;
     glGetShaderiv(program, GL_LINK_STATUS, &LinkResults);
@@ -79,15 +81,16 @@ bool Window::LinkShaderProgram(const GLuint& program) {
     return true;
 }
 void Window::UseShaderProgram(const GLuint& program) {
-    glUseProgram(program);
+    GLCall(glUseProgram(program));
 }
 
 bool Window::CompileShader(GLenum type, const std::string_view& source, GLuint& ID) {
 
     ID = glCreateShader(type);
+    CheckGLError("CompileShader", __FILE__, __LINE__);
     const GLchar* PointerToSource = source.data();
-    glShaderSource(ID, 1, &PointerToSource, nullptr);
-    glCompileShader(ID);
+    GLCall(glShaderSource(ID, 1, &PointerToSource, nullptr));
+    GLCall(glCompileShader(ID));
 
 
     //TODO: make this into a reusable function
@@ -109,48 +112,53 @@ bool Window::CompileShader(GLenum type, const std::string_view& source, GLuint& 
 
 
 bool Window::UpdateWindow() noexcept {
-
-    const VBO VertexBufferObject;
-    const VAO VertexArrayObject;
-    const EBO ElementBufferObject;
     const Triangle Triangle;
     const Square Square;
 
-    glBindVertexArray(VertexArrayObject.m_ID);
 
+    const VBO VertexBufferObject(Square.m_Data, sizeof(Square.m_Data));
+    const EBO ElementBufferObject(Square.m_Indices, sizeof(Square.m_Indices));
+    
+    const VAO VertexArrayObject;
+
+    VertexArrayObject.Bind();
+    //glBindVertexArray(VertexArrayObject.m_ID);
 
     //Leaks VRAM like crazy
-    glBindBuffer(GL_ARRAY_BUFFER, VertexBufferObject.m_ID);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Square.m_Data), &Square.m_Data, GL_STATIC_DRAW);
+    //glBindBuffer(GL_ARRAY_BUFFER, VertexBufferObject.m_ID);
+    //glBufferData(GL_ARRAY_BUFFER, sizeof(Square.m_Data), &Square.m_Data, GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ElementBufferObject.m_ID);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Square.m_Indices), Square.m_Indices, GL_STATIC_DRAW);
+    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ElementBufferObject.m_ID);
+    //glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Square.m_Indices), Square.m_Indices, GL_STATIC_DRAW);
 
-
+    VertexBufferObject.Bind();
+    ElementBufferObject.Bind();
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
     glEnableVertexAttribArray(0);
 
 
+    VertexArrayObject.Unbind();
+    /*glBindVertexArray(0);*/
 
-    glBindVertexArray(0);
+    VertexBufferObject.Unbind();
+    ElementBufferObject.Unbind();
+    //glBindBuffer(GL_ARRAY_BUFFER, 0);
+    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-    bool State = glfwWindowShouldClose(m_Window->m_ptr);
+    const bool State = glfwWindowShouldClose(m_Window->m_ptr);
     if (!State) {
         //Do window shit
         Clear();
 
         ProcessInput();
 
-        glBindVertexArray(VertexArrayObject.m_ID);
+        //glBindVertexArray(VertexArrayObject.m_ID);
         //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ElementBufferObject.m_ID);
         //glDrawArrays(GL_TRIANGLES, 0, 3);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        VertexArrayObject.Bind();
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
         glfwSwapBuffers(m_Window->m_ptr);
         glfwPollEvents();
@@ -201,7 +209,7 @@ void Window::SetupGLAD() {
     m_GLAD = std::make_unique<GLADResource>();
 }
 void Window::SetupViewport() noexcept {
-    glViewport(0, 0, 800, 600);
+    GLCall(glViewport(0, 0, 800, 600));
     auto FrameBufferSizeCallback = [](GLFWwindow* window, int width, int height) { glViewport(0, 0, width, height); };
     glfwSetFramebufferSizeCallback(m_Window->m_ptr, FrameBufferSizeCallback);
 }
