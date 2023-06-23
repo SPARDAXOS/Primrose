@@ -4,7 +4,7 @@
 [[nodiscard]] bool ShaderCompiler::LoadShader(const std::string_view& filePath, std::string& buffer) const {
     //TODO: Create some wrapper for shaders
 
-    return m_FileManagerRef->CRead(filePath, buffer);
+    return FileManagement::CRead(filePath, buffer);
 }
 [[nodiscard]] bool ShaderCompiler::CompileShader(GLuint& ID, GLenum type, const std::string_view& source) const noexcept {
     ID = glCreateShader(type);
@@ -18,7 +18,7 @@
 }
 
 
-[[nodiscard]] bool ShaderCompiler::CreateShaderProgram(GLuint& ID) const noexcept {
+[[nodiscard]] bool ShaderCompiler::CreateShaderProgram(GLuint& ID) const noexcept { //Is this even needed anymore?
     ID = glCreateProgram();
     CheckGLError("CreateShaderProgram", __FILE__, __LINE__);
     return ID == 0 ? false : true;

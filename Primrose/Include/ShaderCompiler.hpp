@@ -1,19 +1,10 @@
 #pragma once
-#include "FileManager.hpp"
+#include "FileManagment.hpp"
 #include <string_view>
 #include "GLAD/glad/glad.h"
 #include "GLErrorHandling.hpp"
 
 class ShaderCompiler final {
-public:
-
-    ShaderCompiler() = delete;
-    ShaderCompiler(const FileManager& manager) noexcept 
-        : m_FileManagerRef(&manager)
-    {
-    }
-
-
 public:
     [[nodiscard]] bool LoadShader(const std::string_view& filePath, std::string& buffer) const;
     [[nodiscard]] bool CompileShader(GLuint& ID, GLenum type, const std::string_view& source) const noexcept;
@@ -33,8 +24,4 @@ private:
     [[nodiscard]] bool CheckCompileStatus(const GLuint& ID) const noexcept;
     [[nodiscard]] bool CheckProgramLinkStatus(const GLuint& ID) const noexcept;
     [[nodiscard]] bool CheckShaderLinkStatus(const GLuint& ID) const noexcept;
-
-
-private:
-    const FileManager* m_FileManagerRef;
 };

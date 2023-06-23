@@ -7,8 +7,6 @@ Core::Core() {
 
 	m_Window = std::make_unique<Window>();
 	m_Renderer = std::make_unique<Renderer>(*m_Window.get());
-	m_FileManager = std::make_unique<FileManager>();
-	m_ShaderCompiler = std::make_unique<ShaderCompiler>(*m_FileManager.get());
 
 }
 
@@ -22,34 +20,15 @@ void Core::Run() {
 	//Run all operations before simply updating the systems in a loop
 	m_Running = true;
 
-	std::string VertexShaderSource;
-	std::string FragmentShaderSource;
-	GLuint VertexShaderID = 0;
-	GLuint FragmentShaderID = 0;
-	GLuint ShaderProgramID = 0;
+	Shader VertexShader(GL_VERTEX_SHADER, "Resources/Shaders/Vertex.txt");
+	Shader FragmentShader(GL_FRAGMENT_SHADER, "Resources/Shaders/Fragment.txt");
 
-	
-	//Shaders
-	if (!m_ShaderCompiler->LoadShader("Resources/Shaders/Vertex.txt", VertexShaderSource))
-		PrintMessage("LoadShader Failed at VertexShader");
-	if (!m_ShaderCompiler->LoadShader("Resources/Shaders/Fragment.txt", FragmentShaderSource))
-		PrintMessage("LoadShader Failed at FragmentShader");
-
-	if (!m_ShaderCompiler->CompileShader(VertexShaderID, GL_VERTEX_SHADER, VertexShaderSource))
-		PrintMessage("CompileShader Failed at VertexShader");
-	if (!m_ShaderCompiler->CompileShader(FragmentShaderID, GL_FRAGMENT_SHADER, FragmentShaderSource))
-		PrintMessage("CompileShader Failed at FragmentShader");
-
-	if (!m_ShaderCompiler->CreateShaderProgram(ShaderProgramID))
-		PrintMessage("CreateShaderProgram Failed");
-
-	m_ShaderCompiler->AttachShader(VertexShaderID, ShaderProgramID);
-	m_ShaderCompiler->AttachShader(FragmentShaderID, ShaderProgramID);
-
-	if (!m_ShaderCompiler->LinkShaderProgram(ShaderProgramID))
+	ShaderProgram ShaderProgramTest;
+	ShaderProgramTest.AttachShader(VertexShader);
+	ShaderProgramTest.AttachShader(FragmentShader);
+	if (!ShaderProgramTest.LinkShaderProgram())
 		PrintMessage("LinkShaderProgram Failed");
-
-	GLCall(glUseProgram(ShaderProgramID));
+	ShaderProgramTest.Bind();
 
 
 	//VBO, VAO, EBO
@@ -68,9 +47,36 @@ void Core::Run() {
 	TestVBO.Unbind();
 	TestEBO.Unbind();
 
+	float c = 0.0f;
+	bool up = true;
+	Color TestColor{ 0.0f, 0.0f, 0.0f, 1.0f };
 
 
 	while (m_Running) {
+
+
+		ShaderProgramTest.SetUniform("u_Color", TestColor);
+
+		if (up) {
+			c += 0.01f;
+			TestColor.R = c;
+			if (c > 1.0f) {
+				c = 1.0f;
+				TestColor.R = 0.0f;
+				up = false;
+			}
+		}
+		else {
+			c -= 0.005f;
+			TestColor.B = c;
+			if (c < 0.0f) {
+				c = 0.0f;
+				TestColor.B = 0.0f;
+				up = true;
+			}
+		}
+
+
 		m_Renderer->Render();
 		m_Renderer->TestRender(TestVAO);
 		UpdateSystems();

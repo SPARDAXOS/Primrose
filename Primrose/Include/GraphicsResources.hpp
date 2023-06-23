@@ -1,6 +1,7 @@
 #pragma once
 #include <GLAD/glad/glad.h>
 #include "GLErrorHandling.hpp"
+#include "ShaderProgram.hpp"
 
 
 //TODO: Use bits instead since these are in NDC so -1.0 -> 1.0
@@ -27,6 +28,10 @@ struct Square {
 							1, 0, 3	};
 };
 
+
+
+
+
 class VBO final {
 public:
 	VBO() = delete;
@@ -41,6 +46,12 @@ public:
 	~VBO() {
 		GLCall(glDeleteBuffers(1, &m_ID));
 	}
+
+	VBO(const VBO&) = delete;
+	VBO& operator=(const VBO&) = delete;
+
+	VBO(VBO&&) = delete;
+	VBO& operator=(VBO&&) = delete;
 
 public:
 	void Bind() const noexcept {
@@ -63,6 +74,12 @@ public:
 	~VAO() {
 		GLCall(glDeleteBuffers(1, &m_ID));
 	}
+
+	VAO(const VAO&) = delete;
+	VAO& operator=(const VAO&) = delete;
+
+	VAO(VAO&&) = delete;
+	VAO& operator=(VAO&&) = delete;
 
 public:
 	void Bind() const noexcept {
@@ -89,6 +106,12 @@ public:
 	~EBO() {
 		GLCall(glDeleteBuffers(1, &m_ID));
 	}
+
+	EBO(const EBO&) = delete;
+	EBO& operator=(const EBO&) = delete;
+
+	EBO(EBO&&) = delete;
+	EBO& operator=(EBO&&) = delete;
 
 public:
 	void Bind() const noexcept {

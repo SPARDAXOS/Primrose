@@ -152,7 +152,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Source\Core.cpp" />
-    <ClCompile Include="Source\FileManager.cpp" />
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="Source\Profiler.cpp" />
     <ClCompile Include="Source\Renderer.cpp" />
@@ -161,13 +160,16 @@
     <ClCompile Include="Dependencies\Includes\GLAD\glad.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Include\FileManager.hpp" />
+    <ClInclude Include="Include\FileManagment.hpp" />
     <ClInclude Include="Include\GraphicsResources.hpp" />
     <ClInclude Include="Include\GLErrorHandling.hpp" />
+    <ClInclude Include="Include\Math.hpp" />
     <ClInclude Include="Include\Profiler.hpp" />
     <ClInclude Include="Include\Core.hpp" />
     <ClInclude Include="Include\Renderer.hpp" />
+    <ClInclude Include="Include\Shader.hpp" />
     <ClInclude Include="Include\ShaderCompiler.hpp" />
+    <ClInclude Include="Include\ShaderProgram.hpp" />
     <ClInclude Include="Include\Utility.hpp" />
     <ClInclude Include="Include\Window.hpp" />
   </ItemGroup>

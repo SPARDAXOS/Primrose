@@ -96,6 +96,9 @@ private:
 
 
 private:
+	bool m_VSync = true;
+
+private:
 	std::string_view m_VertexShaderFilePath;
 	std::string_view m_FragmentShaderFilePath;
 

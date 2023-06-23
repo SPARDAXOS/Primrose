@@ -5,7 +5,7 @@
 
 #include "Renderer.hpp"
 #include "Window.hpp"
-#include "FileManager.hpp"
+#include "FileManagment.hpp"
 #include "ShaderCompiler.hpp"
 
 #include "Utility.hpp"
@@ -53,7 +53,5 @@ private:
 public:
 	std::unique_ptr<Renderer> m_Renderer;
 	std::unique_ptr<Window> m_Window;
-	std::unique_ptr<ShaderCompiler> m_ShaderCompiler;
-	std::unique_ptr<FileManager> m_FileManager;
 
 };

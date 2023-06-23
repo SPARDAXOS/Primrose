@@ -13,7 +13,7 @@ Window::Window() {
     SetupViewport();
     PrintMessage(glGetString(GL_VERSION));
 
-
+    glfwSwapInterval(m_VSync); //Vsync?
 
     m_VertexShaderFilePath = "Resources/Shaders/Vertex.txt";
     m_FragmentShaderFilePath = "Resources/Shaders/Fragment.txt";
@@ -44,7 +44,6 @@ bool Window::UpdateWindow() noexcept {
         //Clean up window
         RegisterExitMessage("Window closed");
         glfwTerminate();
-        //GLCall(glDeleteProgram(m_DefaultShaderProgram)); //TODO: setup some RAII instead
         return false;
     }
 }
