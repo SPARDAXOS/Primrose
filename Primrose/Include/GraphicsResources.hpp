@@ -38,19 +38,6 @@ struct Square {
 
 
 
-struct Texture {
-
-
-
-	int m_ColorChannelsCount;
-	int m_Width;
-	int m_Height;
-
-	GLuint m_ID;
-};
-
-
-
 
 class VBO final {
 public:

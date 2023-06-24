@@ -65,6 +65,16 @@ public:
 			PrintMessages("Could not find requested uniform in shader program - Uniform: ", name.data());
 	}
 
+	template<>
+	void SetUniform<int>(const std::string_view& name, int value) {
+		const int UniformLocation = FindUniformLocation(name);
+		if (UniformLocation != -1) {
+			GLCall(glUniform1i(UniformLocation, value));
+		}
+		else
+			PrintMessages("Could not find requested uniform in shader program - Uniform: ", name.data());
+	}
+
 
 private:
 	[[nodiscard]] int FindUniformLocation(const std::string_view& name) {

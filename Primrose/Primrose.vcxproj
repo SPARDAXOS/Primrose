@@ -151,7 +151,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Include\STB_Image.cpp" />
+    <ClCompile Include="Source\STB_Image.cpp" />
     <ClCompile Include="Source\Core.cpp" />
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="Source\Profiler.cpp" />
@@ -172,6 +172,7 @@
     <ClInclude Include="Include\Shader.hpp" />
     <ClInclude Include="Include\ShaderCompiler.hpp" />
     <ClInclude Include="Include\ShaderProgram.hpp" />
+    <ClInclude Include="Include\TextureStorage.hpp" />
     <ClInclude Include="Include\Utility.hpp" />
     <ClInclude Include="Include\Window.hpp" />
   </ItemGroup>

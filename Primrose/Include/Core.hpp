@@ -7,6 +7,7 @@
 #include "Window.hpp"
 #include "FileManagment.hpp"
 #include "ShaderCompiler.hpp"
+#include "TextureStorage.hpp"
 
 #pragma warning(push, 0)
 #include "STB_Image/stb_image.h"
@@ -57,5 +58,5 @@ private:
 public:
 	std::unique_ptr<Renderer> m_Renderer;
 	std::unique_ptr<Window> m_Window;
-
+	std::unique_ptr<TextureStorage> m_TextureStorage;
 };

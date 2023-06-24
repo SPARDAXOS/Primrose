@@ -7,7 +7,7 @@ Core::Core() {
 
 	m_Window = std::make_unique<Window>();
 	m_Renderer = std::make_unique<Renderer>(*m_Window.get());
-
+	m_TextureStorage = std::make_unique<TextureStorage>();
 }
 
 
@@ -34,40 +34,36 @@ void Core::Run() {
 
 	//Textures
 	
-	//TODO: Implement own image loader!
+	//TODO: Implement own image loader! for bitmaps at least own decoder
 
 
-	std::string testImage;
-	//if (!FileManagement::CRead("Resources/Textures/Crate.jpg", testImage))
-	//	PrintMessage("It failed to load the image");
-	Texture test;
-	stbi_set_flip_vertically_on_load(true);
-	unsigned char* data = stbi_load("Resources/Textures/Crate.jpg", &test.m_Width, &test.m_Height, &test.m_ColorChannelsCount, 0);
+	const std::string_view TexturePath = "Resources/Textures/Crate.jpg";
+	const std::string_view TextureName = "Create";
+	const Texture2D* CreateTexture;
 
-	//ImageLoader::ParseJPG("Resources/Textures/Crate.jpg", testImage);
+	if (!m_TextureStorage->LoadTexture2D(TexturePath, TextureName, CreateTexture))
+		PrintMessage("It failed to load the texture!");
 
-
-
-	GLuint TextureTest;
-	glGenTextures(1, &TextureTest);
-	GLCall(glActiveTexture(GL_TEXTURE0));
-	GLCall(glBindTexture(GL_TEXTURE_2D, TextureTest));
+	CreateTexture->Bind();
+	m_TextureStorage->ActivateTextureUnit(GL_TEXTURE0);
+	m_TextureStorage->SetSamplerState(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+	m_TextureStorage->SetSamplerState(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+	m_TextureStorage->SetSamplerState(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	m_TextureStorage->SetSamplerState(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	//For Both axis
-	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT));
-	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT));
+	//GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT));
+	//GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT));
 
 	//For magnifying and minifying textures - When texture is smaller than object or bigger than object!
-	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)); // For mipmaps. Cuase gets smaller while the magnifying doesnt use mipmaps so dont use it!
-	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+	//GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)); // For mipmaps. Cuase gets smaller while the magnifying doesnt use mipmaps so dont use it!
+	//GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
 
-	GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, test.m_Width, test.m_Height, 0, GL_RGB, GL_UNSIGNED_BYTE, data));
-	//GLCall(glGenerateMipmap(TextureTest));
-	glGenerateMipmap(GL_TEXTURE_2D);
+	GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, CreateTexture->GetWidth(), CreateTexture->GetHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, CreateTexture->GetData()));
+	GLCall(glGenerateMipmap(GL_TEXTURE_2D));
 
-	GLCall(glUniform1i(glGetUniformLocation(ShaderProgramTest.GetID(), "uTexture"), 0));
+	ShaderProgramTest.SetUniform("uTexture", TextureUnit::DIFFUSE);
 
-	stbi_image_free(data);
 
 	//VBO, VAO, EBO
 	const Square TestSquare;
