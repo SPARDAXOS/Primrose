@@ -8,6 +8,10 @@
 #include "FileManagment.hpp"
 #include "ShaderCompiler.hpp"
 
+#pragma warning(push, 0)
+#include "STB_Image/stb_image.h"
+#pragma warning(pop)
+
 #include "Utility.hpp"
 
 

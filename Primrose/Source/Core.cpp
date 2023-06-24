@@ -20,6 +20,8 @@ void Core::Run() {
 	//Run all operations before simply updating the systems in a loop
 	m_Running = true;
 
+
+	//Shaders
 	Shader VertexShader(GL_VERTEX_SHADER, "Resources/Shaders/Vertex.txt");
 	Shader FragmentShader(GL_FRAGMENT_SHADER, "Resources/Shaders/Fragment.txt");
 
@@ -30,6 +32,42 @@ void Core::Run() {
 		PrintMessage("LinkShaderProgram Failed");
 	ShaderProgramTest.Bind();
 
+	//Textures
+	
+	//TODO: Implement own image loader!
+
+
+	std::string testImage;
+	//if (!FileManagement::CRead("Resources/Textures/Crate.jpg", testImage))
+	//	PrintMessage("It failed to load the image");
+	Texture test;
+	stbi_set_flip_vertically_on_load(true);
+	unsigned char* data = stbi_load("Resources/Textures/Crate.jpg", &test.m_Width, &test.m_Height, &test.m_ColorChannelsCount, 0);
+
+	//ImageLoader::ParseJPG("Resources/Textures/Crate.jpg", testImage);
+
+
+
+	GLuint TextureTest;
+	glGenTextures(1, &TextureTest);
+	GLCall(glActiveTexture(GL_TEXTURE0));
+	GLCall(glBindTexture(GL_TEXTURE_2D, TextureTest));
+
+	//For Both axis
+	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT));
+	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT));
+
+	//For magnifying and minifying textures - When texture is smaller than object or bigger than object!
+	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)); // For mipmaps. Cuase gets smaller while the magnifying doesnt use mipmaps so dont use it!
+	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+
+	GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, test.m_Width, test.m_Height, 0, GL_RGB, GL_UNSIGNED_BYTE, data));
+	//GLCall(glGenerateMipmap(TextureTest));
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	GLCall(glUniform1i(glGetUniformLocation(ShaderProgramTest.GetID(), "uTexture"), 0));
+
+	stbi_image_free(data);
 
 	//VBO, VAO, EBO
 	const Square TestSquare;
@@ -47,6 +85,9 @@ void Core::Run() {
 	TestVBO.Unbind();
 	TestEBO.Unbind();
 
+
+
+	//Quick Animation
 	float c = 0.0f;
 	bool up = true;
 	Color TestColor{ 0.0f, 0.0f, 0.0f, 1.0f };
@@ -55,7 +96,7 @@ void Core::Run() {
 	while (m_Running) {
 
 
-		ShaderProgramTest.SetUniform("u_Color", TestColor);
+		//ShaderProgramTest.SetUniform("u_Color", TestColor);
 
 		if (up) {
 			c += 0.01f;
@@ -75,7 +116,6 @@ void Core::Run() {
 				up = true;
 			}
 		}
-
 
 		m_Renderer->Render();
 		m_Renderer->TestRender(TestVAO);

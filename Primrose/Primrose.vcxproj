@@ -151,6 +151,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Include\STB_Image.cpp" />
     <ClCompile Include="Source\Core.cpp" />
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="Source\Profiler.cpp" />
@@ -160,6 +161,7 @@
     <ClCompile Include="Dependencies\Includes\GLAD\glad.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Dependencies\Includes\STB_Image\STB_Image.h" />
     <ClInclude Include="Include\FileManagment.hpp" />
     <ClInclude Include="Include\GraphicsResources.hpp" />
     <ClInclude Include="Include\GLErrorHandling.hpp" />
