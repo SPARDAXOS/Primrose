@@ -61,6 +61,9 @@ void Core::Run() {
 
 	//Creat matrix out of the Translation, Rotation and Scale vectors using this 
 
+	//TODO: when it comes to a HasComponenet() function for the component interface. Every time a component is added or removed, it checks a bit flag that is in the game object.
+	//So HasComponent() simply checks the bit flag whether its 1 or 0 to check if a gameobject has a specific componenet.
+
 	//Transformations
 	Transform TransformTest;
 	TransformTest.m_Position = Vector3f(-0.6f, 0.2f, 0.0f);
