@@ -163,6 +163,7 @@
   <ItemGroup>
     <ClInclude Include="Dependencies\Includes\STB_Image\STB_Image.h" />
     <ClInclude Include="Include\FileManagment.hpp" />
+    <ClInclude Include="Include\GameObject.hpp" />
     <ClInclude Include="Include\GraphicsResources.hpp" />
     <ClInclude Include="Include\GLErrorHandling.hpp" />
     <ClInclude Include="Include\Math.hpp" />
