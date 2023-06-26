@@ -8,6 +8,7 @@
 #include "FileManagment.hpp"
 #include "ShaderCompiler.hpp"
 #include "TextureStorage.hpp"
+#include "EntityComponentSystem.hpp"
 
 #pragma warning(push, 0)
 #include "STB_Image/stb_image.h"
