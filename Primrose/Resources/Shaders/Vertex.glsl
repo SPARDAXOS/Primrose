@@ -8,9 +8,11 @@ layout(location = 2) in vec2 aCoords;
 out vec4 oColor;
 out vec2 oCoords;
 
+uniform mat4 uTransform;
+
 void main() {
 
 	oColor = aColor;
 	oCoords = aCoords;
-	gl_Position = vec4(aPosition.x, aPosition.y, aPosition.z, 1.0);
+	gl_Position = uTransform * vec4(aPosition, 1.0);
 }

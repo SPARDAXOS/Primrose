@@ -1,32 +1,81 @@
 #pragma once
-
+#pragma warning(push, 0)
+#include "GLM/glm.hpp"
+#include "GLM/gtc/matrix_transform.hpp"
+#include "GLM/gtc/type_ptr.hpp"
+#pragma warning(pop)
 
 struct Vector2f {
-	float X, Y;
+	float m_X, m_Y;
 
 	Vector2f() = delete;
+	Vector2f(float value) noexcept
+		: m_X(value), m_Y(value)
+	{
+	}
 	Vector2f(float X, float Y) noexcept
-		: X(X), Y(Y)
+		: m_X(X), m_Y(Y)
 	{
 	}
 
+	~Vector2f() = default;
+	Vector2f(const Vector2f& other) noexcept {
+		*this = other;
+	}
+	Vector2f& operator=(const Vector2f& other) noexcept {
+		if (*this == other) {
+			return *this;
+		}
+		else {
+			this->m_X = other.m_X;
+			this->m_Y = other.m_Y;
+			return *this;
+		}
+	}
+	Vector2f(Vector2f&& other) noexcept {
+		*this = std::move(other);
+	}
+	Vector2f& operator=(Vector2f&& other) noexcept {
+		if (*this == other) {
+			return *this;
+		}
+		else {
+			this->m_X = std::move(other.m_X);
+			this->m_Y = std::move(other.m_Y);
+			return *this;
+		}
+	}
+
 	Vector2f operator*(const Vector2f& rhs) noexcept {
-		return Vector2f(X * rhs.X, Y * rhs.Y);
+		return Vector2f(m_X * rhs.m_X, m_Y * rhs.m_Y);
 	}
 	Vector2f operator/(const Vector2f& rhs) noexcept {
-		return Vector2f(X / rhs.X, Y / rhs.Y);
+		return Vector2f(m_X / rhs.m_X, m_Y / rhs.m_Y);
 	}
 	Vector2f operator+(const Vector2f& rhs) noexcept {
-		return Vector2f(X + rhs.X, Y + rhs.Y);
+		return Vector2f(m_X + rhs.m_X, m_Y + rhs.m_Y);
 	}
 	Vector2f operator-(const Vector2f& rhs) noexcept {
-		return Vector2f(X - rhs.X, Y - rhs.Y);
+		return Vector2f(m_X - rhs.m_X, m_Y - rhs.m_Y);
+	}
+
+	Vector2f operator*(const float& rhs) noexcept {
+		return Vector2f(m_X * rhs, m_Y * rhs);
+	}
+	Vector2f operator/(const float& rhs) noexcept {
+		return Vector2f(m_X / rhs, m_Y / rhs);
+	}
+	Vector2f operator+(const float& rhs) noexcept {
+		return Vector2f(m_X + rhs, m_Y + rhs);
+	}
+	Vector2f operator-(const float& rhs) noexcept {
+		return Vector2f(m_X - rhs, m_Y - rhs);
 	}
 
 	bool operator==(const Vector2f& rhs) const noexcept {
-		if (X != rhs.X)
+		if (m_X != rhs.m_X)
 			return false;
-		else if (Y != rhs.Y)
+		else if (m_Y != rhs.m_Y)
 			return false;
 		else
 			return true;
@@ -39,33 +88,82 @@ struct Vector2f {
 	}
 };
 struct Vector3f {
-	float X, Y, Z;
+	float m_X, m_Y, m_Z;
 
 	Vector3f() = delete;
-	Vector3f(float X, float Y, float Z) noexcept
-		: X(X), Y(Y), Z(Z)
+	Vector3f(float value) noexcept
+		: m_X(value), m_Y(value), m_Z(value)
+	{
+	}
+	Vector3f(float x, float y, float z) noexcept
+		: m_X(x), m_Y(y), m_Z(z)
 	{
 	}
 
+	~Vector3f() = default;
+
+	Vector3f(const Vector3f& other) noexcept {
+		*this = other;
+	}
+	Vector3f& operator=(const Vector3f& other) noexcept {
+		if (*this == other) {
+			return *this;
+		}
+		else {
+			this->m_X = other.m_X;
+			this->m_Y = other.m_Y;
+			this->m_Z = other.m_Z;
+			return *this;
+		}
+	}
+
+	Vector3f(Vector3f&& other) noexcept {
+		*this = std::move(other);
+	}
+	Vector3f& operator=(Vector3f&& other) noexcept {
+		if (*this == other) {
+			return *this;
+		}
+		else {
+			this->m_X = std::move(other.m_X);
+			this->m_Y = std::move(other.m_Y);
+			this->m_Z = std::move(other.m_Z);
+			return *this;
+		}
+	}
+
 	Vector3f operator*(const Vector3f& rhs) noexcept {
-		return Vector3f(X * rhs.X, Y * rhs.Y, Z * rhs.Z);
+		return Vector3f(m_X * rhs.m_X, m_Y * rhs.m_Y, m_Z * rhs.m_Z);
 	}
 	Vector3f operator/(const Vector3f& rhs) noexcept {
-		return Vector3f(X / rhs.X, Y / rhs.Y, Z / rhs.Z);
+		return Vector3f(m_X / rhs.m_X, m_Y / rhs.m_Y, m_Z / rhs.m_Z);
 	}
 	Vector3f operator+(const Vector3f& rhs) noexcept {
-		return Vector3f(X + rhs.X, Y + rhs.Y, Z + rhs.Z);
+		return Vector3f(m_X + rhs.m_X, m_Y + rhs.m_Y, m_Z + rhs.m_Z);
 	}
 	Vector3f operator-(const Vector3f& rhs) noexcept {
-		return Vector3f(X - rhs.X, Y - rhs.Y, Z - rhs.Z);
+		return Vector3f(m_X - rhs.m_X, m_Y - rhs.m_Y, m_Z - rhs.m_Z);
+	}
+
+	Vector3f operator*(const float& rhs) noexcept {
+		return Vector3f(m_X * rhs, m_Y * rhs, m_Z * rhs);
+	}
+	Vector3f operator/(const float& rhs) noexcept {
+		return Vector3f(m_X / rhs, m_Y / rhs, m_Z / rhs);
+	}
+	Vector3f operator+(const float& rhs) noexcept {
+		return Vector3f(m_X + rhs, m_Y + rhs, m_Z + rhs);
+	}
+	Vector3f operator-(const float& rhs) noexcept {
+		return Vector3f(m_X - rhs, m_Y - rhs, m_Z - rhs);
 	}
 
 	bool operator==(const Vector3f& rhs) const noexcept {
-		if (X != rhs.X)
+		if (m_X != rhs.m_X)
 			return false;
-		else if (Y != rhs.Y)
+		else if (m_Y != rhs.m_Y)
 			return false;
-		else if (Z != rhs.Z)
+		else if (m_Z != rhs.m_Z)
 			return false;
 		else
 			return true;
@@ -82,15 +180,15 @@ struct Vector4f {
 };
 
 //Move somewhere else!
-struct Position {
+struct Position { //Remove this and replace it with vector 3 in the vertices. Add redifinition or alias if its for clairties sake but i dont think its needed
 	float X, Y, Z;
 };
 struct Color {
-	float R, G, B = 0.0f;
-	float A = 1.0f;
+	float m_R, m_G, m_B = 0.0f;
+	float m_A = 1.0f;
 };
-struct TextureCordinates {
-	float X, Y;
+struct TextureUV{
+	float m_U, m_V;
 };
 
 namespace Colors {

@@ -20,8 +20,9 @@ public:
 	void TestRender(const VAO& vao) const;
 
 
-private:
+public:
 	void Clear() const noexcept;
+	void SwapBuffers() const noexcept;
 
 
 private:

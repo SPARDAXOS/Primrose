@@ -177,8 +177,8 @@
     <ClInclude Include="Include\Window.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\Shaders\Fragment.txt" />
-    <None Include="Resources\Shaders\Vertex.txt" />
+    <None Include="Resources\Shaders\Fragment.glsl" />
+    <None Include="Resources\Shaders\Vertex.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -59,7 +59,7 @@ public:
 
 		const int UniformLocation = FindUniformLocation(name);
 		if (UniformLocation != -1) {
-			GLCall(glUniform4f(UniformLocation, value.R, value.G, value.B, value.A));
+			GLCall(glUniform4f(UniformLocation, value.m_R, value.m_G, value.m_B, value.m_A));
 		}
 		else
 			PrintMessages("Could not find requested uniform in shader program - Uniform: ", name.data());
@@ -70,6 +70,16 @@ public:
 		const int UniformLocation = FindUniformLocation(name);
 		if (UniformLocation != -1) {
 			GLCall(glUniform1i(UniformLocation, value));
+		}
+		else
+			PrintMessages("Could not find requested uniform in shader program - Uniform: ", name.data());
+	}
+
+	template<>
+	void SetUniform<glm::mat4>(const std::string_view& name, glm::mat4 value) {
+		const int UniformLocation = FindUniformLocation(name);
+		if (UniformLocation != -1) {
+			GLCall(glUniformMatrix4fv(UniformLocation, 1, GL_FALSE, glm::value_ptr(value)));
 		}
 		else
 			PrintMessages("Could not find requested uniform in shader program - Uniform: ", name.data());

@@ -22,8 +22,8 @@ void Core::Run() {
 
 
 	//Shaders
-	Shader VertexShader(GL_VERTEX_SHADER, "Resources/Shaders/Vertex.txt");
-	Shader FragmentShader(GL_FRAGMENT_SHADER, "Resources/Shaders/Fragment.txt");
+	Shader VertexShader(GL_VERTEX_SHADER, "Resources/Shaders/Vertex.glsl");
+	Shader FragmentShader(GL_FRAGMENT_SHADER, "Resources/Shaders/Fragment.glsl");
 
 	ShaderProgram ShaderProgramTest;
 	ShaderProgramTest.AttachShader(VertexShader);
@@ -33,10 +33,7 @@ void Core::Run() {
 	ShaderProgramTest.Bind();
 
 	//Textures
-	
 	//TODO: Implement own image loader! for bitmaps at least own decoder
-
-
 	const std::string_view TexturePath = "Resources/Textures/Crate.jpg";
 	const std::string_view TextureName = "Create";
 	const Texture2D* CreateTexture;
@@ -51,18 +48,25 @@ void Core::Run() {
 	m_TextureStorage->SetSamplerState(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	m_TextureStorage->SetSamplerState(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	//For Both axis
-	//GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT));
-	//GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT));
-
 	//For magnifying and minifying textures - When texture is smaller than object or bigger than object!
 	//GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)); // For mipmaps. Cuase gets smaller while the magnifying doesnt use mipmaps so dont use it!
 	//GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
 
 	GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, CreateTexture->GetWidth(), CreateTexture->GetHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, CreateTexture->GetData()));
+	//Image data might not be needed after this!
 	GLCall(glGenerateMipmap(GL_TEXTURE_2D));
 
-	ShaderProgramTest.SetUniform("uTexture", TextureUnit::DIFFUSE);
+	ShaderProgramTest.SetUniform("uDiffuse", TextureUnit::DIFFUSE);
+
+
+	//Creat matrix out of the Translation, Rotation and Scale vectors using this 
+
+	//Transformations
+	Transform TransformTest;
+	TransformTest.m_Position = Vector3f(-0.6f, 0.2f, 0.0f);
+	TransformTest.m_Rotation = Vector3f(0.0f, 0.0f, 90.0f);
+	TransformTest.m_Scale    = Vector3f(0.5f, 0.5f, 0.5f);
+	TransformTest.UpdateMatrix();
 
 
 	//VBO, VAO, EBO
@@ -82,39 +86,17 @@ void Core::Run() {
 	TestEBO.Unbind();
 
 
-
-	//Quick Animation
-	float c = 0.0f;
-	bool up = true;
-	Color TestColor{ 0.0f, 0.0f, 0.0f, 1.0f };
-
-
 	while (m_Running) {
+		m_Renderer->Clear();
+		//m_Renderer->Render();
 
 
-		//ShaderProgramTest.SetUniform("u_Color", TestColor);
-
-		if (up) {
-			c += 0.01f;
-			TestColor.R = c;
-			if (c > 1.0f) {
-				c = 1.0f;
-				TestColor.R = 0.0f;
-				up = false;
-			}
-		}
-		else {
-			c -= 0.005f;
-			TestColor.B = c;
-			if (c < 0.0f) {
-				c = 0.0f;
-				TestColor.B = 0.0f;
-				up = true;
-			}
-		}
-
-		m_Renderer->Render();
+		ShaderProgramTest.SetUniform("uTransform", TransformTest.GetMatrix());
 		m_Renderer->TestRender(TestVAO);
+
+
+		m_Renderer->SwapBuffers(); //Questionable since it calls a func at the window so why not just call the window one
+
 		UpdateSystems();
 	}
 

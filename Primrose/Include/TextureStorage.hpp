@@ -128,7 +128,7 @@ private:
 class TextureStorage final {
 public:
 
-	explicit TextureStorage() = default;
+	explicit TextureStorage() noexcept = default;
 	~TextureStorage() {
 		if (!m_Storage.empty()) {
 			auto Lambda = [](std::pair<std::string_view, Texture2D*> pair) { delete pair.second; };
@@ -145,13 +145,14 @@ public:
 	TextureStorage& operator=(TextureStorage&&) = delete;
 
 public:
-	[[nodiscard]] bool LoadTexture2D(const std::string_view& path, const std::string_view& name, const Texture2D*& ptr) {
+	[[nodiscard]] bool LoadTexture2D(const std::string_view& path, const std::string_view& name, const Texture2D*& ptr, bool flipped = true) {
 
 		if (FindTexture2D(name, ptr)) {
 			return true;
 		}
 		else {
 			Texture2DSourceData Buffer;
+			stbi_set_flip_vertically_on_load(flipped);
 			if (LoadFromFile(path, name, Buffer)) {
 				Texture2D* NewTexture2D = new Texture2D(Buffer);
 				m_Storage.emplace(name, NewTexture2D);
