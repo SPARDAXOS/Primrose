@@ -1,4 +1,5 @@
 #include <Core.hpp>
+#include <iostream>
 
 
 Core::Core() {
@@ -70,13 +71,24 @@ void Core::Run() {
 	TransformTest.m_Position = Vector3f(-0.6f, 0.2f, 0.0f);
 	TransformTest.m_Rotation = Vector3f(0.0f, 0.0f, 90.0f);
 	TransformTest.m_Scale    = Vector3f(0.5f, 0.5f, 0.5f);
-	TransformTest.UpdateMatrix();
+	//TransformTest.UpdateMatrix();
 
 	//ECS
 	GameObject* GameObjectTest = &m_ECS->CreateGameObject("Test");
 	GameObjectTest->SetName("McLoving");
 	GameObjectTest->AddComponent<SpriteRenderer>();
 	GameObjectTest->HasComponent<SpriteRenderer>();
+	GameObjectTest->RemoveComponent<SpriteRenderer>();
+	GameObjectTest->HasComponent<SpriteRenderer>();
+	GameObjectTest->AddComponent<SpriteRenderer>();
+	GameObjectTest->HasComponent<SpriteRenderer>();
+	SpriteRenderer* OwnSpriteRenderer = GameObjectTest->GetComponent<SpriteRenderer>();
+	OwnSpriteRenderer->SetEnabled(false);
+
+	GameObjectTest->GetTransform().m_Position = Vector3f(-0.6f, 0.2f, 0.0f);
+	GameObjectTest->GetTransform().m_Rotation = Vector3f(0.0f, 0.0f, 0.0f);
+	GameObjectTest->GetTransform().m_Scale = Vector3f(0.5f, 0.5f, 0.5f);
+
 
 	//VBO, VAO, EBO
 	const Square TestSquare;
@@ -98,10 +110,12 @@ void Core::Run() {
 	while (m_Running) {
 		m_Renderer->Clear();
 		//m_Renderer->Render();
-
-
-		ShaderProgramTest.SetUniform("uTransform", TransformTest.GetMatrix());
+		const Vector3f Rotation = GameObjectTest->GetTransform().m_Rotation;
+		GameObjectTest->GetTransform().m_Rotation = Vector3f(0.0f, 0.0f, Rotation.m_Z + 0.01f);
+		ShaderProgramTest.SetUniform("uTransform", GameObjectTest->GetTransform().GetMatrix());
 		m_Renderer->TestRender(TestVAO);
+
+		//m_Renderer->Update(); //It clears then one by one updates all renderers at the ECS then swaps buffers
 
 
 		m_Renderer->SwapBuffers(); //Questionable since it calls a func at the window so why not just call the window one

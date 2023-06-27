@@ -73,29 +73,37 @@ public:
 		if (NewComponent == nullptr)
 			return nullptr;
 		else {
-			uint32 ComponentID = Components::GetComponentID<T>();
+			const uint32 ComponentID = Components::GetComponentID<T>();
 			m_ComponentFlags |= ComponentID;
 			return NewComponent;
 		}
 	}
 
 	template<typename T>
-	void RemoveComponent() {
+	void RemoveComponent() noexcept {
 		static_assert(std::is_base_of_v<ComponentBase, T>);
-		//Check if has comp already
+		if (!HasComponent<T>())
+			return;
+
+
+		m_ECS->RemoveComponent<T>(m_ObjectID);
+		const uint32 ComponentID = Components::GetComponentID<T>();
+		m_ComponentFlags ^= ComponentID;
 	}
 
 	template<typename T>
-	T GetComponent() {
+	T* GetComponent() {
 		static_assert(std::is_base_of_v<ComponentBase, T>);
-		//Check if has comp already
+		if (!HasComponent<T>())
+			return nullptr;
+		
+		return m_ECS->GetComponent<T>(m_ObjectID);
 	}
 
 	template<typename T>
-	bool HasComponent() {
-
+	bool HasComponent() noexcept {
 		static_assert(std::is_base_of_v<ComponentBase, T>);
-		uint32 ComponentID = Components::GetComponentID<T>();
+		const uint32 ComponentID = Components::GetComponentID<T>();
 		if (ComponentID == INVALID_ID)
 			return false;
 
@@ -113,6 +121,8 @@ public:
 	inline bool IsEnabled() const noexcept { return m_Enabled; };
 	inline GameObject* GetParent() const noexcept { return m_Parent; };
 
+	inline Transform& GetTransform() noexcept { return m_Transform; };
+
 
 	void SetName(std::string name) noexcept;
 	void SetEnabled(bool state) noexcept;
@@ -124,6 +134,7 @@ private:
 	bool m_Static{ false };
 
 private:
+	Transform m_Transform;
 	EntityComponentSystem* m_ECS;
 	GameObject* m_Parent{ nullptr };
 	uint32 m_ComponentFlags{ 0 };
