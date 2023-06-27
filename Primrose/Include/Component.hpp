@@ -12,23 +12,23 @@ constexpr uint32 MAIN_SCENE_OBJECT_ID = 0b00000000000000000000000000000001;
 class SpriteRenderer;
 
 class ComponentBase {
+public:
+	ComponentBase() = delete;
+	ComponentBase(uint64 ownerID) noexcept 
+		: m_OwnerID(ownerID)
+	{
+	}
+
+
+public:
+	inline void SetEnabled(bool state) noexcept { m_Enabled = state; };
+	inline bool GetEnabled() const noexcept { return m_Enabled; };
+	inline uint64 GetOwnerID() const noexcept { return m_OwnerID; };
+
+
 protected:
 	bool m_Enabled{ true };
 	uint64 m_OwnerID;
-
-public:
-	template<typename T>
-	static uint32 GetComponentID() {
-		static_assert(std::is_base_of_v<ComponentBase, T>);
-
-
-		//You add new components here
-		if (std::is_object_v(T, SpriteRenderer))
-			return SPRITE_COMPONENT_ID;
-
-		PrintMessage("[Warning] Invalid component sent to HasComponent()");
-		return INVALID_ID;
-	}
 };
 
 class Transform final {
@@ -102,10 +102,35 @@ private:
 	glm::mat4 m_Matrix;
 };
 
-class SpriteRenderer final : ComponentBase {
+class SpriteRenderer final : public ComponentBase {
+public:
+	SpriteRenderer() = delete;
+	SpriteRenderer(uint64 ownerID) noexcept 
+		:	ComponentBase(ownerID)
+	{
+	}
+	~SpriteRenderer() = delete;
 
 
+	//For now it is not possbile to move or copy components
+	SpriteRenderer(const SpriteRenderer& other) = delete;
+	SpriteRenderer& operator=(const SpriteRenderer& other) = delete;
 
+	SpriteRenderer(SpriteRenderer&& other) = delete;
+	SpriteRenderer& operator=(SpriteRenderer&& other) = delete;
+
+public:
 
 
 };
+
+
+namespace Components {
+	//You add new components template specializations here
+	template<typename T>
+	inline uint32 GetComponentID() noexcept;
+	template<>
+	inline uint32 GetComponentID<SpriteRenderer>() noexcept { return SPRITE_COMPONENT_ID; }
+
+	//TODO: Add Custom Component which is basically a component with no code that can be customized.
+}

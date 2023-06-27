@@ -1,7 +1,6 @@
 #include "GameObject.hpp"
-#include "EntityComponentSystem.hpp"
 
-void GameObject::SetObjectName(std::string name) noexcept {
+void GameObject::SetName(std::string name) noexcept {
 	m_ObjectName = name;
 }
 

@@ -8,6 +8,7 @@ Core::Core() {
 	m_Window = std::make_unique<Window>();
 	m_Renderer = std::make_unique<Renderer>(*m_Window.get());
 	m_TextureStorage = std::make_unique<TextureStorage>();
+	m_ECS = std::make_unique<EntityComponentSystem>();
 }
 
 
@@ -71,6 +72,11 @@ void Core::Run() {
 	TransformTest.m_Scale    = Vector3f(0.5f, 0.5f, 0.5f);
 	TransformTest.UpdateMatrix();
 
+	//ECS
+	GameObject* GameObjectTest = &m_ECS->CreateGameObject("Test");
+	GameObjectTest->SetName("McLoving");
+	GameObjectTest->AddComponent<SpriteRenderer>();
+	GameObjectTest->HasComponent<SpriteRenderer>();
 
 	//VBO, VAO, EBO
 	const Square TestSquare;

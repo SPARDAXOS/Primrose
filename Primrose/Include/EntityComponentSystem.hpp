@@ -1,6 +1,8 @@
 #pragma once
 #include "Component.hpp"
-#include "GameObject.hpp"
+
+class GameObject;
+
 
 class EntityComponentSystem final {
 public:
@@ -14,10 +16,27 @@ public:
 	EntityComponentSystem& operator=(EntityComponentSystem&&) = delete;
 
 
+public:
 	GameObject& CreateGameObject();
-	GameObject& CreateGameObject(std::string& name);
-	GameObject& Instantiate(GameObject& name);
+	GameObject& CreateGameObject(const std::string& name);
+	GameObject& Instantiate(const GameObject& object);
 	
+
+public:
+	template<typename T>
+	T* AddComponent(uint64 objectID) {
+		static_assert(std::is_base_of_v<ComponentBase, T>);
+		if (!DoesGameObjectExist(objectID))
+			return nullptr;
+
+		//Check limit on components? Maybe Gameobject side instead. one sounds logical
+
+		//ERROR
+
+		SpriteRenderer* NewSpriteRenderer = new SpriteRenderer(objectID); //Add index in 
+		m_SpriteRenderers.push_back(NewSpriteRenderer);
+		return NewSpriteRenderer;
+	}
 
 public:
 	inline GameObject& GetCurrentMainScene() const noexcept { return *m_MainScene; };
@@ -31,10 +50,15 @@ public:
 	//Keeps track of IDs
 
 private:
+	bool DoesGameObjectExist(uint64 id) const noexcept;
+	GameObject* FindGameObject(uint64 id) const noexcept;
+
+private:
 	std::vector<GameObject*> m_GameObjects;
+	std::vector<SpriteRenderer*> m_SpriteRenderers;
 
 
 	//Created or loaded later on
 	GameObject* m_MainScene; 
-
+	uint64 m_CurrentObjectIDIndex = 1;
 };

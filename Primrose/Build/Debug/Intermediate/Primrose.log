@@ -1,6 +1,2 @@
-﻿  EntityComponentSystem.cpp
-  GameObject.cpp
-  Core.cpp
-  Main.cpp
-  Generating Code...
+﻿  Core.cpp
   Primrose.vcxproj -> C:\Users\alexm\Primrose\Primrose\Build\Debug\Primrose.exe
