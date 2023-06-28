@@ -145,7 +145,7 @@ public:
 	TextureStorage& operator=(TextureStorage&&) = delete;
 
 public:
-	[[nodiscard]] bool LoadTexture2D(const std::string_view& path, const std::string_view& name, const Texture2D*& ptr, bool flipped = true) {
+	[[nodiscard]] bool LoadTexture2D(const std::string_view& path, const std::string_view& name, Texture2D*& ptr, bool flipped = true) {
 
 		if (FindTexture2D(name, ptr)) {
 			return true;
@@ -164,7 +164,7 @@ public:
 		}
 	}
 	void UnloadTexture2D(const std::string_view& name) {
-		const Texture2D* TargetTexture;
+		Texture2D* TargetTexture;
 		if (!FindTexture2D(name, TargetTexture))
 			return;
 		else {
@@ -172,7 +172,7 @@ public:
 			m_Storage.erase(name);
 		}
 	}
-	[[nodiscard]] bool GetTexture2D(const std::string_view& name, const Texture2D*& ptr) {
+	[[nodiscard]] bool GetTexture2D(const std::string_view& name, Texture2D*& ptr) {
 		if (!FindTexture2D(name, ptr))
 			return false;
 		else
@@ -188,7 +188,7 @@ public:
 	}
 
 private:
-	[[nodiscard]] bool FindTexture2D(const std::string_view& name, const Texture2D*& ptr) {
+	[[nodiscard]] bool FindTexture2D(const std::string_view& name, Texture2D*& ptr) {
 		if (m_Storage.find(name) != m_Storage.end()) {
 			ptr = m_Storage[name];
 			return true;

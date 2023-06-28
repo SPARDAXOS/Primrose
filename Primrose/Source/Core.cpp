@@ -38,12 +38,12 @@ void Core::Run() {
 	//TODO: Implement own image loader! for bitmaps at least own decoder
 	const std::string_view TexturePath = "Resources/Textures/Crate.jpg";
 	const std::string_view TextureName = "Create";
-	const Texture2D* CreateTexture;
+	Texture2D* CreateTexture;
 
 	if (!m_TextureStorage->LoadTexture2D(TexturePath, TextureName, CreateTexture))
 		PrintMessage("It failed to load the texture!");
 
-	CreateTexture->Bind();
+	//CreateTexture->Bind();
 	m_TextureStorage->ActivateTextureUnit(GL_TEXTURE0);
 	m_TextureStorage->SetSamplerState(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
 	m_TextureStorage->SetSamplerState(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
@@ -54,12 +54,13 @@ void Core::Run() {
 	//GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)); // For mipmaps. Cuase gets smaller while the magnifying doesnt use mipmaps so dont use it!
 	//GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
 
-	GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, CreateTexture->GetWidth(), CreateTexture->GetHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, CreateTexture->GetData()));
+	//GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, CreateTexture->GetWidth(), CreateTexture->GetHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, CreateTexture->GetData()));
 	//Image data might not be needed after this!
-	GLCall(glGenerateMipmap(GL_TEXTURE_2D));
+	//GLCall(glGenerateMipmap(GL_TEXTURE_2D));
 
-	CreateTexture->Unbind();
+	//CreateTexture->Unbind();
 
+	//Should be when shader program is created. ? idk anymore
 	//ShaderProgramTest.SetUniform("uDiffuse", TextureUnit::DIFFUSE);
 
 
@@ -84,8 +85,8 @@ void Core::Run() {
 	//GameObjectTest->HasComponent<SpriteRenderer>();
 	//GameObjectTest->AddComponent<SpriteRenderer>();
 	//GameObjectTest->HasComponent<SpriteRenderer>();
-	//SpriteRenderer* OwnSpriteRenderer = GameObjectTest->GetComponent<SpriteRenderer>();
-	//OwnSpriteRenderer->SetEnabled(false);
+	SpriteRenderer* OwnSpriteRenderer = GameObjectTest->GetComponent<SpriteRenderer>();
+	OwnSpriteRenderer->SetSprite(CreateTexture);
 
 	GameObjectTest->GetTransform().m_Position = Vector3f(-0.6f, 0.2f, 0.0f);
 	GameObjectTest->GetTransform().m_Rotation = Vector3f(0.0f, 0.0f, 0.0f);

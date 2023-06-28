@@ -2,6 +2,7 @@
 #include "Utility.hpp"
 #include "Math.hpp"
 #include "GraphicsResources.hpp"
+#include "TextureStorage.hpp"
 
 constexpr uint32 INVALID_ID = 0b00000000000000000000000000000000;
 constexpr uint32 SPRITE_COMPONENT_ID = 0b00000000000000000000000000000001;
@@ -140,7 +141,15 @@ public:
 	SpriteRenderer& operator=(SpriteRenderer&& other) = delete;
 
 public:
+	inline void SetSprite(Texture2D* sprite) noexcept { m_Sprite = sprite; }
+
 	inline VAO* GetVAO() const noexcept { return m_VAO; }
+	inline Texture2D* GetSprite() const noexcept { return m_Sprite; }
+
+
+
+private:
+	Texture2D* m_Sprite = nullptr;
 
 private:
 	Square m_Primitive;

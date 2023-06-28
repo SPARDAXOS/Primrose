@@ -55,6 +55,12 @@ bool Renderer::Render2D() const {
         GameObject* TargetGameObject = m_ECSReference->FindGameObject(TargetComponent->GetOwnerID());
 
         ShaderProgramTest.SetUniform("uTransform", TargetGameObject->GetTransform().GetMatrix());
+        ShaderProgramTest.SetUniform("uDiffuse", TextureUnit::DIFFUSE);
+
+        const Texture2D* Sprite = TargetComponent->GetSprite();
+        //Sprite->Bind(); WTF
+        GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Sprite->GetWidth(), Sprite->GetHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, Sprite->GetData()));
+        GLCall(glGenerateMipmap(GL_TEXTURE_2D));
 
         TargetComponent->GetVAO()->Bind();
         GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr)); //TODO: get indicies properly
