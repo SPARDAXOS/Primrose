@@ -26,7 +26,7 @@ void Window::SwapBuffers() const {
 
 
 
-bool Window::UpdateWindow() noexcept {
+bool Window::Update() noexcept {
 
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 

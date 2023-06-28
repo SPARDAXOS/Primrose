@@ -58,7 +58,7 @@ private:
 	};
 
 public:
-	[[nodiscard]] bool UpdateWindow() noexcept;
+	[[nodiscard]] bool Update() noexcept;
 
 public:
 	//[[nodiscard]] inline const GLFWwindow& GetWindowResource() const noexcept { return *m_Window.get()->m_ptr; }

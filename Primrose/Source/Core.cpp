@@ -6,10 +6,10 @@ Core::Core() {
 
 	//TODO: is error checking needed here? probably not since they throw and i should just let it bubble up.
 
-	m_Window = std::make_unique<Window>();
-	m_Renderer = std::make_unique<Renderer>(*m_Window.get());
 	m_TextureStorage = std::make_unique<TextureStorage>();
 	m_ECS = std::make_unique<EntityComponentSystem>();
+	m_Window = std::make_unique<Window>();
+	m_Renderer = std::make_unique<Renderer>(*m_ECS.get(), *m_Window.get());
 }
 
 
@@ -108,17 +108,11 @@ void Core::Run() {
 
 
 	while (m_Running) {
-		m_Renderer->Clear();
 		//m_Renderer->Render();
 		const Vector3f Rotation = GameObjectTest->GetTransform().m_Rotation;
 		GameObjectTest->GetTransform().m_Rotation = Vector3f(0.0f, 0.0f, Rotation.m_Z + 0.01f);
 		ShaderProgramTest.SetUniform("uTransform", GameObjectTest->GetTransform().GetMatrix());
 		m_Renderer->TestRender(TestVAO);
-
-		//m_Renderer->Update(); //It clears then one by one updates all renderers at the ECS then swaps buffers
-
-
-		m_Renderer->SwapBuffers(); //Questionable since it calls a func at the window so why not just call the window one
 
 		UpdateSystems();
 	}
@@ -132,11 +126,12 @@ void Core::Exit() {
 }
 void Core::UpdateSystems() {
 	
-	if (!m_Window->UpdateWindow()) {
+	if (!m_Window->Update()) {
 		RegisterExitMessage("Engine closed down.\nReason: " + m_Window->GetLastExitMessage());
 		m_Running = false; //TODO: make cleaner exit method + some messages for error handling
 	}
 
+	m_Renderer->Update();
 
 
 

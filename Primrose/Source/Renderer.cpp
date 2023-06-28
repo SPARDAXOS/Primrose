@@ -1,13 +1,17 @@
 #include <Renderer.hpp>
 #include "Window.hpp"
+#include "EntityComponentSystem.hpp"
 
 
 
 
 
 
-void Renderer::Render() const {
-
+void Renderer::Update() const {
+    Clear();
+    Render2D();
+    Render3D();
+    SwapBuffers();
 }
 void Renderer::TestRender(const VAO& vao) const {
     //Clear(); //Only at the start of a new frame!
@@ -21,12 +25,27 @@ void Renderer::TestRender(const VAO& vao) const {
 }
 
 
+void Renderer::Render2D() const noexcept {
+    
+
+
+
+
+    //Get amount from ECS
+    //Call loop depending on amount from ECS
+    //Get Transform using component Object ID
+    //Render using them
+}
+void Renderer::Render3D() const noexcept {
+
+}
+
 
 
 void Renderer::Clear() const noexcept {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 }
-void Renderer::SwapBuffers() const noexcept {
+void Renderer::SwapBuffers() const {
     m_WindowReference->SwapBuffers(); //Only once its done!
 }

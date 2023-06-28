@@ -75,6 +75,14 @@ public:
 	}
 
 
+public:
+	template<typename T>
+	uint32 GetComponentsAmount() const noexcept;
+
+	template<>
+	uint32 GetComponentsAmount<SpriteRenderer>() const noexcept{
+		return static_cast<uint32>(m_SpriteRenderers.size());
+	}
 
 
 
