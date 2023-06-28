@@ -117,7 +117,7 @@ public:
 		m_VAO->Bind();
 
 		m_VBO = new VBO(m_Primitive.m_Data, sizeof(m_Primitive.m_Data));
-		m_EBO = new EBO(m_Primitive.m_Indices, sizeof(m_Primitive.m_Indices));
+		m_EBO = new EBO(m_Primitive.m_Indices, sizeof(m_Primitive.m_Indices), sizeof(m_Primitive.m_Indices) / sizeof(GLuint));
 
 		m_VBO->Bind();
 		m_EBO->Bind();
@@ -144,6 +144,7 @@ public:
 	inline void SetSprite(Texture2D* sprite) noexcept { m_Sprite = sprite; }
 
 	inline VAO* GetVAO() const noexcept { return m_VAO; }
+	inline EBO* GetEBO() const noexcept { return m_EBO; }
 	inline Texture2D* GetSprite() const noexcept { return m_Sprite; }
 
 

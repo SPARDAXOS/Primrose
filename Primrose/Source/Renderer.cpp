@@ -63,7 +63,7 @@ bool Renderer::Render2D() const {
         GLCall(glGenerateMipmap(GL_TEXTURE_2D));
 
         TargetComponent->GetVAO()->Bind();
-        GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr)); //TODO: get indicies properly
+        GLCall(glDrawElements(GL_TRIANGLES, TargetComponent->GetEBO()->GetCount(), GL_UNSIGNED_INT, nullptr));
     }
 
     return true;

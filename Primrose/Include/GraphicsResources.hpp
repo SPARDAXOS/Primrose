@@ -112,11 +112,12 @@ private:
 class EBO final {
 public:
 	EBO() = delete;
-	EBO(const GLuint* data, const GLuint size) noexcept { //Could make smaller ones with shorts for better perf
+	EBO(const GLuint* data, const GLuint size, const GLuint count) noexcept { //Could make smaller ones with shorts for better perf
 		GLCall(glGenBuffers(1, &m_ID));
 		Bind();
 		GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, GL_STATIC_DRAW));
 		Unbind();
+		m_Count = count;
 	}
 	~EBO() {
 		GLCall(glDeleteBuffers(1, &m_ID));
@@ -136,6 +137,9 @@ public:
 		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 	}
 
+	inline GLuint GetCount() const noexcept { return m_Count; };
+
 private:
 	GLuint m_ID;
+	GLuint m_Count;
 };
