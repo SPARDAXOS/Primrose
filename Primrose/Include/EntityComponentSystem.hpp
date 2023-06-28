@@ -78,17 +78,29 @@ public:
 public:
 	template<typename T>
 	uint32 GetComponentsAmount() const noexcept;
-
 	template<>
 	uint32 GetComponentsAmount<SpriteRenderer>() const noexcept{
 		return static_cast<uint32>(m_SpriteRenderers.size());
 	}
 
+public:
+	template<typename T>
+	T* GetComponentForUpdate();
+	template<>
+	SpriteRenderer* GetComponentForUpdate<SpriteRenderer>() {
+		SpriteRenderer* TargetComponent = m_SpriteRenderers.at(m_SpriteRenderersUpdateIndex);
+		m_SpriteRenderersUpdateIndex++;
+		if (m_SpriteRenderersUpdateIndex == m_SpriteRenderers.size())
+			m_SpriteRenderersUpdateIndex = 0;
+		return TargetComponent;
+	}
+
+
 
 
 public:
 	inline GameObject& GetCurrentMainScene() const noexcept { return *m_MainScene; };
-
+	GameObject* FindGameObject(uint64 ObjectID) const noexcept;
 	//Can get all components of type. One by one after each call to function
 	//Can create and return a reference to gameobject
 	//Has the hierarchy with the scene component being the parent
@@ -101,8 +113,11 @@ private:
 	bool DoesGameObjectExist(uint64 ObjectID) const noexcept;
 
 private:
-	GameObject* FindGameObject(uint64 ObjectID) const noexcept;
 	int32 FindSpriteRenderer(uint64 ObjectID) const noexcept;
+
+private:
+	uint32  m_SpriteRenderersUpdateIndex = 0;
+
 
 private:
 	std::vector<GameObject*> m_GameObjects;

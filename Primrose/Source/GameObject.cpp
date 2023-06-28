@@ -9,6 +9,11 @@ void GameObject::SetEnabled(bool state) noexcept {
 	
 }
 void GameObject::SetParent(GameObject* parent) noexcept {
+	if (m_Parent == nullptr) {
+		m_Parent = parent;
+		return;
+	}
+
 	if (m_Parent->GetObjectID() == MAIN_SCENE_OBJECT_ID && parent == nullptr)
 		return;
 	if (m_Parent->GetObjectID() != MAIN_SCENE_OBJECT_ID && parent == nullptr) {

@@ -1,6 +1,7 @@
 #pragma once
 #include "Utility.hpp"
 #include "Math.hpp"
+#include "GraphicsResources.hpp"
 
 constexpr uint32 INVALID_ID = 0b00000000000000000000000000000000;
 constexpr uint32 SPRITE_COMPONENT_ID = 0b00000000000000000000000000000001;
@@ -110,8 +111,25 @@ public:
 	SpriteRenderer(uint64 ownerID) noexcept 
 		:	ComponentBase(ownerID)
 	{
+		//TODO: Clean this up. This looks messy!
+		m_VAO = new VAO;
+		m_VAO->Bind();
+
+		m_VBO = new VBO(m_Primitive.m_Data, sizeof(m_Primitive.m_Data));
+		m_EBO = new EBO(m_Primitive.m_Indices, sizeof(m_Primitive.m_Indices));
+
+		m_VBO->Bind();
+		m_EBO->Bind();
+
+		m_VAO->Unbind();
+		m_VBO->Unbind();
+		m_EBO->Unbind();
 	}
-	~SpriteRenderer() = delete;
+	~SpriteRenderer() {
+		delete m_VAO;
+		delete m_VBO;
+		delete m_EBO;
+	}
 
 
 	//For now it is not possbile to move or copy components
@@ -122,8 +140,13 @@ public:
 	SpriteRenderer& operator=(SpriteRenderer&& other) = delete;
 
 public:
+	inline VAO* GetVAO() const noexcept { return m_VAO; }
 
-
+private:
+	Square m_Primitive;
+	VAO* m_VAO = nullptr;
+	VBO* m_VBO = nullptr;
+	EBO* m_EBO = nullptr;
 };
 
 

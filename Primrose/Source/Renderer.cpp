@@ -1,17 +1,23 @@
 #include <Renderer.hpp>
 #include "Window.hpp"
 #include "EntityComponentSystem.hpp"
+#include "GameObject.hpp"
 
 
 
 
 
 
-void Renderer::Update() const {
+bool Renderer::Update() const {
     Clear();
-    Render2D();
-    Render3D();
+
+    bool RendererStatus = true;
+    if (!Render2D() && !Render3D())
+        RendererStatus = false;
+
     SwapBuffers();
+
+    return RendererStatus;
 }
 void Renderer::TestRender(const VAO& vao) const {
     //Clear(); //Only at the start of a new frame!
@@ -25,19 +31,40 @@ void Renderer::TestRender(const VAO& vao) const {
 }
 
 
-void Renderer::Render2D() const noexcept {
+bool Renderer::Render2D() const {
     
+    //Shaders
+    Shader VertexShader(GL_VERTEX_SHADER, "Resources/Shaders/Vertex.glsl");
+    Shader FragmentShader(GL_FRAGMENT_SHADER, "Resources/Shaders/Fragment.glsl");
+
+    ShaderProgram ShaderProgramTest;
+    ShaderProgramTest.AttachShader(VertexShader);
+    ShaderProgramTest.AttachShader(FragmentShader);
+    if (!ShaderProgramTest.LinkShaderProgram())
+        PrintMessage("LinkShaderProgram Failed");
+    ShaderProgramTest.Bind();
 
 
+    //TODO: Register error message when it happens here!
 
+    const uint32 Amount = m_ECSReference->GetComponentsAmount<SpriteRenderer>();
+    for (uint32 index = 0; index < Amount; index++) {
+        //TODO: Check for nullness
 
-    //Get amount from ECS
-    //Call loop depending on amount from ECS
-    //Get Transform using component Object ID
-    //Render using them
+        const SpriteRenderer* TargetComponent = m_ECSReference->GetComponentForUpdate<SpriteRenderer>();
+        GameObject* TargetGameObject = m_ECSReference->FindGameObject(TargetComponent->GetOwnerID());
+
+        ShaderProgramTest.SetUniform("uTransform", TargetGameObject->GetTransform().GetMatrix());
+
+        TargetComponent->GetVAO()->Bind();
+        GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr)); //TODO: get indicies properly
+    }
+
+    return true;
 }
-void Renderer::Render3D() const noexcept {
+bool Renderer::Render3D() const {
 
+    return true;
 }
 
 

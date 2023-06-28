@@ -24,15 +24,15 @@ void Core::Run() {
 
 
 	//Shaders
-	Shader VertexShader(GL_VERTEX_SHADER, "Resources/Shaders/Vertex.glsl");
-	Shader FragmentShader(GL_FRAGMENT_SHADER, "Resources/Shaders/Fragment.glsl");
+	//Shader VertexShader(GL_VERTEX_SHADER, "Resources/Shaders/Vertex.glsl");
+	//Shader FragmentShader(GL_FRAGMENT_SHADER, "Resources/Shaders/Fragment.glsl");
 
-	ShaderProgram ShaderProgramTest;
-	ShaderProgramTest.AttachShader(VertexShader);
-	ShaderProgramTest.AttachShader(FragmentShader);
-	if (!ShaderProgramTest.LinkShaderProgram())
-		PrintMessage("LinkShaderProgram Failed");
-	ShaderProgramTest.Bind();
+	//ShaderProgram ShaderProgramTest;
+	//ShaderProgramTest.AttachShader(VertexShader);
+	//ShaderProgramTest.AttachShader(FragmentShader);
+	//if (!ShaderProgramTest.LinkShaderProgram())
+	//	PrintMessage("LinkShaderProgram Failed");
+	//ShaderProgramTest.Bind();
 
 	//Textures
 	//TODO: Implement own image loader! for bitmaps at least own decoder
@@ -58,7 +58,9 @@ void Core::Run() {
 	//Image data might not be needed after this!
 	GLCall(glGenerateMipmap(GL_TEXTURE_2D));
 
-	ShaderProgramTest.SetUniform("uDiffuse", TextureUnit::DIFFUSE);
+	CreateTexture->Unbind();
+
+	//ShaderProgramTest.SetUniform("uDiffuse", TextureUnit::DIFFUSE);
 
 
 	//Creat matrix out of the Translation, Rotation and Scale vectors using this 
@@ -67,23 +69,23 @@ void Core::Run() {
 	//So HasComponent() simply checks the bit flag whether its 1 or 0 to check if a gameobject has a specific componenet.
 
 	//Transformations
-	Transform TransformTest;
-	TransformTest.m_Position = Vector3f(-0.6f, 0.2f, 0.0f);
-	TransformTest.m_Rotation = Vector3f(0.0f, 0.0f, 90.0f);
-	TransformTest.m_Scale    = Vector3f(0.5f, 0.5f, 0.5f);
+	//Transform TransformTest;
+	//TransformTest.m_Position = Vector3f(-0.6f, 0.2f, 0.0f);
+	//TransformTest.m_Rotation = Vector3f(0.0f, 0.0f, 90.0f);
+	//TransformTest.m_Scale    = Vector3f(0.5f, 0.5f, 0.5f);
 	//TransformTest.UpdateMatrix();
 
 	//ECS
 	GameObject* GameObjectTest = &m_ECS->CreateGameObject("Test");
-	GameObjectTest->SetName("McLoving");
+	GameObjectTest->SetName("McLovin");
 	GameObjectTest->AddComponent<SpriteRenderer>();
-	GameObjectTest->HasComponent<SpriteRenderer>();
-	GameObjectTest->RemoveComponent<SpriteRenderer>();
-	GameObjectTest->HasComponent<SpriteRenderer>();
-	GameObjectTest->AddComponent<SpriteRenderer>();
-	GameObjectTest->HasComponent<SpriteRenderer>();
-	SpriteRenderer* OwnSpriteRenderer = GameObjectTest->GetComponent<SpriteRenderer>();
-	OwnSpriteRenderer->SetEnabled(false);
+	//GameObjectTest->HasComponent<SpriteRenderer>();
+	//GameObjectTest->RemoveComponent<SpriteRenderer>();
+	//GameObjectTest->HasComponent<SpriteRenderer>();
+	//GameObjectTest->AddComponent<SpriteRenderer>();
+	//GameObjectTest->HasComponent<SpriteRenderer>();
+	//SpriteRenderer* OwnSpriteRenderer = GameObjectTest->GetComponent<SpriteRenderer>();
+	//OwnSpriteRenderer->SetEnabled(false);
 
 	GameObjectTest->GetTransform().m_Position = Vector3f(-0.6f, 0.2f, 0.0f);
 	GameObjectTest->GetTransform().m_Rotation = Vector3f(0.0f, 0.0f, 0.0f);
@@ -91,28 +93,28 @@ void Core::Run() {
 
 
 	//VBO, VAO, EBO
-	const Square TestSquare;
+	//const Square TestSquare;
 
-	VAO TestVAO;
-	TestVAO.Bind();
+	//VAO TestVAO;
+	//TestVAO.Bind();
 
-	VBO TestVBO(TestSquare.m_Data, sizeof(TestSquare.m_Data));
-	EBO TestEBO(TestSquare.m_Indices, sizeof(TestSquare.m_Indices));
+	//VBO TestVBO(TestSquare.m_Data, sizeof(TestSquare.m_Data));
+	//EBO TestEBO(TestSquare.m_Indices, sizeof(TestSquare.m_Indices));
 
-	TestVBO.Bind();
-	TestEBO.Bind();
+	//TestVBO.Bind();
+	//TestEBO.Bind();
 
-	TestVAO.Unbind();
-	TestVBO.Unbind();
-	TestEBO.Unbind();
+	//TestVAO.Unbind();
+	//TestVBO.Unbind();
+	//TestEBO.Unbind();
 
 
 	while (m_Running) {
 		//m_Renderer->Render();
-		const Vector3f Rotation = GameObjectTest->GetTransform().m_Rotation;
-		GameObjectTest->GetTransform().m_Rotation = Vector3f(0.0f, 0.0f, Rotation.m_Z + 0.01f);
-		ShaderProgramTest.SetUniform("uTransform", GameObjectTest->GetTransform().GetMatrix());
-		m_Renderer->TestRender(TestVAO);
+		//const Vector3f Rotation = GameObjectTest->GetTransform().m_Rotation;
+		//GameObjectTest->GetTransform().m_Rotation = Vector3f(0.0f, 0.0f, Rotation.m_Z + 0.01f);
+		//ShaderProgramTest.SetUniform("uTransform", GameObjectTest->GetTransform().GetMatrix());
+		//m_Renderer->TestRender(TestVAO);
 
 		UpdateSystems();
 	}
@@ -128,10 +130,13 @@ void Core::UpdateSystems() {
 	
 	if (!m_Window->Update()) {
 		RegisterExitMessage("Engine closed down.\nReason: " + m_Window->GetLastExitMessage());
-		m_Running = false; //TODO: make cleaner exit method + some messages for error handling
+		m_Running = false; //TODO: make cleaner exit method
 	}
 
-	m_Renderer->Update();
+	if (!m_Renderer->Update()) {
+		RegisterExitMessage("Engine closed down.\nReason: " + m_Renderer->GetLastExitMessage());
+		m_Running = false;
+	}
 
 
 
