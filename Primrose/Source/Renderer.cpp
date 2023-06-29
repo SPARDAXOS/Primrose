@@ -52,6 +52,15 @@ bool Renderer::Render2D() const {
         //TODO: Check for nullness
 
         const SpriteRenderer* TargetComponent = m_ECSReference->GetComponentForUpdate<SpriteRenderer>();
+
+
+        GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (GLuint)TargetComponent->GetAddressingModeS()));
+        GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (GLuint)TargetComponent->GetAddressingModeT()));
+        GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (GLuint)TargetComponent->GetFilteringModeMin()));
+        GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (GLuint)TargetComponent->GetFilteringModeMag()));
+
+
+
         GameObject* TargetGameObject = m_ECSReference->FindGameObject(TargetComponent->GetOwnerID());
 
         ShaderProgramTest.SetUniform("uTransform", TargetGameObject->GetTransform().GetMatrix());

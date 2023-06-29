@@ -45,10 +45,17 @@ void Core::Run() {
 
 	//CreateTexture->Bind();
 	m_TextureStorage->ActivateTextureUnit(GL_TEXTURE0);
-	m_TextureStorage->SetSamplerState(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-	m_TextureStorage->SetSamplerState(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-	m_TextureStorage->SetSamplerState(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	m_TextureStorage->SetSamplerState(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	//New Planned Features
+	//Materials - Some default ones like lit, unlit
+	//Use ShaderCompiler again to load shaders using specific params
+	//Using the params, the parser will parse specific parts of shaders by shaking for markers ###Bloom Skip: X
+	//It will load parts of the shader depending on the params
+	//It will save it so next time something wants a shader with these params, it will look if they are saved and return that same shader
+
+	//Renderer takes a material
+
+
 
 	//For magnifying and minifying textures - When texture is smaller than object or bigger than object!
 	//GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)); // For mipmaps. Cuase gets smaller while the magnifying doesnt use mipmaps so dont use it!
@@ -92,6 +99,13 @@ void Core::Run() {
 	GameObjectTest->GetTransform().m_Rotation = Vector3f(0.0f, 0.0f, 0.0f);
 	GameObjectTest->GetTransform().m_Scale = Vector3f(0.5f, 0.5f, 0.5f);
 
+
+	GameObject* InstansiatedGameObject = &m_ECS->Instantiate(*GameObjectTest);
+	//SpriteRenderer* NewSpriteRenderer 
+		//= InstansiatedGameObject->AddComponent<SpriteRenderer>(); //Will not work cause the flags carried over but not actual components.
+	//NewSpriteRenderer->SetSprite(CreateTexture);
+
+	InstansiatedGameObject->GetTransform().m_Position.m_X *= -1;
 
 	//VBO, VAO, EBO
 	//const Square TestSquare;

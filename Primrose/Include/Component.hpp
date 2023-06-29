@@ -142,15 +142,28 @@ public:
 
 public:
 	inline void SetSprite(Texture2D* sprite) noexcept { m_Sprite = sprite; }
+	inline void SetAddressingMode(AddressingMode s, AddressingMode t) noexcept { m_AddressingModeS = s; m_AddressingModeT = t; }
+	inline void SetFilteringMode(FilteringMode min, FilteringMode mag) noexcept { m_FilteringModeMin = min; m_FilteringModeMag = mag; }
 
+
+	inline Texture2D* GetSprite() const noexcept { return m_Sprite; }
+	inline AddressingMode GetAddressingModeS() const noexcept { return m_AddressingModeS; }
+	inline AddressingMode GetAddressingModeT() const noexcept { return m_AddressingModeT; }
+	inline FilteringMode GetFilteringModeMin() const noexcept { return m_FilteringModeMin; }
+	inline FilteringMode GetFilteringModeMag() const noexcept { return m_FilteringModeMag; }
+	
 	inline VAO* GetVAO() const noexcept { return m_VAO; }
 	inline EBO* GetEBO() const noexcept { return m_EBO; }
-	inline Texture2D* GetSprite() const noexcept { return m_Sprite; }
-
 
 
 private:
 	Texture2D* m_Sprite = nullptr;
+
+private:
+	AddressingMode m_AddressingModeS = AddressingMode::REPEAT;
+	AddressingMode m_AddressingModeT = AddressingMode::REPEAT;
+	FilteringMode m_FilteringModeMin = FilteringMode::LINEAR_MIPMAP_LINEAR;
+	FilteringMode m_FilteringModeMag = FilteringMode::LINEAR;
 
 private:
 	Square m_Primitive;

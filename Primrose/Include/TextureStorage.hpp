@@ -10,6 +10,23 @@
 #include <algorithm>
 
 
+enum class AddressingMode {
+	MIRRORED = GL_MIRRORED_REPEAT,
+	CLAMPED_TO_EDGE = GL_CLAMP_TO_EDGE,
+	CLAMPED_TO_BORDER = GL_CLAMP_TO_BORDER,
+	REPEAT = GL_REPEAT
+};
+enum class FilteringMode {
+	LINEAR = GL_LINEAR,
+	NEAREST = GL_NEAREST,
+	LINEAR_MIPMAP_LINEAR = GL_LINEAR_MIPMAP_LINEAR,
+	NEAREST_MIPMAP_NEAREST = GL_NEAREST_MIPMAP_NEAREST,
+	LINEAR_MIPMAP_NEAREST = GL_LINEAR_MIPMAP_NEAREST,
+	NEAREST_MIPMAP_LINEAR = GL_NEAREST_MIPMAP_LINEAR
+};
+
+
+
 
 namespace TextureUnit {
 	static constexpr uint8 DIFFUSE  = 0;
@@ -109,6 +126,7 @@ public:
 		GLCall(glBindTexture(GL_TEXTURE_2D, 0));
 	}
 
+
 public:
 	[[nodiscard]] inline bool IsValid() const noexcept { return m_IsValid; };
 	inline GLuint GetID() const noexcept { return m_ID; };
@@ -182,9 +200,6 @@ public:
 public:
 	void ActivateTextureUnit(GLenum unit) noexcept {
 		GLCall(glActiveTexture(unit));
-	}
-	void SetSamplerState(GLenum texture, GLenum pname, GLenum pvalue) noexcept {
-		GLCall(glTexParameteri(texture, pname, pvalue));
 	}
 
 private:
