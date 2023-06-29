@@ -3,8 +3,12 @@
 
 
 EntityComponentSystem::EntityComponentSystem() noexcept {
+	//Is this even necessary? I could just create a normal object using the function
 	m_MainScene = new GameObject(*this, MAIN_SCENE_OBJECT_ID);
 	m_MainScene->SetName("Scene");
+
+	GameObject* MainCameraObject = &CreateGameObject("MainCamera");
+	m_MainCamera = MainCameraObject->AddComponent<Camera>();
 }
 EntityComponentSystem::~EntityComponentSystem() {
 	//Clean all Gameobjects and Components
@@ -55,6 +59,14 @@ GameObject* EntityComponentSystem::FindGameObject(uint64 objectID) const noexcep
 int32 EntityComponentSystem::FindSpriteRenderer(uint64 objectID) const noexcept {
 	for (uint32 index = 0; index < m_SpriteRenderers.size(); index++) {
 		if (m_SpriteRenderers.at(index)->GetOwnerID() == objectID) {
+			return index;
+		}
+	}
+	return -1;
+}
+int32 EntityComponentSystem::FindCamera(uint64 objectID) const noexcept {
+	for (uint32 index = 0; index < m_Cameras.size(); index++) {
+		if (m_Cameras.at(index)->GetOwnerID() == objectID) {
 			return index;
 		}
 	}

@@ -17,7 +17,7 @@ void GameObject::SetParent(GameObject* parent) noexcept {
 	if (m_Parent->GetObjectID() == MAIN_SCENE_OBJECT_ID && parent == nullptr)
 		return;
 	if (m_Parent->GetObjectID() != MAIN_SCENE_OBJECT_ID && parent == nullptr) {
-		m_Parent = &m_ECS->GetCurrentMainScene();
+		m_Parent = &m_ECS->GetCurrentScene();
 		return;
 	}
 

@@ -192,11 +192,11 @@ struct TextureUV{
 };
 
 namespace Colors {
-	static Color Black   = { 0.0f, 0.0f, 0.0f, 1.0f };
-	static Color White   = { 1.0f, 1.0f, 1.0f, 1.0f };
-	static Color Red     = { 1.0f, 0.0f, 0.0f, 1.0f };
-	static Color Green   = { 0.0f, 1.0f, 0.0f, 1.0f };
-	static Color Blue    = { 0.0f, 0.0f, 1.0f, 1.0f };
-	static Color Magenta = { 1.0f, 0.0f, 1.0f, 1.0f };
-
+	static Color Black    = { 0.0f, 0.0f, 0.0f, 1.0f };
+	static Color White    = { 1.0f, 1.0f, 1.0f, 1.0f };
+	static Color Red      = { 1.0f, 0.0f, 0.0f, 1.0f };
+	static Color Green    = { 0.0f, 1.0f, 0.0f, 1.0f };
+	static Color Blue     = { 0.0f, 0.0f, 1.0f, 1.0f };
+	static Color Magenta  = { 1.0f, 0.0f, 1.0f, 1.0f };
+	static Color PaleGreen = { 0.2f, 0.3f, 0.3f, 1.0f };
 }

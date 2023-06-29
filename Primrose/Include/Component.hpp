@@ -6,12 +6,12 @@
 
 constexpr uint32 INVALID_ID = 0b00000000000000000000000000000000;
 constexpr uint32 SPRITE_COMPONENT_ID = 0b00000000000000000000000000000001;
+constexpr uint32 CAMERA_COMPONENT_ID = 0b00000000000000000000000000000010;
 
 //Move somewhere else or get rid of it
 constexpr uint32 MAIN_SCENE_OBJECT_ID = 0b00000000000000000000000000000001;
 
 
-class SpriteRenderer;
 
 class ComponentBase {
 public:
@@ -166,10 +166,105 @@ private:
 	FilteringMode m_FilteringModeMag = FilteringMode::LINEAR;
 
 private:
-	Square m_Primitive;
+	Cube m_Primitive;
 	VAO* m_VAO = nullptr;
 	VBO* m_VBO = nullptr;
 	EBO* m_EBO = nullptr;
+};
+
+class Camera final : public ComponentBase {
+public:
+	enum class ProjectionType { ORTHOGRAPHIC, PERSPECTIVE };
+
+public:
+	Camera() = delete;
+	Camera(uint64 ownerID)
+		: ComponentBase(ownerID)
+	{
+		//Construct matrices - At least the projection
+
+		UpdateProjectionMatrix();
+
+		ViewMatrix = glm::mat4(1.0f);
+		ViewMatrix = glm::translate(ViewMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
+
+	}
+	~Camera() = default;
+
+	//For now it is not possbile to move or copy components
+	Camera(const Camera& other) = delete;
+	Camera& operator=(const Camera& other) = delete;
+
+	Camera(Camera&& other) = delete;
+	Camera& operator=(Camera&& other) = delete;
+
+public:
+	inline glm::mat4 GetViewMatrix() const noexcept { return ViewMatrix; };
+	inline glm::mat4 GetProjectionMatrix() const noexcept { return ProjectionMatrix; };
+
+	inline ProjectionType GetProjectionType() const noexcept { return m_ProjectionType; };
+	inline float GetWidth() const noexcept { return m_Width; };
+	inline float GetHeight() const noexcept { return m_Height; };
+	inline float GetFOV() const noexcept { return m_FOV; };
+	inline float GetAspectRatio() const noexcept { return m_AspectRatio; };
+	inline float GetNearClipPlane() const noexcept { return m_NearClipPlane; };
+	inline float GetFarClipPlane() const noexcept { return m_FarClipPlane; };
+
+	inline void SetProjectionType(ProjectionType type) { 
+		m_ProjectionType = type; 
+		UpdateProjectionMatrix(); 
+	};
+	inline void SetWidth(float width) { 
+		m_Width = width;
+		if (m_ProjectionType == ProjectionType::ORTHOGRAPHIC)
+			UpdateProjectionMatrix();
+	};
+	inline void SetHeight(float height) { 
+		m_Height = height;
+		if (m_ProjectionType == ProjectionType::ORTHOGRAPHIC)
+			UpdateProjectionMatrix();
+	};
+	inline void SetFOV(float fov) { 
+		//TODO: Set some caps on this
+		m_FOV = fov;
+		if (m_ProjectionType == ProjectionType::PERSPECTIVE)
+			UpdateProjectionMatrix();
+	};
+	inline void SetAspectRatio(float ratio) { 
+		m_AspectRatio = ratio;
+		if (m_ProjectionType == ProjectionType::PERSPECTIVE)
+			UpdateProjectionMatrix();
+	};
+	inline void SetNearClipPlane(float distance) { 
+		m_NearClipPlane = distance; 
+		UpdateProjectionMatrix();
+	};
+	inline void SetFarClipPlane(float distance) { 
+		m_FarClipPlane = distance; 
+		UpdateProjectionMatrix();
+	};
+
+
+private:
+	inline void UpdateProjectionMatrix() {
+		if (m_ProjectionType == ProjectionType::PERSPECTIVE)
+			ProjectionMatrix = glm::perspective(glm::radians(m_FOV), m_AspectRatio, m_NearClipPlane, m_FarClipPlane);
+		else if (m_ProjectionType == ProjectionType::ORTHOGRAPHIC)
+			ProjectionMatrix = glm::ortho(0.0f, m_Width, 0.0f, m_Height, m_NearClipPlane, m_FarClipPlane);
+	}
+
+private:
+	ProjectionType m_ProjectionType = ProjectionType::PERSPECTIVE;
+	float m_Width = 800.0f;
+	float m_Height = 600.0f;
+	float m_FOV = 45.0f;
+	float m_AspectRatio = m_Width / m_Height;
+	float m_NearClipPlane = 0.1f;
+	float m_FarClipPlane = 100.0f;
+
+private:
+	glm::mat4 ViewMatrix;
+	glm::mat4 ProjectionMatrix;
 };
 
 
@@ -179,6 +274,8 @@ namespace Components {
 	inline uint32 GetComponentID() noexcept;
 	template<>
 	inline uint32 GetComponentID<SpriteRenderer>() noexcept { return SPRITE_COMPONENT_ID; }
+	template<>
+	inline uint32 GetComponentID<Camera>() noexcept { return CAMERA_COMPONENT_ID; }
 
 	//TODO: Add Custom Component which is basically a component with no code that can be customized.
 }

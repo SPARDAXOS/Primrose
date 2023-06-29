@@ -29,6 +29,74 @@ struct Square {
 	GLuint m_Indices[6] = {	0, 2, 3,
 							1, 0, 3	};
 };
+struct Cube {
+	//Vertex m_Data[24] = {   //Front
+	//						Position( 0.5f, -0.5f, 0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 0.0f),
+	//						Position(-0.5f, -0.5f, 0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 0.0f),
+	//						Position( 0.5f,  0.5f, 0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 1.0f),
+	//						Position(-0.5f,  0.5f, 0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 1.0f),
+
+	//						//Back
+	//						Position( 0.5f, -0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 0.0f),
+	//						Position(-0.5f, -0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 0.0f),
+	//						Position( 0.5f,  0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 1.0f),
+	//						Position(-0.5f,  0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 1.0f),
+	//
+	//						//Right
+	//						Position(0.5f, -0.5f,  0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 0.0f),
+	//						Position(0.5f, -0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 0.0f),
+	//						Position(0.5f,  0.5f,  0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 1.0f),
+	//						Position(0.5f,  0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 1.0f), 
+	//						
+	//						//Left
+	//						Position(-0.5f, -0.5f,  0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 0.0f),
+	//						Position(-0.5f, -0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 0.0f),
+	//						Position(-0.5f,  0.5f,  0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 1.0f),
+	//						Position(-0.5f,  0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 1.0f),
+	//
+	//						//Up
+	//						Position(-0.5f, 0.5f,  0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 0.0f),
+	//						Position(-0.5f, 0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 0.0f),
+	//						Position( 0.5f, 0.5f,  0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 1.0f),
+	//						Position( 0.5f, 0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 1.0f),
+	//						
+	//						//Down
+	//						Position(-0.5f, -0.5f,  0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 0.0f),
+	//						Position(-0.5f, -0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 0.0f),
+	//						Position( 0.5f, -0.5f,  0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 1.0f),
+	//						Position( 0.5f, -0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 1.0f) };
+
+	Vertex m_Data[8] = {   //FrontSide
+							Position(-0.5f, -0.5f,  0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 0.0f),
+							Position( 0.5f, -0.5f,  0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 0.0f),
+							Position(-0.5f,  0.5f,  0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 1.0f),
+							Position( 0.5f,  0.5f,  0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 1.0f),
+
+							//BackSide
+							Position(-0.5f, -0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 0.0f),
+							Position( 0.5f, -0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 0.0f),
+							Position(-0.5f,  0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 1.0f),
+							Position( 0.5f,  0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 1.0f)	  };
+
+
+	GLuint m_Indices[36] = { 2, 6, 7,
+							 2, 3, 7,
+							
+							 0, 4, 5,
+							 0, 1, 5,
+
+							 0, 2, 6,
+							 0, 4, 6,
+
+							 1, 3, 7,
+							 1, 5, 7,
+
+							 0, 2, 3,
+							 0, 1, 3,
+							
+							 4, 6, 7,
+							 4, 5, 7	};
+};
 
 
 

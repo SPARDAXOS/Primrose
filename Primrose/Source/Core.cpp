@@ -100,12 +100,13 @@ void Core::Run() {
 	GameObjectTest->GetTransform().m_Scale = Vector3f(0.5f, 0.5f, 0.5f);
 
 
-	GameObject* InstansiatedGameObject = &m_ECS->Instantiate(*GameObjectTest);
+	//GameObject* InstansiatedGameObject = &m_ECS->Instantiate(*GameObjectTest);
 	//SpriteRenderer* NewSpriteRenderer 
 		//= InstansiatedGameObject->AddComponent<SpriteRenderer>(); //Will not work cause the flags carried over but not actual components.
 	//NewSpriteRenderer->SetSprite(CreateTexture);
 
-	InstansiatedGameObject->GetTransform().m_Position.m_X *= -1;
+	//InstansiatedGameObject->GetTransform().m_Position.m_X *= -1;
+
 
 	//VBO, VAO, EBO
 	//const Square TestSquare;

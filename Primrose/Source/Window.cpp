@@ -84,7 +84,7 @@ void Window::SetupGLAD() {
     m_GLAD = std::make_unique<GLADResource>();
 }
 void Window::SetupViewport() noexcept {
-    GLCall(glViewport(0, 0, 800, 600));
+    GLCall(glViewport(0, 0, 800, 600)); //TODO: Expose those somehow and make getter and setters
     auto FrameBufferSizeCallback = [](GLFWwindow* window, int width, int height) { glViewport(0, 0, width, height); };
     glfwSetFramebufferSizeCallback(m_Window->m_ptr, FrameBufferSizeCallback);
 }

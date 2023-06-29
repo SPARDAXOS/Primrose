@@ -45,6 +45,18 @@ bool Renderer::Render2D() const {
     ShaderProgramTest.Bind();
 
 
+    //Transformations
+    const glm::mat4 OrthographicMatrix = glm::ortho(0.0f, 800.0f, 0.0f, 600.0f, 0.1f, 100.0f);
+
+
+    glm::mat4 ProjectionMatrix = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+
+    glm::mat4 ViewMatrix = glm::mat4(1.0f);
+    ViewMatrix = glm::translate(ViewMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
+
+
+    glEnable(GL_DEPTH_TEST);
+
     //TODO: Register error message when it happens here!
 
     const uint32 Amount = m_ECSReference->GetComponentsAmount<SpriteRenderer>();
@@ -60,14 +72,23 @@ bool Renderer::Render2D() const {
         GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (GLuint)TargetComponent->GetFilteringModeMag()));
 
 
-
         GameObject* TargetGameObject = m_ECSReference->FindGameObject(TargetComponent->GetOwnerID());
+        Camera* MainCamera = &m_ECSReference->GetMainCamera();
 
-        ShaderProgramTest.SetUniform("uTransform", TargetGameObject->GetTransform().GetMatrix());
+        TargetGameObject->GetTransform().m_Rotation.m_X += 1.0f;
+
+        ShaderProgramTest.SetUniform("uModel", TargetGameObject->GetTransform().GetMatrix());
+        ShaderProgramTest.SetUniform("uView", MainCamera->GetViewMatrix());
+        ShaderProgramTest.SetUniform("uProjection", MainCamera->GetProjectionMatrix());
+
+
+        //Get rest from window and camera? This class might as well have a reference to core
+
+
         ShaderProgramTest.SetUniform("uDiffuse", TextureUnit::DIFFUSE);
 
         const Texture2D* Sprite = TargetComponent->GetSprite();
-        //Sprite->Bind(); WTF
+        //Sprite->Bind(); //WTF
         GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Sprite->GetWidth(), Sprite->GetHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, Sprite->GetData()));
         GLCall(glGenerateMipmap(GL_TEXTURE_2D));
 
@@ -85,8 +106,9 @@ bool Renderer::Render3D() const {
 
 
 void Renderer::Clear() const noexcept {
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    const Color ClearColor = Colors::PaleGreen;
+    GLCall(glClearColor(ClearColor.m_R, ClearColor.m_G, ClearColor.m_B, ClearColor.m_A));
+    GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 }
 void Renderer::SwapBuffers() const {
     m_WindowReference->SwapBuffers(); //Only once its done!
