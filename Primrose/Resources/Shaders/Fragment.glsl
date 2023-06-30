@@ -8,9 +8,11 @@ in vec2 oCoords;
 
 uniform sampler2D uDiffuse;
 
+uniform vec4 uTint;
+
 void main() {
 
 
-	FragColor = texture(uDiffuse, oCoords) * oColor;
+	FragColor = texture(uDiffuse, oCoords) * uTint;
 }
 

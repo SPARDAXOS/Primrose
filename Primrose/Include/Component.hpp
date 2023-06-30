@@ -11,13 +11,13 @@ constexpr uint32 CAMERA_COMPONENT_ID = 0b00000000000000000000000000000010;
 //Move somewhere else or get rid of it
 constexpr uint32 MAIN_SCENE_OBJECT_ID = 0b00000000000000000000000000000001;
 
-
+class GameObject;
 
 class ComponentBase {
 public:
 	ComponentBase() = delete;
-	ComponentBase(uint64 ownerID) noexcept 
-		: m_OwnerID(ownerID)
+	ComponentBase(GameObject& owner, uint64 ownerID) noexcept 
+		: m_Owner(&owner), m_OwnerID(ownerID)
 	{
 	}
 
@@ -26,11 +26,13 @@ public:
 	inline void SetEnabled(bool state) noexcept { m_Enabled = state; };
 	inline bool GetEnabled() const noexcept { return m_Enabled; };
 	inline uint64 GetOwnerID() const noexcept { return m_OwnerID; };
+	inline GameObject* GetOwner() const noexcept { return m_Owner; };
 
 
 protected:
 	bool m_Enabled{ true };
 	uint64 m_OwnerID;
+	GameObject* m_Owner;
 };
 
 class Transform final {
@@ -109,8 +111,8 @@ private:
 class SpriteRenderer final : public ComponentBase {
 public:
 	SpriteRenderer() = delete;
-	SpriteRenderer(uint64 ownerID) noexcept 
-		:	ComponentBase(ownerID)
+	SpriteRenderer(GameObject& owner, uint64 ownerID) noexcept 
+		:	ComponentBase(owner, ownerID)
 	{
 		//TODO: Clean this up. This looks messy!
 		m_VAO = new VAO;
@@ -142,11 +144,13 @@ public:
 
 public:
 	inline void SetSprite(Texture2D* sprite) noexcept { m_Sprite = sprite; }
+	inline void SetTint(Color color) noexcept { m_Tint = color; }
 	inline void SetAddressingMode(AddressingMode s, AddressingMode t) noexcept { m_AddressingModeS = s; m_AddressingModeT = t; }
 	inline void SetFilteringMode(FilteringMode min, FilteringMode mag) noexcept { m_FilteringModeMin = min; m_FilteringModeMag = mag; }
 
 
 	inline Texture2D* GetSprite() const noexcept { return m_Sprite; }
+	inline Color GetTint() const noexcept { return m_Tint; }
 	inline AddressingMode GetAddressingModeS() const noexcept { return m_AddressingModeS; }
 	inline AddressingMode GetAddressingModeT() const noexcept { return m_AddressingModeT; }
 	inline FilteringMode GetFilteringModeMin() const noexcept { return m_FilteringModeMin; }
@@ -158,6 +162,7 @@ public:
 
 private:
 	Texture2D* m_Sprite = nullptr;
+	Color m_Tint = Colors::White;
 
 private:
 	AddressingMode m_AddressingModeS = AddressingMode::REPEAT;
@@ -166,7 +171,7 @@ private:
 	FilteringMode m_FilteringModeMag = FilteringMode::LINEAR;
 
 private:
-	Cube m_Primitive;
+	Cube m_Primitive; //Change to square for 2D
 	VAO* m_VAO = nullptr;
 	VBO* m_VBO = nullptr;
 	EBO* m_EBO = nullptr;
@@ -178,8 +183,8 @@ public:
 
 public:
 	Camera() = delete;
-	Camera(uint64 ownerID)
-		: ComponentBase(ownerID)
+	Camera(GameObject& owner, uint64 ownerID)
+		: ComponentBase(owner, ownerID)
 	{
 		//Construct matrices - At least the projection
 

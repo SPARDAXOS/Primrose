@@ -41,13 +41,6 @@ GameObject& EntityComponentSystem::Instantiate(const GameObject& object) {
 	return *NewGameObject;
 }
 
-bool EntityComponentSystem::DoesGameObjectExist(uint64 objectID) const noexcept {
-	for (auto& x : m_GameObjects) {
-		if (x->GetObjectID() == objectID)
-			return true;
-	}
-	return false;
-}
 GameObject* EntityComponentSystem::FindGameObject(uint64 objectID) const noexcept {
 	for (auto& x : m_GameObjects) {
 		if (x->GetObjectID() == objectID)

@@ -76,6 +76,7 @@ bool Renderer::Render2D() const {
         Camera* MainCamera = &m_ECSReference->GetMainCamera();
 
         TargetGameObject->GetTransform().m_Rotation.m_X += 1.0f;
+        TargetGameObject->GetTransform().m_Rotation.m_Y += 1.0f;
 
         ShaderProgramTest.SetUniform("uModel", TargetGameObject->GetTransform().GetMatrix());
         ShaderProgramTest.SetUniform("uView", MainCamera->GetViewMatrix());
@@ -86,6 +87,8 @@ bool Renderer::Render2D() const {
 
 
         ShaderProgramTest.SetUniform("uDiffuse", TextureUnit::DIFFUSE);
+
+        ShaderProgramTest.SetUniform("uTint", TargetComponent->GetTint());
 
         const Texture2D* Sprite = TargetComponent->GetSprite();
         //Sprite->Bind(); //WTF

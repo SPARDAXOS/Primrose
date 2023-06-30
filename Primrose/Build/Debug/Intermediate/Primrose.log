@@ -1,6 +1,6 @@
-﻿  Core.cpp
-  EntityComponentSystem.cpp
+﻿  EntityComponentSystem.cpp
   GameObject.cpp
+  Core.cpp
   Main.cpp
   Renderer.cpp
   Generating Code...

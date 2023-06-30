@@ -71,33 +71,28 @@ void Core::Run() {
 	//ShaderProgramTest.SetUniform("uDiffuse", TextureUnit::DIFFUSE);
 
 
-	//Creat matrix out of the Translation, Rotation and Scale vectors using this 
 
 	//TODO: when it comes to a HasComponenet() function for the component interface. Every time a component is added or removed, it checks a bit flag that is in the game object.
 	//So HasComponent() simply checks the bit flag whether its 1 or 0 to check if a gameobject has a specific componenet.
 
-	//Transformations
-	//Transform TransformTest;
-	//TransformTest.m_Position = Vector3f(-0.6f, 0.2f, 0.0f);
-	//TransformTest.m_Rotation = Vector3f(0.0f, 0.0f, 90.0f);
-	//TransformTest.m_Scale    = Vector3f(0.5f, 0.5f, 0.5f);
-	//TransformTest.UpdateMatrix();
 
 	//ECS
 	GameObject* GameObjectTest = &m_ECS->CreateGameObject("Test");
-	GameObjectTest->SetName("McLovin");
 	GameObjectTest->AddComponent<SpriteRenderer>();
+	SpriteRenderer* Component = GameObjectTest->GetComponent<SpriteRenderer>();
+	Component->SetSprite(CreateTexture);
+	Component->SetTint(Colors::Red); //TODO: Remove vertex color attribute + clean up shaders + readjust attributes afterwards
+
+
 	//GameObjectTest->HasComponent<SpriteRenderer>();
 	//GameObjectTest->RemoveComponent<SpriteRenderer>();
 	//GameObjectTest->HasComponent<SpriteRenderer>();
 	//GameObjectTest->AddComponent<SpriteRenderer>();
 	//GameObjectTest->HasComponent<SpriteRenderer>();
-	SpriteRenderer* OwnSpriteRenderer = GameObjectTest->GetComponent<SpriteRenderer>();
-	OwnSpriteRenderer->SetSprite(CreateTexture);
-
-	GameObjectTest->GetTransform().m_Position = Vector3f(-0.6f, 0.2f, 0.0f);
-	GameObjectTest->GetTransform().m_Rotation = Vector3f(0.0f, 0.0f, 0.0f);
-	GameObjectTest->GetTransform().m_Scale = Vector3f(0.5f, 0.5f, 0.5f);
+	Transform* GameObjectTransform = &GameObjectTest->GetTransform();
+	GameObjectTransform->m_Position = Vector3f(-0.6f, 0.2f, 0.0f);
+	GameObjectTransform->m_Rotation = Vector3f(0.0f, 0.0f, 0.0f);
+	GameObjectTransform->m_Scale = Vector3f(0.5f, 0.5f, 0.5f);
 
 
 	//GameObject* InstansiatedGameObject = &m_ECS->Instantiate(*GameObjectTest);
@@ -108,29 +103,8 @@ void Core::Run() {
 	//InstansiatedGameObject->GetTransform().m_Position.m_X *= -1;
 
 
-	//VBO, VAO, EBO
-	//const Square TestSquare;
-
-	//VAO TestVAO;
-	//TestVAO.Bind();
-
-	//VBO TestVBO(TestSquare.m_Data, sizeof(TestSquare.m_Data));
-	//EBO TestEBO(TestSquare.m_Indices, sizeof(TestSquare.m_Indices));
-
-	//TestVBO.Bind();
-	//TestEBO.Bind();
-
-	//TestVAO.Unbind();
-	//TestVBO.Unbind();
-	//TestEBO.Unbind();
-
-
 	while (m_Running) {
-		//m_Renderer->Render();
-		//const Vector3f Rotation = GameObjectTest->GetTransform().m_Rotation;
-		//GameObjectTest->GetTransform().m_Rotation = Vector3f(0.0f, 0.0f, Rotation.m_Z + 0.01f);
-		//ShaderProgramTest.SetUniform("uTransform", GameObjectTest->GetTransform().GetMatrix());
-		//m_Renderer->TestRender(TestVAO);
+
 
 		UpdateSystems();
 	}

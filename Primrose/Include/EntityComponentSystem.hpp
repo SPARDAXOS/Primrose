@@ -29,26 +29,28 @@ public:
 	template<>
 	SpriteRenderer* AddComponent<SpriteRenderer>(uint64 objectID) {
 		static_assert(std::is_base_of_v<ComponentBase, SpriteRenderer>); //Makes more sense for the custom components
-		if (!DoesGameObjectExist(objectID))
+		GameObject* ptr = FindGameObject(objectID);
+		if (ptr == nullptr)
 			return nullptr;
 
 		//Check limit on components? Maybe Gameobject side instead. one sounds logical
 
 
-		SpriteRenderer* NewSpriteRenderer = new SpriteRenderer(objectID); //Add index in 
+		SpriteRenderer* NewSpriteRenderer = new SpriteRenderer(*ptr, objectID); //Add index in 
 		m_SpriteRenderers.push_back(NewSpriteRenderer);
 		return NewSpriteRenderer;
 	}
 	template<>
 	Camera* AddComponent<Camera>(uint64 objectID) {
 		static_assert(std::is_base_of_v<ComponentBase, Camera>); //Makes more sense for the custom components
-		if (!DoesGameObjectExist(objectID))
+		GameObject* ptr = FindGameObject(objectID);
+		if (ptr == nullptr)
 			return nullptr;
 
 		//Check limit on components? Maybe Gameobject side instead. one sounds logical
 
 
-		Camera* NewCamera = new Camera(objectID); //Add index in 
+		Camera* NewCamera = new Camera(*ptr, objectID); //Add index in 
 		m_Cameras.push_back(NewCamera);
 		return NewCamera;
 	}
@@ -60,7 +62,7 @@ public:
 	void RemoveComponent(uint64 objectID);
 	template<>
 	void RemoveComponent<SpriteRenderer>(uint64 objectID) noexcept {
-		if (!DoesGameObjectExist(objectID))
+		if (FindGameObject(objectID) == nullptr)
 			return;
 
 		const int32 TargetIndex = FindSpriteRenderer(objectID);
@@ -71,7 +73,7 @@ public:
 	}
 	template<>
 	void RemoveComponent<Camera>(uint64 objectID) noexcept {
-		if (!DoesGameObjectExist(objectID))
+		if (FindGameObject(objectID) == nullptr)
 			return;
 
 		const int32 TargetIndex = FindCamera(objectID);
@@ -88,7 +90,7 @@ public:
 	T* GetComponent(uint64 objectID);
 	template<>
 	SpriteRenderer* GetComponent<SpriteRenderer>(uint64 objectID) {
-		if (!DoesGameObjectExist(objectID))
+		if (FindGameObject(objectID) == nullptr)
 			return nullptr;
 
 		const int32 TargetIndex = FindSpriteRenderer(objectID);
@@ -99,7 +101,7 @@ public:
 	}
 	template<>
 	Camera* GetComponent<Camera>(uint64 objectID) {
-		if (!DoesGameObjectExist(objectID))
+		if (FindGameObject(objectID) == nullptr)
 			return nullptr;
 
 		const int32 TargetIndex = FindCamera(objectID);
@@ -142,10 +144,6 @@ public:
 	inline Camera& GetMainCamera() const noexcept { return *m_MainCamera; };
 
 	GameObject* FindGameObject(uint64 ObjectID) const noexcept;
-
-
-private:
-	bool DoesGameObjectExist(uint64 objectID) const noexcept;
 
 private:
 	int32 FindSpriteRenderer(uint64 objectID) const noexcept;
