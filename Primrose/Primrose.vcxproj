@@ -173,6 +173,7 @@
     <ClInclude Include="Include\GameObject.hpp" />
     <ClInclude Include="Include\GraphicsResources.hpp" />
     <ClInclude Include="Include\GLErrorHandling.hpp" />
+    <ClInclude Include="Include\Inputinator.hpp" />
     <ClInclude Include="Include\Math.hpp" />
     <ClInclude Include="Include\Profiler.hpp" />
     <ClInclude Include="Include\Core.hpp" />
@@ -182,6 +183,7 @@
     <ClInclude Include="Include\ShaderProgram.hpp" />
     <ClInclude Include="Include\Components\SpriteRendererComponent.hpp" />
     <ClInclude Include="Include\TextureStorage.hpp" />
+    <ClInclude Include="Include\Time.hpp" />
     <ClInclude Include="Include\Transform.hpp" />
     <ClInclude Include="Include\Utility.hpp" />
     <ClInclude Include="Include\Window.hpp" />

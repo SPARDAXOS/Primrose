@@ -10,6 +10,7 @@
 #include "TextureStorage.hpp"
 #include "EntityComponentSystem.hpp"
 #include "GameObject.hpp"
+#include "Time.hpp"
 
 #pragma warning(push, 0)
 #include "STB_Image/stb_image.h"
@@ -30,7 +31,7 @@ TODO: Implement ECS
 
 class Core final {
 public:
-	explicit Core();
+	explicit Core() noexcept;
 
 	void Run();
 	void Exit();
@@ -62,4 +63,5 @@ public:
 	std::unique_ptr<Window> m_Window;
 	std::unique_ptr<TextureStorage> m_TextureStorage;
 	std::unique_ptr<EntityComponentSystem> m_ECS;
+	std::unique_ptr<Time> m_Time;
 };

@@ -96,7 +96,7 @@ private:
 
 
 private:
-	bool m_VSync = true;
+	uint8 m_VSync = 1;
 
 private:
 	std::string_view m_VertexShaderFilePath;

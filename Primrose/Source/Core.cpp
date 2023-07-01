@@ -2,7 +2,8 @@
 #include <iostream>
 
 
-Core::Core() {
+
+Core::Core() noexcept {
 
 	//TODO: is error checking needed here? probably not since they throw and i should just let it bubble up.
 
@@ -10,6 +11,7 @@ Core::Core() {
 	m_ECS = std::make_unique<EntityComponentSystem>();
 	m_Window = std::make_unique<Window>();
 	m_Renderer = std::make_unique<Renderer>(*m_ECS.get(), *m_Window.get());
+	m_Time = std::make_unique<Time>();
 }
 
 
@@ -38,9 +40,9 @@ void Core::Run() {
 	//TODO: Implement own image loader! for bitmaps at least own decoder
 	const std::string_view TexturePath = "Resources/Textures/Crate.jpg";
 	const std::string_view TextureName = "Create";
-	Texture2D* CreateTexture;
+	Texture2D* CrateTexture;
 
-	if (!m_TextureStorage->LoadTexture2D(TexturePath, TextureName, CreateTexture))
+	if (!m_TextureStorage->LoadTexture2D(TexturePath, TextureName, CrateTexture))
 		PrintMessage("It failed to load the texture!");
 
 	//CreateTexture->Bind();
@@ -75,12 +77,12 @@ void Core::Run() {
 	//TODO: when it comes to a HasComponenet() function for the component interface. Every time a component is added or removed, it checks a bit flag that is in the game object.
 	//So HasComponent() simply checks the bit flag whether its 1 or 0 to check if a gameobject has a specific componenet.
 
-
+	
 	//ECS
 	GameObject* GameObjectTest = &m_ECS->CreateGameObject("Test");
 	GameObjectTest->AddComponent<SpriteRenderer>();
 	SpriteRenderer* Component = GameObjectTest->GetComponent<SpriteRenderer>();
-	Component->SetSprite(CreateTexture);
+	Component->SetSprite(CrateTexture);
 	Component->SetTint(Colors::Red); //TODO: Remove vertex color attribute + clean up shaders + readjust attributes afterwards
 
 
@@ -104,8 +106,8 @@ void Core::Run() {
 
 
 	while (m_Running) {
-
-
+		std::cout << "FPS: " << m_Time->GetFPS() << std::endl;
+		
 		UpdateSystems();
 	}
 
@@ -128,7 +130,7 @@ void Core::UpdateSystems() {
 		m_Running = false;
 	}
 
-
+	m_Time->Update();
 
 }
 

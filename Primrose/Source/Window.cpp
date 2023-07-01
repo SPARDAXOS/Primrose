@@ -13,7 +13,7 @@ Window::Window() {
     SetupViewport();
     PrintMessage(glGetString(GL_VERSION));
 
-    glfwSwapInterval(m_VSync); //Vsync?
+    glfwSwapInterval(m_VSync); //Vsync? Shouldnt even be a bool
 
     m_VertexShaderFilePath = "Resources/Shaders/Vertex.txt";
     m_FragmentShaderFilePath = "Resources/Shaders/Fragment.txt";
