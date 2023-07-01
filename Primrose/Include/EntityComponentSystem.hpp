@@ -1,9 +1,9 @@
 #pragma once
-#include "Component.hpp"
+#include "Components/SpriteRendererComponent.hpp"
+#include "Components/CameraComponent.hpp"
 #include <vector>
 
 class GameObject;
-
 
 class EntityComponentSystem final {
 public:
@@ -141,7 +141,7 @@ public:
 
 public:
 	inline GameObject& GetCurrentScene() const noexcept { return *m_MainScene; };
-	inline Camera& GetMainCamera() const noexcept { return *m_MainCamera; };
+	inline Camera& GetViewportCamera() const noexcept { return *m_ViewportCamera; };
 
 	GameObject* FindGameObject(uint64 ObjectID) const noexcept;
 
@@ -161,6 +161,23 @@ private:
 
 	//Created or loaded later on
 	GameObject* m_MainScene; 
-	Camera* m_MainCamera;
+	Camera* m_ViewportCamera;
 	uint64 m_CurrentObjectIDIndex = 1;
 };
+
+
+
+namespace Components {
+	//You add new components template specializations here
+	template<typename T>
+	inline uint32 GetComponentID() noexcept;
+
+
+
+	template<>
+	inline uint32 GetComponentID<SpriteRenderer>() noexcept { return SPRITE_COMPONENT_ID; }
+	template<>
+	inline uint32 GetComponentID<Camera>() noexcept { return CAMERA_COMPONENT_ID; }
+
+	//TODO: Add Custom Component which is basically a component with no code that can be customized.
+}

@@ -151,8 +151,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Components\CameraComponent.cpp" />
     <ClCompile Include="Source\EntityComponentSystem.cpp" />
     <ClCompile Include="Source\GameObject.cpp" />
+    <ClCompile Include="Source\Components\SpriteRendererComponent.cpp" />
     <ClCompile Include="Source\STB_Image.cpp" />
     <ClCompile Include="Source\Core.cpp" />
     <ClCompile Include="Source\Main.cpp" />
@@ -164,7 +166,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\Includes\STB_Image\STB_Image.h" />
-    <ClInclude Include="Include\Component.hpp" />
+    <ClInclude Include="Include\Components\CameraComponent.hpp" />
+    <ClInclude Include="Include\Components\Component.hpp" />
     <ClInclude Include="Include\EntityComponentSystem.hpp" />
     <ClInclude Include="Include\FileManagment.hpp" />
     <ClInclude Include="Include\GameObject.hpp" />
@@ -177,7 +180,9 @@
     <ClInclude Include="Include\Shader.hpp" />
     <ClInclude Include="Include\ShaderCompiler.hpp" />
     <ClInclude Include="Include\ShaderProgram.hpp" />
+    <ClInclude Include="Include\Components\SpriteRendererComponent.hpp" />
     <ClInclude Include="Include\TextureStorage.hpp" />
+    <ClInclude Include="Include\Transform.hpp" />
     <ClInclude Include="Include\Utility.hpp" />
     <ClInclude Include="Include\Window.hpp" />
   </ItemGroup>

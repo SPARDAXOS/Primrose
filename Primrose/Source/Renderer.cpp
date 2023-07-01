@@ -72,15 +72,37 @@ bool Renderer::Render2D() const {
         GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (GLuint)TargetComponent->GetFilteringModeMag()));
 
 
+        Camera* ViewportCamera = &m_ECSReference->GetViewportCamera();
         GameObject* TargetGameObject = m_ECSReference->FindGameObject(TargetComponent->GetOwnerID());
-        Camera* MainCamera = &m_ECSReference->GetMainCamera();
+        if (TargetGameObject == nullptr)
+            continue;
+        Transform* TargetTransform = &TargetGameObject->GetTransform();
+        glm::mat4 TargetMatrix = TargetTransform->GetMatrix();
 
+
+        //Flipping
+        if (TargetComponent->GetFlipX() || TargetComponent->GetFlipY()) {
+            float ScaleX = TargetTransform->m_Scale.m_X;
+            float ScaleY = TargetTransform->m_Scale.m_Y;
+            float ScaleZ = TargetTransform->m_Scale.m_Z;
+
+            if (TargetComponent->GetFlipX())
+                ScaleX *= -1;
+            if (TargetComponent->GetFlipY())
+                ScaleY *= -1;
+
+            TargetMatrix = glm::translate(TargetMatrix, glm::vec3(ScaleX, ScaleY, ScaleZ));
+        }
+
+
+        //Testing
         TargetGameObject->GetTransform().m_Rotation.m_X += 1.0f;
         TargetGameObject->GetTransform().m_Rotation.m_Y += 1.0f;
 
-        ShaderProgramTest.SetUniform("uModel", TargetGameObject->GetTransform().GetMatrix());
-        ShaderProgramTest.SetUniform("uView", MainCamera->GetViewMatrix());
-        ShaderProgramTest.SetUniform("uProjection", MainCamera->GetProjectionMatrix());
+        //MVP
+        ShaderProgramTest.SetUniform("uModel", TargetGameObject->GetTransform().GetMatrix()); //Construct matrix here instead of getting to apply the flipx anmd y?
+        ShaderProgramTest.SetUniform("uView", ViewportCamera->GetViewMatrix());
+        ShaderProgramTest.SetUniform("uProjection", ViewportCamera->GetProjectionMatrix());
 
 
         //Get rest from window and camera? This class might as well have a reference to core

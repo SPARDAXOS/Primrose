@@ -7,8 +7,8 @@ EntityComponentSystem::EntityComponentSystem() noexcept {
 	m_MainScene = new GameObject(*this, MAIN_SCENE_OBJECT_ID);
 	m_MainScene->SetName("Scene");
 
-	GameObject* MainCameraObject = &CreateGameObject("MainCamera");
-	m_MainCamera = MainCameraObject->AddComponent<Camera>();
+	GameObject* MainCameraObject = &CreateGameObject("ViewportCamera"); //Does it need to be a gameobject? maybe cause the features are reusable?
+	m_ViewportCamera = MainCameraObject->AddComponent<Camera>();
 }
 EntityComponentSystem::~EntityComponentSystem() {
 	//Clean all Gameobjects and Components

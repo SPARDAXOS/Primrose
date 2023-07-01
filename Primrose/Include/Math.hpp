@@ -3,6 +3,7 @@
 #include "GLM/glm.hpp"
 #include "GLM/gtc/matrix_transform.hpp"
 #include "GLM/gtc/type_ptr.hpp"
+#include <math.h>
 #pragma warning(pop)
 
 struct Vector2f {
@@ -173,6 +174,17 @@ struct Vector3f {
 			return true;
 		else
 			return false;
+	}
+
+
+	inline float Length() const noexcept {
+		return sqrtf(((m_X * m_X), (m_Y * m_Y), (m_Z * m_Z)));
+	}
+	inline void Normalize() noexcept {
+		float Length = this->Length();
+		m_X /= Length;
+		m_Y /= Length;
+		m_Z /= Length;
 	}
 };
 struct Vector4f {

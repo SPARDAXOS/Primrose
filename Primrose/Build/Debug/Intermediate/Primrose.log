@@ -1,6 +1,8 @@
-﻿  EntityComponentSystem.cpp
-  GameObject.cpp
+﻿  CameraComponent.cpp
+  SpriteRendererComponent.cpp
   Core.cpp
+  EntityComponentSystem.cpp
+  GameObject.cpp
   Main.cpp
   Renderer.cpp
   Generating Code...
