@@ -11,6 +11,7 @@
 #include "EntityComponentSystem.hpp"
 #include "GameObject.hpp"
 #include "Time.hpp"
+#include "Inputinator.hpp"
 
 #pragma warning(push, 0)
 #include "STB_Image/stb_image.h"
@@ -51,6 +52,27 @@ private:
 private:
 	void RegisterExitMessage(std::string message) noexcept;
 	void PrintExitMessage() noexcept;
+
+	//TODO: move all input code to some other class
+	void UpdateViewportControls();
+
+	double m_LastCursorPositionX;
+	double m_LastCursorPositionY;
+
+	float m_FreeLookSensitivity = 0.1f;
+	float m_ScrollSensitivity = 10.0f;
+
+
+	float m_FreeLookSpeed = 200.0f;
+
+	float m_CameraMovementSpeed = 5.0f;
+	float m_CameraSpeedMax = 7.0f;
+	float m_CameraSpeedMin = 2.0f;
+	float m_CameraSpeedDecrease = 0.01f;
+	float m_CameraSpeedIncrease = 0.01f;
+
+	int32 m_ViewportWidth = 800;
+	int32 m_ViewportHeight = 600;
 
 private:
 	std::string m_ExitMessage;

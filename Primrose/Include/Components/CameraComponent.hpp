@@ -23,8 +23,14 @@ public:
 	Camera& operator=(Camera&& other) = delete;
 
 public:
-	inline glm::mat4 GetViewMatrix() const noexcept { return m_ViewMatrix; };
-	inline glm::mat4 GetProjectionMatrix() const noexcept { return m_ProjectionMatrix; };
+	glm::mat4 GetViewMatrix() noexcept { 
+		UpdateViewMatrix();
+		return m_ViewMatrix; 
+	};
+	glm::mat4 GetProjectionMatrix() noexcept { 
+		UpdateProjectionMatrix();
+		return m_ProjectionMatrix; 
+	};
 
 	inline ProjectionType GetProjectionType() const noexcept { return m_ProjectionType; };
 	inline float GetWidth() const noexcept { return m_Width; };
@@ -68,14 +74,13 @@ public:
 		UpdateProjectionMatrix();
 	};
 
+	void MoveX(float amount) noexcept;
+	void MoveY(float amount) noexcept;
+
 
 private:
-	inline void UpdateProjectionMatrix() {
-		if (m_ProjectionType == ProjectionType::PERSPECTIVE)
-			m_ProjectionMatrix = glm::perspective(glm::radians(m_FOV), m_AspectRatio, m_NearClipPlane, m_FarClipPlane);
-		else if (m_ProjectionType == ProjectionType::ORTHOGRAPHIC)
-			m_ProjectionMatrix = glm::ortho(0.0f, m_Width, 0.0f, m_Height, m_NearClipPlane, m_FarClipPlane);
-	}
+	void UpdateProjectionMatrix();
+	void UpdateViewMatrix();
 
 private:
 	ProjectionType m_ProjectionType = ProjectionType::PERSPECTIVE;
@@ -87,8 +92,14 @@ private:
 	float m_FarClipPlane = 100.0f;
 
 private:
+	float m_Yaw = -90.0f;
+	float m_Roll = 0.0f;
+	float m_Pitch = 0.0f;
+
+private:
 	glm::mat4 m_ViewMatrix;
 	glm::mat4 m_ProjectionMatrix;
 	glm::vec3 m_Right;
 	glm::vec3 m_Up;
+	glm::vec3 m_Forward;
 };

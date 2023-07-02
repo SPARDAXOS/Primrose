@@ -30,7 +30,7 @@ private:
 
 private:
 	void Clear() const noexcept;
-	void SwapBuffers() const;
+	void SwapBuffers() const noexcept;
 
 private:
 	inline void RegisterExitMessage(std::string message) noexcept { m_LastExitMessage = message; };

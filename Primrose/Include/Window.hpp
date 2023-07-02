@@ -12,7 +12,19 @@
 
 class Window final {
 public:
-	explicit Window();
+	Window() = delete;
+	Window(int32 width, int32 height)
+		:	m_Width(width), m_Height(height)
+	{
+		SetupGLFW();
+		SetupOpenGLFlags();
+		CreateWindow();
+		SetupGLAD();
+		SetupViewport();
+		PrintMessage(glGetString(GL_VERSION));
+
+		glfwSwapInterval(m_VSync); //Vsync? Shouldnt even be a bool
+	}
 
 private:
 	struct WindowResource {
@@ -61,11 +73,17 @@ public:
 	[[nodiscard]] bool Update() noexcept;
 
 public:
-	//[[nodiscard]] inline const GLFWwindow& GetWindowResource() const noexcept { return *m_Window.get()->m_ptr; }
-	void SwapBuffers() const;
+	inline void SetWidth(int32 width) noexcept { m_Width = width; UpdateWindowSize(); }
+	inline void SetHeight(int32 height) noexcept {  m_Height = height; UpdateWindowSize(); }
+
+	inline int32 GetWidth() const noexcept { return m_Width; }
+	inline int32 GetHeight() const noexcept { return m_Height; }
+	[[nodiscard]] inline const GLFWwindow& GetWindowResource() const noexcept { return *m_Window.get()->m_ptr; }
+
 
 public:
-	inline std::string GetLastExitMessage() noexcept { return m_LastExitMessage; };
+	inline std::string GetLastExitMessage() const noexcept { return m_LastExitMessage; }
+	inline WindowResource& GetWindowResource() noexcept { return *m_Window.get(); }
 
 
 private:
@@ -79,37 +97,15 @@ private:
 	void ProcessInput();
 
 private:
-	void Clear() noexcept;
+	void UpdateWindowSize() noexcept;
 
 private:
-	inline void RegisterExitMessage(std::string message) noexcept { m_LastExitMessage = message; };
+	inline void RegisterExitMessage(std::string message) noexcept { m_LastExitMessage = message; }
 
 private:
-	void LoadShaders();
-	[[nodiscard]] GLuint CreateShaderProgram();
-	[[nodiscard]] bool LinkToShaderProgram(const GLuint& program, const GLuint& shader);
-	[[nodiscard]] bool LinkShaderProgram(const GLuint& program);
-	void UseShaderProgram(const GLuint& program);
-
-	[[nodiscard]] bool CompileShader(GLenum type, const std::string_view& sourcecode, GLuint& ID);
-	//[[nodiscard]] GLuint CreateShaderProgram(); //How many and which types are they!
-
-
-private:
+	int32 m_Width;
+	int32 m_Height;
 	uint8 m_VSync = 1;
-
-private:
-	std::string_view m_VertexShaderFilePath;
-	std::string_view m_FragmentShaderFilePath;
-
-private:
-	std::string m_VertexShaderSource;
-	std::string m_FragmentShaderSource;
-
-
-private:
-	GLuint m_VertexShader;
-	GLuint m_FragmentShader;
 
 private:
 	GLuint m_DefaultShaderProgram;

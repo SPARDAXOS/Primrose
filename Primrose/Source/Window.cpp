@@ -1,31 +1,6 @@
 #include <Window.hpp>
 #include <iostream>
 
-
-
-Window::Window() {
-
-
-    SetupGLFW();
-    SetupOpenGLFlags();
-    CreateWindow();
-    SetupGLAD();
-    SetupViewport();
-    PrintMessage(glGetString(GL_VERSION));
-
-    glfwSwapInterval(m_VSync); //Vsync? Shouldnt even be a bool
-
-    m_VertexShaderFilePath = "Resources/Shaders/Vertex.txt";
-    m_FragmentShaderFilePath = "Resources/Shaders/Fragment.txt";
-}
-
-void Window::SwapBuffers() const {
-    glfwSwapBuffers(m_Window->m_ptr);
-    //glfwPollEvents(); //There is a change in order now since this happens before the above! maybe
-}
-
-
-
 bool Window::Update() noexcept {
 
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -33,10 +8,9 @@ bool Window::Update() noexcept {
     const bool State = glfwWindowShouldClose(m_Window->m_ptr);
     if (!State) {
         //Do window shit
-        Clear();
         ProcessInput();
 
-        //glfwSwapBuffers(m_Window->m_ptr);
+
         glfwPollEvents();
         return true;
     }
@@ -50,19 +24,13 @@ bool Window::Update() noexcept {
 
 
 void Window::ProcessInput() {
+    //Move somewhere else? Inputinator or something
     if (glfwGetKey(m_Window->m_ptr, GLFW_KEY_ESCAPE)) {
         glfwSetWindowShouldClose(m_Window->m_ptr, true);
     }
 
 
 }
-
-
-void Window::Clear() noexcept {
-    GLCall(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));
-    GLCall(glClear(GL_COLOR_BUFFER_BIT));
-}
-
 
 void Window::CreateWindow() {
     m_Window = std::make_unique<WindowResource>(800, 600, "Primrose", nullptr, nullptr);
@@ -84,7 +52,11 @@ void Window::SetupGLAD() {
     m_GLAD = std::make_unique<GLADResource>();
 }
 void Window::SetupViewport() noexcept {
-    GLCall(glViewport(0, 0, 800, 600)); //TODO: Expose those somehow and make getter and setters
-    auto FrameBufferSizeCallback = [](GLFWwindow* window, int width, int height) { glViewport(0, 0, width, height); };
+    GLCall(glViewport(0, 0, m_Width, m_Height)); 
+    auto FrameBufferSizeCallback = [](GLFWwindow* window, int width, int height) { GLCall(glViewport(0, 0, width, height)); };
+    glfwGetWindowSize(m_Window->m_ptr, &m_Width, &m_Height);
     glfwSetFramebufferSizeCallback(m_Window->m_ptr, FrameBufferSizeCallback);
+}
+void Window::UpdateWindowSize() noexcept {
+    GLCall(glViewport(0, 0, m_Width, m_Height));
 }

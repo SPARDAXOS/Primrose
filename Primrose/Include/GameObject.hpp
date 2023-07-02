@@ -118,7 +118,7 @@ public:
 	inline uint64 GetObjectID() const noexcept { return m_ObjectID; };
 	inline std::string GetName() const noexcept { return m_ObjectName; };
 
-	inline bool IsEnabled() const noexcept { return m_Enabled; };
+	inline bool GetEnabled() const noexcept { return m_Enabled; };
 	inline GameObject* GetParent() const noexcept { return m_Parent; };
 
 	inline Transform& GetTransform() noexcept { return m_Transform; };

@@ -9,7 +9,7 @@ Core::Core() noexcept {
 
 	m_TextureStorage = std::make_unique<TextureStorage>();
 	m_ECS = std::make_unique<EntityComponentSystem>();
-	m_Window = std::make_unique<Window>();
+	m_Window = std::make_unique<Window>(m_ViewportWidth, m_ViewportHeight);
 	m_Renderer = std::make_unique<Renderer>(*m_ECS.get(), *m_Window.get());
 	m_Time = std::make_unique<Time>();
 }
@@ -41,20 +41,20 @@ void Core::Run() {
 	const std::string_view TexturePath = "Resources/Textures/Crate.jpg";
 	const std::string_view TextureName = "Create";
 	Texture2D* CrateTexture;
-
+	
 	if (!m_TextureStorage->LoadTexture2D(TexturePath, TextureName, CrateTexture))
-		PrintMessage("It failed to load the texture!");
-
+	PrintMessage("It failed to load the texture!");
+	
 	//CreateTexture->Bind();
 	m_TextureStorage->ActivateTextureUnit(GL_TEXTURE0);
-
+	
 	//New Planned Features
 	//Materials - Some default ones like lit, unlit
 	//Use ShaderCompiler again to load shaders using specific params
 	//Using the params, the parser will parse specific parts of shaders by shaking for markers ###Bloom Skip: X
 	//It will load parts of the shader depending on the params
 	//It will save it so next time something wants a shader with these params, it will look if they are saved and return that same shader
-
+	
 	//Renderer takes a material
 
 
@@ -62,29 +62,28 @@ void Core::Run() {
 	//For magnifying and minifying textures - When texture is smaller than object or bigger than object!
 	//GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)); // For mipmaps. Cuase gets smaller while the magnifying doesnt use mipmaps so dont use it!
 	//GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-
+	
 	//GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, CreateTexture->GetWidth(), CreateTexture->GetHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, CreateTexture->GetData()));
 	//Image data might not be needed after this!
 	//GLCall(glGenerateMipmap(GL_TEXTURE_2D));
-
+	
 	//CreateTexture->Unbind();
-
+	
 	//Should be when shader program is created. ? idk anymore
 	//ShaderProgramTest.SetUniform("uDiffuse", TextureUnit::DIFFUSE);
-
-
-
+	
+	
+	
 	//TODO: when it comes to a HasComponenet() function for the component interface. Every time a component is added or removed, it checks a bit flag that is in the game object.
 	//So HasComponent() simply checks the bit flag whether its 1 or 0 to check if a gameobject has a specific componenet.
-
+	
 	
 	//ECS
 	GameObject* GameObjectTest = &m_ECS->CreateGameObject("Test");
 	GameObjectTest->AddComponent<SpriteRenderer>();
 	SpriteRenderer* Component = GameObjectTest->GetComponent<SpriteRenderer>();
 	Component->SetSprite(CrateTexture);
-	Component->SetTint(Colors::Red); //TODO: Remove vertex color attribute + clean up shaders + readjust attributes afterwards
-
+	//Component->SetTint(Colors::Red); //TODO: Remove vertex color attribute + clean up shaders + readjust attributes afterwards
 
 	//GameObjectTest->HasComponent<SpriteRenderer>();
 	//GameObjectTest->RemoveComponent<SpriteRenderer>();
@@ -95,22 +94,22 @@ void Core::Run() {
 	GameObjectTransform->m_Position = Vector3f(-0.6f, 0.2f, 0.0f);
 	GameObjectTransform->m_Rotation = Vector3f(0.0f, 0.0f, 0.0f);
 	GameObjectTransform->m_Scale = Vector3f(0.5f, 0.5f, 0.5f);
-
-
+	
+	
 	//GameObject* InstansiatedGameObject = &m_ECS->Instantiate(*GameObjectTest);
 	//SpriteRenderer* NewSpriteRenderer 
 		//= InstansiatedGameObject->AddComponent<SpriteRenderer>(); //Will not work cause the flags carried over but not actual components.
 	//NewSpriteRenderer->SetSprite(CreateTexture);
-
+	
 	//InstansiatedGameObject->GetTransform().m_Position.m_X *= -1;
-
-
+	
+	
 	while (m_Running) {
 		std::cout << "FPS: " << m_Time->GetFPS() << std::endl;
-		
+	
 		UpdateSystems();
 	}
-
+	
 	Exit();
 	//End all operations then clean up
 }
@@ -119,7 +118,7 @@ void Core::Exit() {
 	PrintExitMessage();
 }
 void Core::UpdateSystems() {
-	
+
 	if (!m_Window->Update()) {
 		RegisterExitMessage("Engine closed down.\nReason: " + m_Window->GetLastExitMessage());
 		m_Running = false; //TODO: make cleaner exit method
@@ -132,8 +131,66 @@ void Core::UpdateSystems() {
 
 	m_Time->Update();
 
-}
+	UpdateViewportControls();
 
+}
+void Core::UpdateViewportControls() {
+	GLFWwindow* WindowReference = m_Window->GetWindowResource().m_ptr;
+	Camera* ViewportCamera = &m_ECS->GetViewportCamera();
+	Transform* CameraTransform = &m_ECS->GetViewportCamera().GetOwner()->GetTransform();
+
+	//TODO: add adjustable movement speed using the mouse well like ue!
+
+	if (glfwGetKey(WindowReference, GLFW_KEY_W)){
+		ViewportCamera->MoveY(5.0f * static_cast<float>(m_Time->GetDeltaTime()));
+	}
+	if (glfwGetKey(WindowReference, GLFW_KEY_S)) {
+		ViewportCamera->MoveY((5.0f * static_cast<float>(m_Time->GetDeltaTime())) * -1);
+	}
+	if (glfwGetKey(WindowReference, GLFW_KEY_A)) {
+		ViewportCamera->MoveX((5.0f * static_cast<float>(m_Time->GetDeltaTime())) * -1);
+	}
+	if (glfwGetKey(WindowReference, GLFW_KEY_D)) {
+		ViewportCamera->MoveX(5.0f * static_cast<float>(m_Time->GetDeltaTime()));
+	}
+	if (glfwGetKey(WindowReference, GLFW_KEY_E)) {
+		CameraTransform->m_Position.m_Y += 20.0f * static_cast<float>(m_Time->GetDeltaTime());
+	}
+	if (glfwGetKey(WindowReference, GLFW_KEY_Q)) {
+		CameraTransform->m_Position.m_Y -= 20.0f * static_cast<float>(m_Time->GetDeltaTime());
+	}
+
+	//Move this somewhere else
+	glfwSetInputMode(WindowReference, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+	//Look
+	double X;
+	double Y;
+	glfwGetCursorPos(WindowReference, &X, &Y);
+
+	const float XResults = static_cast<float>(X - m_LastCursorPositionX);
+	const float YResults = static_cast<float>(m_LastCursorPositionY - Y); //Reversed cause Up is minus, Down is plus.
+
+	if (XResults >= m_FreeLookSensitivity) {
+		CameraTransform->m_Rotation.m_Y += m_FreeLookSpeed * static_cast<float>(m_Time->GetDeltaTime());
+	}
+	else if (XResults <= -m_FreeLookSensitivity) {
+		CameraTransform->m_Rotation.m_Y -= m_FreeLookSpeed * static_cast<float>(m_Time->GetDeltaTime());
+	}
+	if (YResults >= m_FreeLookSensitivity) {
+		CameraTransform->m_Rotation.m_X += m_FreeLookSpeed * static_cast<float>(m_Time->GetDeltaTime());
+	}
+	else if (YResults <= -m_FreeLookSensitivity) {
+		CameraTransform->m_Rotation.m_X -= m_FreeLookSpeed * static_cast<float>(m_Time->GetDeltaTime());
+	}
+
+	m_LastCursorPositionX = X;
+	m_LastCursorPositionY = Y;
+
+	//Scroll Wheel
+
+	
+}
 
 void Core::RegisterExitMessage(std::string message) noexcept {
 	m_ExitMessage = message;

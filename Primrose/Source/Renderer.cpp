@@ -45,17 +45,7 @@ bool Renderer::Render2D() const {
     ShaderProgramTest.Bind();
 
 
-    //Transformations
-    const glm::mat4 OrthographicMatrix = glm::ortho(0.0f, 800.0f, 0.0f, 600.0f, 0.1f, 100.0f);
-
-
-    glm::mat4 ProjectionMatrix = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
-
-    glm::mat4 ViewMatrix = glm::mat4(1.0f);
-    ViewMatrix = glm::translate(ViewMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
-
-
-    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_DEPTH_TEST); //TODO: move somewhere else
 
     //TODO: Register error message when it happens here!
 
@@ -63,35 +53,51 @@ bool Renderer::Render2D() const {
     for (uint32 index = 0; index < Amount; index++) {
         //TODO: Check for nullness
 
+
         const SpriteRenderer* TargetComponent = m_ECSReference->GetComponentForUpdate<SpriteRenderer>();
+        if (TargetComponent == nullptr)
+            continue;
+        if (!TargetComponent->GetEnabled())
+            continue;
+        GameObject* TargetGameObject = m_ECSReference->FindGameObject(TargetComponent->GetOwnerID());
+        if (TargetGameObject == nullptr)
+            continue;
+        if (!TargetGameObject->GetEnabled())
+            continue;
 
-
+        //Texture
         GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (GLuint)TargetComponent->GetAddressingModeS()));
         GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (GLuint)TargetComponent->GetAddressingModeT()));
         GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (GLuint)TargetComponent->GetFilteringModeMin()));
         GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (GLuint)TargetComponent->GetFilteringModeMag()));
 
+        const Texture2D* Sprite = TargetComponent->GetSprite();
+        //Sprite->Bind(); //WTF Check why this doesnt matter whether its called or not to render!
+        GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Sprite->GetWidth(), Sprite->GetHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, Sprite->GetData()));
+        GLCall(glGenerateMipmap(GL_TEXTURE_2D));
 
-        Camera* ViewportCamera = &m_ECSReference->GetViewportCamera();
-        GameObject* TargetGameObject = m_ECSReference->FindGameObject(TargetComponent->GetOwnerID());
-        if (TargetGameObject == nullptr)
-            continue;
+        ShaderProgramTest.SetUniform("uDiffuse", TextureUnit::DIFFUSE);
+        ShaderProgramTest.SetUniform("uTint", TargetComponent->GetTint());
+
+
         Transform* TargetTransform = &TargetGameObject->GetTransform();
         glm::mat4 TargetMatrix = TargetTransform->GetMatrix();
 
-
-        //Flipping
+        //Flipping - Needs to be done before MVP
         if (TargetComponent->GetFlipX() || TargetComponent->GetFlipY()) {
             float ScaleX = TargetTransform->m_Scale.m_X;
             float ScaleY = TargetTransform->m_Scale.m_Y;
-            float ScaleZ = TargetTransform->m_Scale.m_Z;
 
             if (TargetComponent->GetFlipX())
                 ScaleX *= -1;
+            else
+                ScaleX = 0;
             if (TargetComponent->GetFlipY())
                 ScaleY *= -1;
+            else
+                ScaleY = 0;
 
-            TargetMatrix = glm::translate(TargetMatrix, glm::vec3(ScaleX, ScaleY, ScaleZ));
+            TargetMatrix = glm::scale(TargetMatrix, glm::vec3(ScaleX, ScaleY, 0.0f)); //This is kinda sus
         }
 
 
@@ -100,22 +106,12 @@ bool Renderer::Render2D() const {
         TargetGameObject->GetTransform().m_Rotation.m_Y += 1.0f;
 
         //MVP
-        ShaderProgramTest.SetUniform("uModel", TargetGameObject->GetTransform().GetMatrix()); //Construct matrix here instead of getting to apply the flipx anmd y?
+        Camera* ViewportCamera = &m_ECSReference->GetViewportCamera();
+
+        ShaderProgramTest.SetUniform("uModel", TargetMatrix); //Construct matrix here instead of getting to apply the flipx anmd y?
         ShaderProgramTest.SetUniform("uView", ViewportCamera->GetViewMatrix());
         ShaderProgramTest.SetUniform("uProjection", ViewportCamera->GetProjectionMatrix());
 
-
-        //Get rest from window and camera? This class might as well have a reference to core
-
-
-        ShaderProgramTest.SetUniform("uDiffuse", TextureUnit::DIFFUSE);
-
-        ShaderProgramTest.SetUniform("uTint", TargetComponent->GetTint());
-
-        const Texture2D* Sprite = TargetComponent->GetSprite();
-        //Sprite->Bind(); //WTF
-        GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Sprite->GetWidth(), Sprite->GetHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, Sprite->GetData()));
-        GLCall(glGenerateMipmap(GL_TEXTURE_2D));
 
         TargetComponent->GetVAO()->Bind();
         GLCall(glDrawElements(GL_TRIANGLES, TargetComponent->GetEBO()->GetCount(), GL_UNSIGNED_INT, nullptr));
@@ -135,6 +131,6 @@ void Renderer::Clear() const noexcept {
     GLCall(glClearColor(ClearColor.m_R, ClearColor.m_G, ClearColor.m_B, ClearColor.m_A));
     GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 }
-void Renderer::SwapBuffers() const {
-    m_WindowReference->SwapBuffers(); //Only once its done!
+void Renderer::SwapBuffers() const noexcept {
+    glfwSwapBuffers(m_WindowReference->GetWindowResource().m_ptr);
 }

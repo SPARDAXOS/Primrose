@@ -9,7 +9,10 @@
 struct Vector2f {
 	float m_X, m_Y;
 
-	Vector2f() = delete;
+	Vector2f() noexcept
+		: m_X(0.0f), m_Y(0.0f)
+	{
+	}
 	Vector2f(float value) noexcept
 		: m_X(value), m_Y(value)
 	{
@@ -89,15 +92,22 @@ struct Vector2f {
 	}
 };
 struct Vector3f {
-	float m_X, m_Y, m_Z;
+	float m_X, m_Y, m_Z = 0.0f;
 
-	Vector3f() = delete;
+	Vector3f() noexcept
+		: m_X(0.0f), m_Y(0.0f), m_Z(0.0f)
+	{
+	}
 	Vector3f(float value) noexcept
 		: m_X(value), m_Y(value), m_Z(value)
 	{
 	}
 	Vector3f(float x, float y, float z) noexcept
 		: m_X(x), m_Y(y), m_Z(z)
+	{
+	}
+	Vector3f(glm::vec3 vector) noexcept
+		: m_X(vector.x), m_Y(vector.y), m_Z(vector.z)
 	{
 	}
 
@@ -159,6 +169,12 @@ struct Vector3f {
 		return Vector3f(m_X - rhs, m_Y - rhs, m_Z - rhs);
 	}
 
+	void operator+=(const Vector3f& other) noexcept {
+		m_X += other.m_X;
+		m_Y += other.m_Y;
+		m_Z += other.m_Z;
+	}
+
 	bool operator==(const Vector3f& rhs) const noexcept {
 		if (m_X != rhs.m_X)
 			return false;
@@ -181,7 +197,7 @@ struct Vector3f {
 		return sqrtf(((m_X * m_X), (m_Y * m_Y), (m_Z * m_Z)));
 	}
 	inline void Normalize() noexcept {
-		float Length = this->Length();
+		const float Length = this->Length();
 		m_X /= Length;
 		m_Y /= Length;
 		m_Z /= Length;
