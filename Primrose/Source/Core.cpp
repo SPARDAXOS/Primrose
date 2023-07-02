@@ -12,11 +12,11 @@ Core::Core() noexcept {
 	m_Window = std::make_unique<Window>(m_ViewportWidth, m_ViewportHeight);
 	m_Renderer = std::make_unique<Renderer>(*m_ECS.get(), *m_Window.get());
 	m_Time = std::make_unique<Time>();
+	m_Input = std::make_unique<Inputinator>(*m_Window.get()->GetWindowResource().m_ptr);
 }
+void Core::SetupCore() { // Sounds like 2 step initialization. I could however use it for stuff like cursor pos first capture.
 
-
-void Core::SetupCore() { // Sounds like 2 step initialization
-
+	glfwGetCursorPos(m_Window.get()->GetWindowResource().m_ptr, &m_LastCursorPositionX, &m_LastCursorPositionY);
 }
 
 
@@ -24,17 +24,6 @@ void Core::Run() {
 	//Run all operations before simply updating the systems in a loop
 	m_Running = true;
 
-
-	//Shaders
-	//Shader VertexShader(GL_VERTEX_SHADER, "Resources/Shaders/Vertex.glsl");
-	//Shader FragmentShader(GL_FRAGMENT_SHADER, "Resources/Shaders/Fragment.glsl");
-
-	//ShaderProgram ShaderProgramTest;
-	//ShaderProgramTest.AttachShader(VertexShader);
-	//ShaderProgramTest.AttachShader(FragmentShader);
-	//if (!ShaderProgramTest.LinkShaderProgram())
-	//	PrintMessage("LinkShaderProgram Failed");
-	//ShaderProgramTest.Bind();
 
 	//Textures
 	//TODO: Implement own image loader! for bitmaps at least own decoder
@@ -74,8 +63,6 @@ void Core::Run() {
 	
 	
 	
-	//TODO: when it comes to a HasComponenet() function for the component interface. Every time a component is added or removed, it checks a bit flag that is in the game object.
-	//So HasComponent() simply checks the bit flag whether its 1 or 0 to check if a gameobject has a specific componenet.
 	
 	
 	//ECS
@@ -102,10 +89,9 @@ void Core::Run() {
 	//NewSpriteRenderer->SetSprite(CreateTexture);
 	
 	//InstansiatedGameObject->GetTransform().m_Position.m_X *= -1;
-	
+	SetupCore();
 	
 	while (m_Running) {
-		std::cout << "FPS: " << m_Time->GetFPS() << std::endl;
 	
 		UpdateSystems();
 	}
@@ -134,34 +120,39 @@ void Core::UpdateSystems() {
 	UpdateViewportControls();
 
 }
-void Core::UpdateViewportControls() {
-	GLFWwindow* WindowReference = m_Window->GetWindowResource().m_ptr;
+void Core::UpdateViewportControls() noexcept {
+
 	Camera* ViewportCamera = &m_ECS->GetViewportCamera();
-	Transform* CameraTransform = &m_ECS->GetViewportCamera().GetOwner()->GetTransform();
+	if (ViewportCamera == nullptr)
+		return;
 
-	//TODO: add adjustable movement speed using the mouse well like ue!
+	GLFWwindow* WindowReference = m_Window->GetWindowResource().m_ptr;
+	const float DeltaTime = static_cast<float>(m_Time->GetDeltaTime());
 
+	std::cout << "X: " << ViewportCamera->GetOwner()->GetTransform().m_Rotation.m_X
+		<< " " << "Y: " << ViewportCamera->GetOwner()->GetTransform().m_Rotation.m_Y
+		<< " " << "Z: " << ViewportCamera->GetOwner()->GetTransform().m_Rotation.m_Z << std::endl;
+
+	
 	if (glfwGetKey(WindowReference, GLFW_KEY_W)){
-		ViewportCamera->MoveY(5.0f * static_cast<float>(m_Time->GetDeltaTime()));
+		ViewportCamera->MoveY(m_CameraMovementSpeed * DeltaTime);
 	}
 	if (glfwGetKey(WindowReference, GLFW_KEY_S)) {
-		ViewportCamera->MoveY((5.0f * static_cast<float>(m_Time->GetDeltaTime())) * -1);
+		ViewportCamera->MoveY((m_CameraMovementSpeed * DeltaTime) * -1);
 	}
 	if (glfwGetKey(WindowReference, GLFW_KEY_A)) {
-		ViewportCamera->MoveX((5.0f * static_cast<float>(m_Time->GetDeltaTime())) * -1);
+		ViewportCamera->MoveX((m_CameraMovementSpeed * DeltaTime) * -1);
 	}
 	if (glfwGetKey(WindowReference, GLFW_KEY_D)) {
-		ViewportCamera->MoveX(5.0f * static_cast<float>(m_Time->GetDeltaTime()));
+		ViewportCamera->MoveX(m_CameraMovementSpeed * DeltaTime);
 	}
 	if (glfwGetKey(WindowReference, GLFW_KEY_E)) {
-		CameraTransform->m_Position.m_Y += 20.0f * static_cast<float>(m_Time->GetDeltaTime());
+		ViewportCamera->MoveVertical(m_CameraMovementSpeed * DeltaTime);
 	}
 	if (glfwGetKey(WindowReference, GLFW_KEY_Q)) {
-		CameraTransform->m_Position.m_Y -= 20.0f * static_cast<float>(m_Time->GetDeltaTime());
+		ViewportCamera->MoveVertical((m_CameraMovementSpeed * DeltaTime) * -1);
 	}
 
-	//Move this somewhere else
-	glfwSetInputMode(WindowReference, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	//Look
 	double X;
@@ -171,25 +162,34 @@ void Core::UpdateViewportControls() {
 	const float XResults = static_cast<float>(X - m_LastCursorPositionX);
 	const float YResults = static_cast<float>(m_LastCursorPositionY - Y); //Reversed cause Up is minus, Down is plus.
 
-	if (XResults >= m_FreeLookSensitivity) {
-		CameraTransform->m_Rotation.m_Y += m_FreeLookSpeed * static_cast<float>(m_Time->GetDeltaTime());
-	}
-	else if (XResults <= -m_FreeLookSensitivity) {
-		CameraTransform->m_Rotation.m_Y -= m_FreeLookSpeed * static_cast<float>(m_Time->GetDeltaTime());
-	}
-	if (YResults >= m_FreeLookSensitivity) {
-		CameraTransform->m_Rotation.m_X += m_FreeLookSpeed * static_cast<float>(m_Time->GetDeltaTime());
-	}
-	else if (YResults <= -m_FreeLookSensitivity) {
-		CameraTransform->m_Rotation.m_X -= m_FreeLookSpeed * static_cast<float>(m_Time->GetDeltaTime());
-	}
+	//Make funcs for those
+	if (XResults >= m_FreeLookSensitivity)
+		ViewportCamera->RotateY(m_FreeLookSpeed * DeltaTime * XResults);
+	else if (XResults <= -m_FreeLookSensitivity)
+		ViewportCamera->RotateY((m_FreeLookSpeed * DeltaTime * -XResults) * -1);
+
+	if (YResults >= m_FreeLookSensitivity)
+		ViewportCamera->RotateX(m_FreeLookSpeed * DeltaTime * YResults);
+	else if (YResults <= -m_FreeLookSensitivity)
+		ViewportCamera->RotateX((m_FreeLookSpeed * DeltaTime * -YResults) * -1);
 
 	m_LastCursorPositionX = X;
 	m_LastCursorPositionY = Y;
 
-	//Scroll Wheel
 
-	
+	//Scroll Wheel
+	if (ScrollCapture::ScrollY > 0.0f) {
+		m_CameraMovementSpeed += m_CameraSpeedIncrease * DeltaTime;
+		if (m_CameraMovementSpeed > m_CameraSpeedMax)
+			m_CameraMovementSpeed = m_CameraSpeedMax;
+		ScrollCapture::ScrollY = 0; //Reset it for next frame
+	}
+	else if (ScrollCapture::ScrollY < 0.0f) {
+		m_CameraMovementSpeed -= m_CameraSpeedDecrease * DeltaTime;
+		if (m_CameraMovementSpeed < m_CameraSpeedMin)
+			m_CameraMovementSpeed = m_CameraSpeedMin;
+		ScrollCapture::ScrollY = 0; //Reset it for next frame
+	}
 }
 
 void Core::RegisterExitMessage(std::string message) noexcept {

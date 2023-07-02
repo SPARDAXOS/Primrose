@@ -33,10 +33,10 @@ void Window::ProcessInput() {
 }
 
 void Window::CreateWindow() {
-    m_Window = std::make_unique<WindowResource>(800, 600, "Primrose", nullptr, nullptr);
+    m_Window = std::make_unique<WindowResource>(m_Width, m_Height, "Primrose", nullptr, nullptr);
     if (m_Window->m_ptr == nullptr) {
-            glfwTerminate();
-            throw std::runtime_error("GLFW failed to create window");
+        glfwTerminate();
+        throw std::runtime_error("GLFW failed to create window");
     }
     glfwMakeContextCurrent(m_Window->m_ptr);
 }

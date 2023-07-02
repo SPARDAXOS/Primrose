@@ -54,22 +54,20 @@ private:
 	void PrintExitMessage() noexcept;
 
 	//TODO: move all input code to some other class
-	void UpdateViewportControls();
+	void UpdateViewportControls() noexcept;
 
+	//TODO: make function in inputinator that retunrs differens betwenn last 2 frames
 	double m_LastCursorPositionX;
 	double m_LastCursorPositionY;
 
 	float m_FreeLookSensitivity = 0.1f;
-	float m_ScrollSensitivity = 10.0f;
-
-
-	float m_FreeLookSpeed = 200.0f;
+	float m_FreeLookSpeed = 10.0f;
 
 	float m_CameraMovementSpeed = 5.0f;
-	float m_CameraSpeedMax = 7.0f;
-	float m_CameraSpeedMin = 2.0f;
-	float m_CameraSpeedDecrease = 0.01f;
-	float m_CameraSpeedIncrease = 0.01f;
+	float m_CameraSpeedMax = 10.0f;
+	float m_CameraSpeedMin = 1.0f;
+	float m_CameraSpeedDecrease = 20.0f;
+	float m_CameraSpeedIncrease = 20.0f;
 
 	int32 m_ViewportWidth = 800;
 	int32 m_ViewportHeight = 600;
@@ -86,4 +84,5 @@ public:
 	std::unique_ptr<TextureStorage> m_TextureStorage;
 	std::unique_ptr<EntityComponentSystem> m_ECS;
 	std::unique_ptr<Time> m_Time;
+	std::unique_ptr<Inputinator> m_Input;
 };

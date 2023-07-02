@@ -74,8 +74,15 @@ public:
 		UpdateProjectionMatrix();
 	};
 
-	void MoveX(float amount) noexcept;
+	//Make axis param instead?
+	void MoveX(float amount);
 	void MoveY(float amount) noexcept;
+	void MoveVertical(float amount) noexcept;
+	void RotateX(float amount) noexcept;
+	void RotateY(float amount) noexcept;
+
+
+	void UpdateVectors() noexcept;
 
 
 private:
