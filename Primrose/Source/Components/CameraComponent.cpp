@@ -48,6 +48,7 @@ void Camera::MoveY(float amount) noexcept {
 void Camera::MoveVertical(float amount) noexcept {
 	Transform* OwnerTransform = &m_Owner->GetTransform();
 	OwnerTransform->m_Position += Vector3f(0.0f, 1.0f, 0.0f) * amount;
+	UpdateVectors();
 }
 void Camera::RotateX(float amount) noexcept {
 	Transform* OwnerTransform = &m_Owner->GetTransform();

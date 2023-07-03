@@ -14,9 +14,8 @@ Core::Core() noexcept {
 	m_Time = std::make_unique<Time>();
 	m_Input = std::make_unique<Inputinator>(*m_Window.get()->GetWindowResource().m_ptr);
 }
-void Core::SetupCore() { // Sounds like 2 step initialization. I could however use it for stuff like cursor pos first capture.
+void Core::SetupCore() { // Sounds like 2 step initialization.
 
-	glfwGetCursorPos(m_Window.get()->GetWindowResource().m_ptr, &m_LastCursorPositionX, &m_LastCursorPositionY);
 }
 
 
@@ -120,75 +119,77 @@ void Core::UpdateSystems() {
 	UpdateViewportControls();
 
 }
-void Core::UpdateViewportControls() noexcept {
+void Core::UpdateViewportControls() {
+	
+
+	if (m_Input->GetMouseKey(MouseKeyCode::RIGHT) && !m_ViewportNavigationMode) {
+
+		m_ViewportNavigationMode = true;
+		m_Input->SetMouseInputMode(MouseMode::DISABLED);
+	}
+	else if (!m_Input->GetMouseKey(MouseKeyCode::RIGHT) && m_ViewportNavigationMode) {
+		m_ViewportNavigationMode = false;
+		m_Input->SetMouseInputMode(MouseMode::NORMAL);
+	}
+
+
+	if (!m_ViewportNavigationMode) {
+		return;
+	}
 
 	Camera* ViewportCamera = &m_ECS->GetViewportCamera();
 	if (ViewportCamera == nullptr)
 		return;
 
-	GLFWwindow* WindowReference = m_Window->GetWindowResource().m_ptr;
 	const float DeltaTime = static_cast<float>(m_Time->GetDeltaTime());
 
-	std::cout << "X: " << ViewportCamera->GetOwner()->GetTransform().m_Rotation.m_X
-		<< " " << "Y: " << ViewportCamera->GetOwner()->GetTransform().m_Rotation.m_Y
-		<< " " << "Z: " << ViewportCamera->GetOwner()->GetTransform().m_Rotation.m_Z << std::endl;
-
 	
-	if (glfwGetKey(WindowReference, GLFW_KEY_W)){
+	if (m_Input->GetKey(Keycode::W)){
 		ViewportCamera->MoveY(m_CameraMovementSpeed * DeltaTime);
 	}
-	if (glfwGetKey(WindowReference, GLFW_KEY_S)) {
+	if (m_Input->GetKey(Keycode::S)) {
 		ViewportCamera->MoveY((m_CameraMovementSpeed * DeltaTime) * -1);
 	}
-	if (glfwGetKey(WindowReference, GLFW_KEY_A)) {
+	if (m_Input->GetKey(Keycode::A)) {
 		ViewportCamera->MoveX((m_CameraMovementSpeed * DeltaTime) * -1);
 	}
-	if (glfwGetKey(WindowReference, GLFW_KEY_D)) {
+	if (m_Input->GetKey(Keycode::D)) {
 		ViewportCamera->MoveX(m_CameraMovementSpeed * DeltaTime);
 	}
-	if (glfwGetKey(WindowReference, GLFW_KEY_E)) {
+	if (m_Input->GetKey(Keycode::E)) {
 		ViewportCamera->MoveVertical(m_CameraMovementSpeed * DeltaTime);
 	}
-	if (glfwGetKey(WindowReference, GLFW_KEY_Q)) {
+	if (m_Input->GetKey(Keycode::Q)) {
 		ViewportCamera->MoveVertical((m_CameraMovementSpeed * DeltaTime) * -1);
 	}
 
+	const Vector2f CursorDelta = m_Input->GetMouseCursorDelta();
 
-	//Look
-	double X;
-	double Y;
-	glfwGetCursorPos(WindowReference, &X, &Y);
 
-	const float XResults = static_cast<float>(X - m_LastCursorPositionX);
-	const float YResults = static_cast<float>(m_LastCursorPositionY - Y); //Reversed cause Up is minus, Down is plus.
-
+	//TODO: Camera look feels a bit janky and sometimes i feel like it bugs out. Debug it.
 	//Make funcs for those
-	if (XResults >= m_FreeLookSensitivity)
-		ViewportCamera->RotateY(m_FreeLookSpeed * DeltaTime * XResults);
-	else if (XResults <= -m_FreeLookSensitivity)
-		ViewportCamera->RotateY((m_FreeLookSpeed * DeltaTime * -XResults) * -1);
+	if (CursorDelta.m_X >= m_FreeLookSensitivity)
+		ViewportCamera->RotateY(m_FreeLookSpeed * DeltaTime * CursorDelta.m_X);
+	else if (CursorDelta.m_X <= -m_FreeLookSensitivity)
+		ViewportCamera->RotateY((m_FreeLookSpeed * DeltaTime * -CursorDelta.m_X) * -1);
 
-	if (YResults >= m_FreeLookSensitivity)
-		ViewportCamera->RotateX(m_FreeLookSpeed * DeltaTime * YResults);
-	else if (YResults <= -m_FreeLookSensitivity)
-		ViewportCamera->RotateX((m_FreeLookSpeed * DeltaTime * -YResults) * -1);
+	if (CursorDelta.m_Y >= m_FreeLookSensitivity)
+		ViewportCamera->RotateX(m_FreeLookSpeed * DeltaTime * CursorDelta.m_Y);
+	else if (CursorDelta.m_Y <= -m_FreeLookSensitivity)
+		ViewportCamera->RotateX((m_FreeLookSpeed * DeltaTime * -CursorDelta.m_Y) * -1);
 
-	m_LastCursorPositionX = X;
-	m_LastCursorPositionY = Y;
-
+	const float ScrollDelta = m_Input->GetScrollDelta();
 
 	//Scroll Wheel
-	if (ScrollCapture::ScrollY > 0.0f) {
+	if (ScrollDelta > 0.0f) {
 		m_CameraMovementSpeed += m_CameraSpeedIncrease * DeltaTime;
 		if (m_CameraMovementSpeed > m_CameraSpeedMax)
 			m_CameraMovementSpeed = m_CameraSpeedMax;
-		ScrollCapture::ScrollY = 0; //Reset it for next frame
 	}
-	else if (ScrollCapture::ScrollY < 0.0f) {
+	else if (ScrollDelta < 0.0f) {
 		m_CameraMovementSpeed -= m_CameraSpeedDecrease * DeltaTime;
 		if (m_CameraMovementSpeed < m_CameraSpeedMin)
 			m_CameraMovementSpeed = m_CameraSpeedMin;
-		ScrollCapture::ScrollY = 0; //Reset it for next frame
 	}
 }
 

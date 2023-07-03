@@ -54,7 +54,7 @@ private:
 	void PrintExitMessage() noexcept;
 
 	//TODO: move all input code to some other class
-	void UpdateViewportControls() noexcept;
+	void UpdateViewportControls();
 
 	//TODO: make function in inputinator that retunrs differens betwenn last 2 frames
 	double m_LastCursorPositionX;
@@ -68,6 +68,8 @@ private:
 	float m_CameraSpeedMin = 1.0f;
 	float m_CameraSpeedDecrease = 20.0f;
 	float m_CameraSpeedIncrease = 20.0f;
+
+	bool m_ViewportNavigationMode = false;
 
 	int32 m_ViewportWidth = 800;
 	int32 m_ViewportHeight = 600;

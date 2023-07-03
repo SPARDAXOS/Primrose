@@ -21,6 +21,10 @@ struct Vector2f {
 		: m_X(X), m_Y(Y)
 	{
 	}
+	Vector2f(glm::vec2 vector) noexcept
+		: m_X(vector.x), m_Y(vector.y)
+	{
+	}
 
 	~Vector2f() = default;
 	Vector2f(const Vector2f& other) noexcept {
@@ -50,45 +54,59 @@ struct Vector2f {
 		}
 	}
 
-	Vector2f operator*(const Vector2f& rhs) noexcept {
-		return Vector2f(m_X * rhs.m_X, m_Y * rhs.m_Y);
+	Vector2f operator*(const Vector2f& other) noexcept {
+		return Vector2f(m_X * other.m_X, m_Y * other.m_Y);
 	}
-	Vector2f operator/(const Vector2f& rhs) noexcept {
-		return Vector2f(m_X / rhs.m_X, m_Y / rhs.m_Y);
+	Vector2f operator/(const Vector2f& other) noexcept {
+		return Vector2f(m_X / other.m_X, m_Y / other.m_Y);
 	}
-	Vector2f operator+(const Vector2f& rhs) noexcept {
-		return Vector2f(m_X + rhs.m_X, m_Y + rhs.m_Y);
+	Vector2f operator+(const Vector2f& other) noexcept {
+		return Vector2f(m_X + other.m_X, m_Y + other.m_Y);
 	}
-	Vector2f operator-(const Vector2f& rhs) noexcept {
-		return Vector2f(m_X - rhs.m_X, m_Y - rhs.m_Y);
-	}
-
-	Vector2f operator*(const float& rhs) noexcept {
-		return Vector2f(m_X * rhs, m_Y * rhs);
-	}
-	Vector2f operator/(const float& rhs) noexcept {
-		return Vector2f(m_X / rhs, m_Y / rhs);
-	}
-	Vector2f operator+(const float& rhs) noexcept {
-		return Vector2f(m_X + rhs, m_Y + rhs);
-	}
-	Vector2f operator-(const float& rhs) noexcept {
-		return Vector2f(m_X - rhs, m_Y - rhs);
+	Vector2f operator-(const Vector2f& other) noexcept {
+		return Vector2f(m_X - other.m_X, m_Y - other.m_Y);
 	}
 
-	bool operator==(const Vector2f& rhs) const noexcept {
-		if (m_X != rhs.m_X)
+	Vector2f operator*(const float& other) noexcept {
+		return Vector2f(m_X * other, m_Y * other);
+	}
+	Vector2f operator/(const float& other) noexcept {
+		return Vector2f(m_X / other, m_Y / other);
+	}
+	Vector2f operator+(const float& other) noexcept {
+		return Vector2f(m_X + other, m_Y + other);
+	}
+	Vector2f operator-(const float& other) noexcept {
+		return Vector2f(m_X - other, m_Y - other);
+	}
+
+	void operator+=(const Vector2f& other) noexcept {
+		m_X += other.m_X;
+		m_Y += other.m_Y;
+	}
+
+	bool operator==(const Vector2f& other) const noexcept {
+		if (m_X != other.m_X)
 			return false;
-		else if (m_Y != rhs.m_Y)
+		else if (m_Y != other.m_Y)
 			return false;
 		else
 			return true;
 	}
-	bool operator!=(const Vector2f& rhs) const noexcept {
-		if (!(*this == rhs))
+	bool operator!=(const Vector2f& other) const noexcept {
+		if (!(*this == other))
 			return true;
 		else
 			return false;
+	}
+
+	inline float Length() const noexcept {
+		return sqrtf(((m_X * m_X), (m_Y * m_Y)));
+	}
+	inline void Normalize() noexcept {
+		const float Length = this->Length();
+		m_X /= Length;
+		m_Y /= Length;
 	}
 };
 struct Vector3f {
@@ -112,7 +130,6 @@ struct Vector3f {
 	}
 
 	~Vector3f() = default;
-
 	Vector3f(const Vector3f& other) noexcept {
 		*this = other;
 	}
@@ -127,7 +144,6 @@ struct Vector3f {
 			return *this;
 		}
 	}
-
 	Vector3f(Vector3f&& other) noexcept {
 		*this = std::move(other);
 	}
@@ -143,30 +159,30 @@ struct Vector3f {
 		}
 	}
 
-	Vector3f operator*(const Vector3f& rhs) noexcept {
-		return Vector3f(m_X * rhs.m_X, m_Y * rhs.m_Y, m_Z * rhs.m_Z);
+	Vector3f operator*(const Vector3f& other) noexcept {
+		return Vector3f(m_X * other.m_X, m_Y * other.m_Y, m_Z * other.m_Z);
 	}
-	Vector3f operator/(const Vector3f& rhs) noexcept {
-		return Vector3f(m_X / rhs.m_X, m_Y / rhs.m_Y, m_Z / rhs.m_Z);
+	Vector3f operator/(const Vector3f& other) noexcept {
+		return Vector3f(m_X / other.m_X, m_Y / other.m_Y, m_Z / other.m_Z);
 	}
-	Vector3f operator+(const Vector3f& rhs) noexcept {
-		return Vector3f(m_X + rhs.m_X, m_Y + rhs.m_Y, m_Z + rhs.m_Z);
+	Vector3f operator+(const Vector3f& other) noexcept {
+		return Vector3f(m_X + other.m_X, m_Y + other.m_Y, m_Z + other.m_Z);
 	}
-	Vector3f operator-(const Vector3f& rhs) noexcept {
-		return Vector3f(m_X - rhs.m_X, m_Y - rhs.m_Y, m_Z - rhs.m_Z);
+	Vector3f operator-(const Vector3f& other) noexcept {
+		return Vector3f(m_X - other.m_X, m_Y - other.m_Y, m_Z - other.m_Z);
 	}
 
-	Vector3f operator*(const float& rhs) noexcept {
-		return Vector3f(m_X * rhs, m_Y * rhs, m_Z * rhs);
+	Vector3f operator*(const float& other) noexcept {
+		return Vector3f(m_X * other, m_Y * other, m_Z * other);
 	}
-	Vector3f operator/(const float& rhs) noexcept {
-		return Vector3f(m_X / rhs, m_Y / rhs, m_Z / rhs);
+	Vector3f operator/(const float& other) noexcept {
+		return Vector3f(m_X / other, m_Y / other, m_Z / other);
 	}
-	Vector3f operator+(const float& rhs) noexcept {
-		return Vector3f(m_X + rhs, m_Y + rhs, m_Z + rhs);
+	Vector3f operator+(const float& other) noexcept {
+		return Vector3f(m_X + other, m_Y + other, m_Z + other);
 	}
-	Vector3f operator-(const float& rhs) noexcept {
-		return Vector3f(m_X - rhs, m_Y - rhs, m_Z - rhs);
+	Vector3f operator-(const float& other) noexcept {
+		return Vector3f(m_X - other, m_Y - other, m_Z - other);
 	}
 
 	void operator+=(const Vector3f& other) noexcept {
@@ -175,18 +191,18 @@ struct Vector3f {
 		m_Z += other.m_Z;
 	}
 
-	bool operator==(const Vector3f& rhs) const noexcept {
-		if (m_X != rhs.m_X)
+	bool operator==(const Vector3f& other) const noexcept {
+		if (m_X != other.m_X)
 			return false;
-		else if (m_Y != rhs.m_Y)
+		else if (m_Y != other.m_Y)
 			return false;
-		else if (m_Z != rhs.m_Z)
+		else if (m_Z != other.m_Z)
 			return false;
 		else
 			return true;
 	}
-	bool operator!=(const Vector3f& rhs) const noexcept {
-		if (!(*this == rhs))
+	bool operator!=(const Vector3f& other) const noexcept {
+		if (!(*this == other))
 			return true;
 		else
 			return false;
