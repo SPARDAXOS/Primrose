@@ -97,7 +97,8 @@ enum class Keycode {
 	LEFT_BRACKET = GLFW_KEY_LEFT_BRACKET,
 	GRAVE_ACCENT = GLFW_KEY_GRAVE_ACCENT,
 	RIGHT_SUPER = GLFW_KEY_RIGHT_SUPER,
-	LEFT_SUPER = GLFW_KEY_LEFT_SUPER
+	LEFT_SUPER = GLFW_KEY_LEFT_SUPER,
+	ESCAPE = GLFW_KEY_ESCAPE
 };
 enum class MouseKeyCode {
 
@@ -158,6 +159,14 @@ public:
 	};
 
 
+public:
+	[[nodiscard]] bool Update() {
+		if (GetKey(Keycode::ESCAPE)) {
+			glfwSetWindowShouldClose(m_WindowReference, true);
+		}
+
+		return true;
+	}
 
 public:
 	bool GetKey(Keycode key) const noexcept {
@@ -170,9 +179,14 @@ public:
 		if (m_CurrentMouseMode != MouseMode::DISABLED && mode == MouseMode::DISABLED) {
 			m_LastCursorPositionX = CursorCapture::CursorX;
 			m_LastCursorPositionY = CursorCapture::CursorY;
+			std::cout << "#UYX" << std::endl;
 		}
+		//m_LastCursorPositionX = CursorCapture::CursorX;
+		//m_LastCursorPositionY = CursorCapture::CursorY;
 		glfwSetInputMode(m_WindowReference, GLFW_CURSOR, static_cast<int>(mode));
 	}
+
+	inline std::string GetLastExitMessage() const noexcept { return m_LastExitMessage; }
 
 public:
 	Vector2f GetMouseCursorDelta() noexcept { 
@@ -201,11 +215,15 @@ public:
 	}
 
 private:
+	inline void RegisterExitMessage(std::string message) noexcept { m_LastExitMessage = message; }
+
+private:
 	bool m_FirstCursorCapture = true;
 	double m_LastCursorPositionX;
 	double m_LastCursorPositionY;
 
 private:
+	std::string m_LastExitMessage;
 	MouseMode m_CurrentMouseMode = MouseMode::NORMAL;
 	GLFWwindow* m_WindowReference;
 };

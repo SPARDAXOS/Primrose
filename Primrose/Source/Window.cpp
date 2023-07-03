@@ -7,8 +7,6 @@ bool Window::Update() noexcept {
 
     const bool State = glfwWindowShouldClose(m_Window->m_ptr);
     if (!State) {
-        //Do window shit
-        ProcessInput();
 
 
         glfwPollEvents();
@@ -20,16 +18,6 @@ bool Window::Update() noexcept {
         glfwTerminate();
         return false;
     }
-}
-
-
-void Window::ProcessInput() {
-    //Move somewhere else? Inputinator or something
-    if (glfwGetKey(m_Window->m_ptr, GLFW_KEY_ESCAPE)) {
-        glfwSetWindowShouldClose(m_Window->m_ptr, true);
-    }
-
-
 }
 
 void Window::CreateWindow() {

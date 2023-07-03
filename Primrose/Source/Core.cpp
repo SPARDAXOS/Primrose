@@ -108,31 +108,39 @@ void Core::UpdateSystems() {
 		RegisterExitMessage("Engine closed down.\nReason: " + m_Window->GetLastExitMessage());
 		m_Running = false; //TODO: make cleaner exit method
 	}
-
 	if (!m_Renderer->Update()) {
 		RegisterExitMessage("Engine closed down.\nReason: " + m_Renderer->GetLastExitMessage());
+		m_Running = false;
+	}
+	if (!m_Input->Update()) {
+		RegisterExitMessage("Engine closed down.\nReason: " + m_Input->GetLastExitMessage());
+		m_Running = false;
+	}
+	if (!m_ECS->Update()) {
+		RegisterExitMessage("Engine closed down.\nReason: " + m_ECS->GetLastExitMessage());
 		m_Running = false;
 	}
 
 	m_Time->Update();
 
 	UpdateViewportControls();
-
 }
 void Core::UpdateViewportControls() {
 	
-
+	//still fucks up
 	if (m_Input->GetMouseKey(MouseKeyCode::RIGHT) && !m_ViewportNavigationMode) {
 
 		m_ViewportNavigationMode = true;
 		m_Input->SetMouseInputMode(MouseMode::DISABLED);
+		std::cout << "active" << std::endl;
 	}
 	else if (!m_Input->GetMouseKey(MouseKeyCode::RIGHT) && m_ViewportNavigationMode) {
 		m_ViewportNavigationMode = false;
 		m_Input->SetMouseInputMode(MouseMode::NORMAL);
+		std::cout << "Unactive" << std::endl;
 	}
-
-
+	
+	
 	if (!m_ViewportNavigationMode) {
 		return;
 	}

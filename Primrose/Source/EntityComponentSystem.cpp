@@ -14,11 +14,26 @@ EntityComponentSystem::~EntityComponentSystem() {
 	//Clean all Gameobjects and Components
 }
 
+[[nodiscard]] bool EntityComponentSystem::Update() const {
+
+	for (auto& Object : m_GameObjects) {
+		if (Object->GetEnabled()) {
+			if (!Object->GetStarted())
+				Object->Start();
+
+			Object->Update();
+		}
+	}
+
+	return true;
+}
+
 
 GameObject& EntityComponentSystem::CreateGameObject() {
 	//Creats one simply
 	GameObject* NewGameObject = new GameObject(*this, m_CurrentObjectIDIndex);
 	NewGameObject->SetParent(m_MainScene);
+	NewGameObject->Awake();
 	m_GameObjects.push_back(NewGameObject);
 	m_CurrentObjectIDIndex++;
 	return *NewGameObject;
@@ -28,6 +43,7 @@ GameObject& EntityComponentSystem::CreateGameObject(const std::string& name) {
 	GameObject* NewGameObject = new GameObject(*this, m_CurrentObjectIDIndex);
 	NewGameObject->SetParent(m_MainScene);
 	NewGameObject->SetName(name);
+	NewGameObject->Awake();
 	m_GameObjects.push_back(NewGameObject);
 	m_CurrentObjectIDIndex++;
 	return *NewGameObject;
@@ -36,6 +52,7 @@ GameObject& EntityComponentSystem::Instantiate(const GameObject& object) {
 	//Compies
 	GameObject* NewGameObject = new GameObject(*this, m_CurrentObjectIDIndex);
 	*NewGameObject = object;
+	NewGameObject->Awake();
 	m_GameObjects.push_back(NewGameObject);
 	m_CurrentObjectIDIndex++;
 	return *NewGameObject;

@@ -94,9 +94,6 @@ private:
 	void SetupViewport() noexcept;
 
 private:
-	void ProcessInput();
-
-private:
 	void UpdateWindowSize() noexcept;
 
 private:

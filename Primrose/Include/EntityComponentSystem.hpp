@@ -21,6 +21,9 @@ public:
 	GameObject& CreateGameObject();
 	GameObject& CreateGameObject(const std::string& name);
 	GameObject& Instantiate(const GameObject& object);
+
+public:
+	[[nodiscard]] bool Update() const;
 	
 
 public:
@@ -140,6 +143,7 @@ public:
 
 
 public:
+	inline std::string GetLastExitMessage() const noexcept { return m_LastExitMessage; }
 	inline GameObject& GetCurrentScene() const noexcept { return *m_MainScene; };
 	inline Camera& GetViewportCamera() const noexcept { return *m_ViewportCamera; };
 
@@ -150,6 +154,9 @@ private:
 	int32 FindCamera(uint64 objectID) const noexcept;
 
 private:
+	inline void RegisterExitMessage(std::string message) noexcept { m_LastExitMessage = message; }
+
+private:
 	uint32  m_SpriteRenderersUpdateIndex = 0;
 
 
@@ -157,6 +164,9 @@ private:
 	std::vector<GameObject*> m_GameObjects;
 	std::vector<SpriteRenderer*> m_SpriteRenderers;
 	std::vector<Camera*> m_Cameras;
+
+private:
+	std::string m_LastExitMessage;
 
 
 	//Created or loaded later on

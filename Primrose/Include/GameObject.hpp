@@ -10,7 +10,7 @@ public:
 		:	m_ECS(&ecs), m_ObjectID(id)
 	{
 	}
-	~GameObject() {
+	virtual ~GameObject() {
 		//Call ECS to clean up?
 	}
 
@@ -29,6 +29,7 @@ public:
 			this->m_ComponentFlags = other.m_ComponentFlags; //TODO: Make sure to check the flags and add the needed components by calling ECS
 			this->m_ObjectName = other.m_ObjectName + " (Clone)";
 			
+			//Note: m_Started is not copyable or assignable
 
 			return *this;
 		}
@@ -48,6 +49,8 @@ public:
 			this->m_Parent = std::move(other.m_Parent);
 			this->m_ComponentFlags = std::move(other.m_ComponentFlags); //TODO: Make sure to check the flags and COPY THE OWNERSHIP of the needed components by calling ECS
 			this->m_ObjectName = std::move(other.m_ObjectName + " (Clone)");
+
+			//Note: m_Started is not copyable or assignable
 			return *this;
 		}
 	}
@@ -56,6 +59,18 @@ public:
 		if (this->m_ObjectID == rhs.m_ObjectID)
 			return true;
 		return false;
+	}
+
+public:
+	virtual void Awake() {
+
+	}
+	virtual void Start() {
+		m_Started = true;
+
+	}
+	virtual void Update() {
+
 	}
 
 
@@ -115,13 +130,14 @@ public:
 
 public:
 
-	inline uint64 GetObjectID() const noexcept { return m_ObjectID; };
-	inline std::string GetName() const noexcept { return m_ObjectName; };
+	inline uint64 GetObjectID() const noexcept { return m_ObjectID; }
+	inline std::string GetName() const noexcept { return m_ObjectName; }
 
-	inline bool GetEnabled() const noexcept { return m_Enabled; };
-	inline GameObject* GetParent() const noexcept { return m_Parent; };
+	inline bool GetEnabled() const noexcept { return m_Enabled; }
+	inline bool GetStarted() const noexcept { return m_Started; }
+	inline GameObject* GetParent() const noexcept { return m_Parent; }
 
-	inline Transform& GetTransform() noexcept { return m_Transform; };
+	inline Transform& GetTransform() noexcept { return m_Transform; }
 
 
 	void SetName(std::string name) noexcept;
@@ -131,7 +147,8 @@ public:
 
 private:
 	bool m_Enabled{ true };
-	bool m_Static{ false };
+	bool m_Static{ false }; //Not Implemented yet
+	bool m_Started{ false };
 
 private:
 	Transform m_Transform;
