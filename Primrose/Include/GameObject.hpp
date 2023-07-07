@@ -49,7 +49,7 @@ public:
 			this->m_Parent = std::move(other.m_Parent);
 			this->m_ComponentFlags = std::move(other.m_ComponentFlags); //TODO: Make sure to check the flags and COPY THE OWNERSHIP of the needed components by calling ECS
 			this->m_ObjectName = std::move(other.m_ObjectName + " (Clone)");
-
+			//hmm
 			//Note: m_Started is not copyable or assignable
 			return *this;
 		}
@@ -63,7 +63,7 @@ public:
 
 public:
 	virtual void Awake() {
-
+		
 	}
 	virtual void Start() {
 		m_Started = true;
