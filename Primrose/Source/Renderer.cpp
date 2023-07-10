@@ -46,6 +46,9 @@ bool Renderer::Render2D() const {
 
 
     glEnable(GL_DEPTH_TEST); //TODO: move somewhere else
+    glEnable(GL_BLEND); //TODO: move somewhere else
+
+    //glBlendEquation();
 
     //TODO: Register error message when it happens here!
 
@@ -70,6 +73,10 @@ bool Renderer::Render2D() const {
         GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (GLuint)TargetComponent->GetAddressingModeT()));
         GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (GLuint)TargetComponent->GetFilteringModeMin()));
         GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (GLuint)TargetComponent->GetFilteringModeMag()));
+
+        //Blending
+        GLCall(glBlendFunc((GLuint)TargetComponent->GetSourceBlendMode(), (GLuint)TargetComponent->GetDestinationBlendMode()));
+        GLCall(glBlendEquation((GLuint)TargetComponent->GetBlendEquation()));
 
         const Texture2D* Sprite = TargetComponent->GetSprite();
         //Sprite->Bind(); //WTF Check why this doesnt matter whether its called or not to render!

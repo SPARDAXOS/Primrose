@@ -25,6 +25,10 @@ public:
 	inline void SetFlipX(bool state) noexcept { m_FlipX = state; }
 	inline void SetFlipY(bool state) noexcept { m_FlipY = state; }
 
+	inline void SetBlendEquation(BlendEquation equation) noexcept { m_BlendEquation = equation; }
+	inline void SetSourceBlendMode(SourceBlendMode mode) noexcept { m_SourceBlendMode = mode; }
+	inline void SetDestinationBlendMode(DestinationBlendMode mode) noexcept { m_DestinationBlendMode = mode; }
+
 	inline void SetAddressingMode(AddressingMode s, AddressingMode t) noexcept { m_AddressingModeS = s; m_AddressingModeT = t; }
 	inline void SetFilteringMode(FilteringMode min, FilteringMode mag) noexcept { m_FilteringModeMin = min; m_FilteringModeMag = mag; }
 
@@ -34,6 +38,9 @@ public:
 	inline bool GetFlipX() const noexcept { return m_FlipX; }
 	inline bool GetFlipY() const noexcept { return m_FlipY; }
 
+	inline BlendEquation GetBlendEquation() const noexcept { return m_BlendEquation; }
+	inline SourceBlendMode GetSourceBlendMode() const noexcept { return m_SourceBlendMode; }
+	inline DestinationBlendMode GetDestinationBlendMode() const noexcept { return m_DestinationBlendMode; }
 
 	inline AddressingMode GetAddressingModeS() const noexcept { return m_AddressingModeS; }
 	inline AddressingMode GetAddressingModeT() const noexcept { return m_AddressingModeT; }
@@ -51,6 +58,10 @@ private:
 	bool m_FlipY = false;
 
 private:
+	BlendEquation m_BlendEquation = BlendEquation::ADDITIVE;
+	SourceBlendMode m_SourceBlendMode = SourceBlendMode::SOURCE_ALPHA;
+	DestinationBlendMode m_DestinationBlendMode = DestinationBlendMode::ONE_MINUS_SOURCE_ALPHA;
+
 	AddressingMode m_AddressingModeS = AddressingMode::REPEAT;
 	AddressingMode m_AddressingModeT = AddressingMode::REPEAT;
 	FilteringMode m_FilteringModeMin = FilteringMode::LINEAR_MIPMAP_LINEAR;
