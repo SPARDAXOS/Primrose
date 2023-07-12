@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <cstdio>
 #include <memory>
+#include <thread>
 
 #include "Renderer.hpp"
 #include "Window.hpp"

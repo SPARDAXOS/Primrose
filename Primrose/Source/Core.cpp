@@ -26,6 +26,9 @@ void Core::Run() {
 
 	//Textures
 	//TODO: Implement own image loader! for bitmaps at least own decoder
+
+	//TODO: Maybe switch this up so it returns a texture pointer. The actual texture is stored in the storage so if you attempt to load it again, it will return the 
+	//one from the storage. It checks by path and not name! or?
 	const std::string_view TexturePath = "Resources/Textures/Crate.jpg";
 	const std::string_view TextureName = "Create";
 	Texture2D* CrateTexture;
@@ -104,13 +107,15 @@ void Core::Exit() {
 }
 void Core::UpdateSystems() {
 
+
+	//TODO: Create a pool of threads and manage it by camsizing the allowed threads count depending on the system
+	//Do stuff like joinable checkls and whatever
+
+	m_Time->Update();
+
 	if (!m_Window->Update()) {
 		RegisterExitMessage("Engine closed down.\nReason: " + m_Window->GetLastExitMessage());
 		m_Running = false; //TODO: make cleaner exit method
-	}
-	if (!m_Renderer->Update()) {
-		RegisterExitMessage("Engine closed down.\nReason: " + m_Renderer->GetLastExitMessage());
-		m_Running = false;
 	}
 	if (!m_Input->Update()) {
 		RegisterExitMessage("Engine closed down.\nReason: " + m_Input->GetLastExitMessage());
@@ -120,10 +125,15 @@ void Core::UpdateSystems() {
 		RegisterExitMessage("Engine closed down.\nReason: " + m_ECS->GetLastExitMessage());
 		m_Running = false;
 	}
-
-	m_Time->Update();
+	if (!m_Renderer->Update()) {
+		RegisterExitMessage("Engine closed down.\nReason: " + m_Renderer->GetLastExitMessage());
+		m_Running = false;
+	}
 
 	UpdateViewportControls();
+
+
+	//glfwPollEvents(); //Needs to be outside of the worker thread calls
 }
 void Core::UpdateViewportControls() {
 	

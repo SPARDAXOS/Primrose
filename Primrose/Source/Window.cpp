@@ -26,7 +26,9 @@ void Window::CreateWindow() {
         glfwTerminate();
         throw std::runtime_error("GLFW failed to create window");
     }
-    glfwMakeContextCurrent(m_Window->m_ptr);
+
+    //THIS HERE!
+    //glfwMakeContextCurrent(m_Window->m_ptr);
 }
 void Window::SetupGLFW() {
     m_GLFW = std::make_unique<GLFWResource>();

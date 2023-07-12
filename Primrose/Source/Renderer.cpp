@@ -9,6 +9,7 @@
 
 
 bool Renderer::Update() const {
+
     Clear();
 
     bool RendererStatus = true;

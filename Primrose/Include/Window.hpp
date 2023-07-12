@@ -19,6 +19,7 @@ public:
 		SetupGLFW();
 		SetupOpenGLFlags();
 		CreateWindow();
+		BindOpenGLContext();
 		SetupGLAD();
 		SetupViewport();
 		PrintMessage(glGetString(GL_VERSION));
@@ -84,6 +85,14 @@ public:
 public:
 	inline std::string GetLastExitMessage() const noexcept { return m_LastExitMessage; }
 	inline WindowResource& GetWindowResource() noexcept { return *m_Window.get(); }
+	
+
+	void BindOpenGLContext() {
+		glfwMakeContextCurrent(m_Window->m_ptr);
+	}
+	void UnbindOpenGLContext() {
+		glfwMakeContextCurrent(nullptr);
+	}
 
 
 private:
