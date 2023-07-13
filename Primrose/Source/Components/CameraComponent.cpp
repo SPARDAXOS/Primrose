@@ -53,6 +53,9 @@ void Camera::MoveVertical(float amount) noexcept {
 void Camera::RotateX(float amount) noexcept {
 	Transform* OwnerTransform = &m_Owner->GetTransform();
 	OwnerTransform->m_Rotation.m_X += amount;
+	std::cout << "X " << std::endl;
+
+	//BUG: The math is incorrect!
 
 	if (OwnerTransform->m_Rotation.m_X > 89.0f)
 		OwnerTransform->m_Rotation.m_X = 89.0f;
@@ -64,6 +67,8 @@ void Camera::RotateX(float amount) noexcept {
 void Camera::RotateY(float amount) noexcept {
 	Transform* OwnerTransform = &m_Owner->GetTransform();
 	OwnerTransform->m_Rotation.m_Y += amount;
+
+	std::cout << "Y " << std::endl;
 	UpdateVectors();
 }
 

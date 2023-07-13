@@ -42,7 +42,7 @@ public:
 
 	inline void SetProjectionType(ProjectionType type) {
 		m_ProjectionType = type;
-		UpdateProjectionMatrix();
+		//UpdateProjectionMatrix();
 	};
 	inline void SetWidth(float width) {
 		m_Width = width;

@@ -115,13 +115,13 @@ enum class MouseKeyCode {
 	BUTTON_7 = GLFW_MOUSE_BUTTON_7,
 	BUTTON_8 = GLFW_MOUSE_BUTTON_8,
 };
-
 enum class MouseMode {
 
 	NORMAL = GLFW_CURSOR_NORMAL,
 	HIDDEN = GLFW_CURSOR_HIDDEN,
 	DISABLED = GLFW_CURSOR_DISABLED
 };
+
 
 namespace ScrollCapture {
 
@@ -154,6 +154,9 @@ public:
 			CursorCapture::CursorY = yoffset;
 		};
 		glfwSetCursorPosCallback(m_WindowReference, CursorCapture);
+		if (glfwRawMouseMotionSupported()) {
+			glfwSetInputMode(m_WindowReference, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+		}
 
 		SetMouseInputMode(m_CurrentMouseMode);
 	};
@@ -161,6 +164,8 @@ public:
 
 public:
 	[[nodiscard]] bool Update() {
+
+		//TODO: move to window probably or something. Its a bit weird here
 		if (GetKey(Keycode::ESCAPE)) {
 			glfwSetWindowShouldClose(m_WindowReference, true);
 		}
@@ -176,13 +181,12 @@ public:
 		return glfwGetMouseButton(m_WindowReference, static_cast<int>(key));
 	}
 	void SetMouseInputMode(MouseMode mode) noexcept {
-		if (m_CurrentMouseMode != MouseMode::DISABLED && mode == MouseMode::DISABLED) {
+
+		if (m_CurrentMouseMode != MouseMode::HIDDEN && mode == MouseMode::HIDDEN) {
 			m_LastCursorPositionX = CursorCapture::CursorX;
 			m_LastCursorPositionY = CursorCapture::CursorY;
-			std::cout << "#UYX" << std::endl;
 		}
-		//m_LastCursorPositionX = CursorCapture::CursorX;
-		//m_LastCursorPositionY = CursorCapture::CursorY;
+
 		glfwSetInputMode(m_WindowReference, GLFW_CURSOR, static_cast<int>(mode));
 	}
 
@@ -190,15 +194,6 @@ public:
 
 public:
 	Vector2f GetMouseCursorDelta() noexcept { 
-
-		if (m_FirstCursorCapture) {
-			if (CursorCapture::CursorX == 0.0f && CursorCapture::CursorY == 0.0f)
-				return Vector2f(0.0f);
-
-			m_FirstCursorCapture = false;
-			m_LastCursorPositionX = CursorCapture::CursorX;
-			m_LastCursorPositionY = CursorCapture::CursorY;
-		}
 		
 		Vector2f Results 
 			= { static_cast<float>(CursorCapture::CursorX - m_LastCursorPositionX), static_cast<float>(m_LastCursorPositionY - CursorCapture::CursorY) };
@@ -218,7 +213,6 @@ private:
 	inline void RegisterExitMessage(std::string message) noexcept { m_LastExitMessage = message; }
 
 private:
-	bool m_FirstCursorCapture = true;
 	double m_LastCursorPositionX;
 	double m_LastCursorPositionY;
 

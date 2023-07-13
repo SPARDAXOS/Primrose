@@ -137,19 +137,14 @@ void Core::UpdateSystems() {
 }
 void Core::UpdateViewportControls() {
 	
-	//still fucks up
 	if (m_Input->GetMouseKey(MouseKeyCode::RIGHT) && !m_ViewportNavigationMode) {
-
 		m_ViewportNavigationMode = true;
-		m_Input->SetMouseInputMode(MouseMode::DISABLED);
-		std::cout << "active" << std::endl;
+		m_Input->SetMouseInputMode(MouseMode::HIDDEN);
 	}
 	else if (!m_Input->GetMouseKey(MouseKeyCode::RIGHT) && m_ViewportNavigationMode) {
 		m_ViewportNavigationMode = false;
 		m_Input->SetMouseInputMode(MouseMode::NORMAL);
-		std::cout << "Unactive" << std::endl;
 	}
-	
 	
 	if (!m_ViewportNavigationMode) {
 		return;
@@ -183,17 +178,16 @@ void Core::UpdateViewportControls() {
 
 	const Vector2f CursorDelta = m_Input->GetMouseCursorDelta();
 
-
-	//TODO: Camera look feels a bit janky and sometimes i feel like it bugs out. Debug it.
+	//TODO: Moving the camera and also looking in one direction will break it after a while
 	//Make funcs for those
 	if (CursorDelta.m_X >= m_FreeLookSensitivity)
 		ViewportCamera->RotateY(m_FreeLookSpeed * DeltaTime * CursorDelta.m_X);
-	else if (CursorDelta.m_X <= -m_FreeLookSensitivity)
+	if (CursorDelta.m_X <= -m_FreeLookSensitivity)
 		ViewportCamera->RotateY((m_FreeLookSpeed * DeltaTime * -CursorDelta.m_X) * -1);
 
 	if (CursorDelta.m_Y >= m_FreeLookSensitivity)
 		ViewportCamera->RotateX(m_FreeLookSpeed * DeltaTime * CursorDelta.m_Y);
-	else if (CursorDelta.m_Y <= -m_FreeLookSensitivity)
+	if (CursorDelta.m_Y <= -m_FreeLookSensitivity)
 		ViewportCamera->RotateX((m_FreeLookSpeed * DeltaTime * -CursorDelta.m_Y) * -1);
 
 	const float ScrollDelta = m_Input->GetScrollDelta();
