@@ -16,7 +16,9 @@ bool Renderer::Update() const {
     if (!Render2D() && !Render3D())
         RendererStatus = false;
 
-    SwapBuffers();
+
+    //GUI before buffers are swapped!
+    //SwapBuffers();
 
     return RendererStatus;
 }

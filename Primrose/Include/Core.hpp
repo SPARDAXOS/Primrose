@@ -14,6 +14,10 @@
 #include "Time.hpp"
 #include "Inputinator.hpp"
 
+#include "ImGUI/imgui.h"
+#include "ImGUI/imgui_impl_glfw.h"
+#include "ImGUI/imgui_impl_opengl3.h"
+
 #pragma warning(push, 0)
 #include "STB_Image/stb_image.h"
 #pragma warning(pop)

@@ -62,10 +62,19 @@ void Core::Run() {
 	
 	//Should be when shader program is created. ? idk anymore
 	//ShaderProgramTest.SetUniform("uDiffuse", TextureUnit::DIFFUSE);
+
+
+	//ImGuiContext* GUIContext = ImGui::CreateContext();
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+
+	ImGuiIO& io = ImGui::GetIO();
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;		// IF using Docking Branch
 	
-	
-	
-	
+	ImGui_ImplGlfw_InitForOpenGL(m_Window->GetWindowResource().m_ptr, true);
+	ImGui_ImplOpenGL3_Init();
 	
 	//ECS
 	GameObject* GameObjectTest = &m_ECS->CreateGameObject("Test");
@@ -94,7 +103,7 @@ void Core::Run() {
 	SetupCore();
 	
 	while (m_Running) {
-	
+
 		UpdateSystems();
 	}
 	
@@ -104,6 +113,10 @@ void Core::Run() {
 void Core::Exit() {
 
 	PrintExitMessage();
+
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
 }
 void Core::UpdateSystems() {
 
@@ -113,6 +126,7 @@ void Core::UpdateSystems() {
 
 	m_Time->Update();
 
+	//PollEvents
 	if (!m_Window->Update()) {
 		RegisterExitMessage("Engine closed down.\nReason: " + m_Window->GetLastExitMessage());
 		m_Running = false; //TODO: make cleaner exit method
@@ -125,10 +139,30 @@ void Core::UpdateSystems() {
 		RegisterExitMessage("Engine closed down.\nReason: " + m_ECS->GetLastExitMessage());
 		m_Running = false;
 	}
+
+
+	//Feed input and start GUI frame
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+	ImGui::ShowDemoWindow();
+
+	//Render GUI
+	ImGui::Begin("Demo window");
+	ImGui::Button("Hello!");
+	ImGui::End();
+
 	if (!m_Renderer->Update()) {
 		RegisterExitMessage("Engine closed down.\nReason: " + m_Renderer->GetLastExitMessage());
 		m_Running = false;
 	}
+
+	//Render GUI to screen
+	ImGui::Render();
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+	glfwSwapBuffers(m_Window->GetWindowResource().m_ptr);
+
 
 	UpdateViewportControls();
 
