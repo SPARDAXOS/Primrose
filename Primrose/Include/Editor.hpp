@@ -14,6 +14,7 @@ public:
 	{
 		IMGUI_CHECKVERSION();
 		m_GUIContext = ImGui::CreateContext();
+		m_GUIViewport = ImGui::GetMainViewport();
 
 		m_IO = &ImGui::GetIO();
 		m_IO->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
@@ -61,104 +62,114 @@ private:
 		//I get the selected GameObject from ECS? or Somewhere at least and do all this if its valid
 
 
+		//TODO: Add the ability to reorder these one day
+		//TODO: Move viewport related code to this class
+
+
 		//Render GUI
+		//Note: Will also lock position and size
+		ImGui::SetNextWindowSize(ImVec2(400.0f, m_GUIViewport->Size.y));
+		ImGui::SetNextWindowPos(ImVec2(m_GUIViewport->Size.x - 400.0f, 0.0f));
+
 		ImGui::Begin("Details");
+		if (ImGui::CollapsingHeader("Transform")) {
 
-		ImGui::Text("Position");
+			ImGui::Text("Position");
 
-		ImGui::SameLine(100.0f);
-		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
-		ImGui::Text("X");
-		ImGui::PopStyleColor();
+			ImGui::SameLine(100.0f);
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+			ImGui::Text("X");
+			ImGui::PopStyleColor();
 
-		ImGui::SameLine(120.0f);
-		ImGui::PushItemWidth(50.0F);
-		ImGui::InputFloat("##PX", &m_TransformTest->m_Position.m_X);
+			ImGui::SameLine(120.0f);
+			ImGui::PushItemWidth(50.0F);
+			ImGui::InputFloat("##PX", &m_TransformTest->m_Position.m_X);
 
-		ImGui::SameLine(200.0f);
-		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
-		ImGui::Text("Y");
-		ImGui::PopStyleColor();
+			ImGui::SameLine(200.0f);
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
+			ImGui::Text("Y");
+			ImGui::PopStyleColor();
 
-		ImGui::SameLine(220.0f);
-		ImGui::PushItemWidth(50.0F);
-		ImGui::InputFloat("##PY", &m_TransformTest->m_Position.m_Y);
+			ImGui::SameLine(220.0f);
+			ImGui::PushItemWidth(50.0F);
+			ImGui::InputFloat("##PY", &m_TransformTest->m_Position.m_Y);
 
-		ImGui::SameLine(300.0f);
-		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 1.0f, 1.0f));
-		ImGui::Text("Z");
-		ImGui::PopStyleColor();
+			ImGui::SameLine(300.0f);
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 1.0f, 1.0f));
+			ImGui::Text("Z");
+			ImGui::PopStyleColor();
 
-		ImGui::SameLine(320.0f);
-		ImGui::PushItemWidth(50.0F);
-		ImGui::InputFloat("##PZ", &m_TransformTest->m_Position.m_Z);
-
-
-		ImGui::Text("Rotation");
-
-		ImGui::SameLine(100.0f);
-		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
-		ImGui::Text("X");
-		ImGui::PopStyleColor();
-
-		ImGui::SameLine(120.0f);
-		ImGui::PushItemWidth(50.0F);
-		ImGui::InputFloat("##RX", &m_TransformTest->m_Rotation.m_X);
-
-		ImGui::SameLine(200.0f);
-		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
-		ImGui::Text("Y");
-		ImGui::PopStyleColor();
-
-		ImGui::SameLine(220.0f);
-		ImGui::PushItemWidth(50.0F);
-		ImGui::InputFloat("##RY", &m_TransformTest->m_Rotation.m_Y);
-
-		ImGui::SameLine(300.0f);
-		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 1.0f, 1.0f));
-		ImGui::Text("Z");
-		ImGui::PopStyleColor();
-
-		ImGui::SameLine(320.0f);
-		ImGui::PushItemWidth(50.0F);
-		ImGui::InputFloat("##RZ", &m_TransformTest->m_Rotation.m_Z);
+			ImGui::SameLine(320.0f);
+			ImGui::PushItemWidth(50.0F);
+			ImGui::InputFloat("##PZ", &m_TransformTest->m_Position.m_Z);
 
 
-		ImGui::Text("Scale");
+			ImGui::Text("Rotation");
 
-		ImGui::SameLine(100.0f);
-		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
-		ImGui::Text("X");
-		ImGui::PopStyleColor();
+			ImGui::SameLine(100.0f);
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+			ImGui::Text("X");
+			ImGui::PopStyleColor();
 
-		ImGui::SameLine(120.0f);
-		ImGui::PushItemWidth(50.0F);
-		ImGui::InputFloat("##SX", &m_TransformTest->m_Scale.m_X);
+			ImGui::SameLine(120.0f);
+			ImGui::PushItemWidth(50.0F);
+			ImGui::InputFloat("##RX", &m_TransformTest->m_Rotation.m_X);
 
-		ImGui::SameLine(200.0f);
-		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
-		ImGui::Text("Y");
-		ImGui::PopStyleColor();
+			ImGui::SameLine(200.0f);
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
+			ImGui::Text("Y");
+			ImGui::PopStyleColor();
 
-		ImGui::SameLine(220.0f);
-		ImGui::PushItemWidth(50.0F);
-		ImGui::InputFloat("##SY", &m_TransformTest->m_Scale.m_Y);
+			ImGui::SameLine(220.0f);
+			ImGui::PushItemWidth(50.0F);
+			ImGui::InputFloat("##RY", &m_TransformTest->m_Rotation.m_Y);
 
-		ImGui::SameLine(300.0f);
-		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 1.0f, 1.0f));
-		ImGui::Text("Z");
-		ImGui::PopStyleColor();
+			ImGui::SameLine(300.0f);
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 1.0f, 1.0f));
+			ImGui::Text("Z");
+			ImGui::PopStyleColor();
 
-		ImGui::SameLine(320.0f);
-		ImGui::PushItemWidth(50.0F);
-		ImGui::InputFloat("##SZ", &m_TransformTest->m_Scale.m_Z);
+			ImGui::SameLine(320.0f);
+			ImGui::PushItemWidth(50.0F);
+			ImGui::InputFloat("##RZ", &m_TransformTest->m_Rotation.m_Z);
 
 
-		//ImGui::PopStyleColor();
+			ImGui::Text("Scale");
+
+			ImGui::SameLine(100.0f);
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+			ImGui::Text("X");
+			ImGui::PopStyleColor();
+
+			ImGui::SameLine(120.0f);
+			ImGui::PushItemWidth(50.0F);
+			ImGui::InputFloat("##SX", &m_TransformTest->m_Scale.m_X);
+
+			ImGui::SameLine(200.0f);
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
+			ImGui::Text("Y");
+			ImGui::PopStyleColor();
+
+			ImGui::SameLine(220.0f);
+			ImGui::PushItemWidth(50.0F);
+			ImGui::InputFloat("##SY", &m_TransformTest->m_Scale.m_Y);
+
+			ImGui::SameLine(300.0f);
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 1.0f, 1.0f));
+			ImGui::Text("Z");
+			ImGui::PopStyleColor();
+
+			ImGui::SameLine(320.0f);
+			ImGui::PushItemWidth(50.0F);
+			ImGui::InputFloat("##SZ", &m_TransformTest->m_Scale.m_Z);
+
+		}
+		if (ImGui::CollapsingHeader("SpriteRenderer")) {
+
+
+		}
 
 		ImGui::End();
-
-
 	}
 	void RenderFrame() const {
 		//Render GUI to screen
@@ -173,5 +184,6 @@ public:
 private:
 	Window* m_WindowReference;
 	ImGuiContext* m_GUIContext;
+	ImGuiViewport* m_GUIViewport;
 	ImGuiIO* m_IO;
 };
