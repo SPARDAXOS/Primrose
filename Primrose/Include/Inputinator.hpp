@@ -138,7 +138,7 @@ namespace CursorCapture {
 class Inputinator final {
 public:
 	Inputinator() = delete;
-	Inputinator(GLFWwindow& window) noexcept
+	Inputinator(Window& window) noexcept
 		:	m_WindowReference(&window)
 	{
 		auto ScrollCapture = [](GLFWwindow* window, double xoffset, double yoffset) {
@@ -146,16 +146,16 @@ public:
 			ScrollCapture::ScrollX = xoffset;
 			ScrollCapture::ScrollY = yoffset;
 		};
-		glfwSetScrollCallback(m_WindowReference, ScrollCapture);
+		glfwSetScrollCallback(m_WindowReference->GetWindowResource().m_ptr, ScrollCapture);
 
 		auto CursorCapture = [](GLFWwindow* window, double xoffset, double yoffset) {
 
 			CursorCapture::CursorX = xoffset;
 			CursorCapture::CursorY = yoffset;
 		};
-		glfwSetCursorPosCallback(m_WindowReference, CursorCapture);
+		glfwSetCursorPosCallback(m_WindowReference->GetWindowResource().m_ptr, CursorCapture);
 		if (glfwRawMouseMotionSupported()) {
-			glfwSetInputMode(m_WindowReference, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+			glfwSetInputMode(m_WindowReference->GetWindowResource().m_ptr, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
 		}
 
 		SetMouseInputMode(m_CurrentMouseMode);
@@ -167,7 +167,7 @@ public:
 
 		//TODO: move to window probably or something. Its a bit weird here
 		if (GetKey(Keycode::ESCAPE)) {
-			glfwSetWindowShouldClose(m_WindowReference, true);
+			glfwSetWindowShouldClose(m_WindowReference->GetWindowResource().m_ptr, true);
 		}
 
 		return true;
@@ -175,10 +175,10 @@ public:
 
 public:
 	bool GetKey(Keycode key) const noexcept {
-		return glfwGetKey(m_WindowReference, static_cast<int>(key));
+		return glfwGetKey(m_WindowReference->GetWindowResource().m_ptr, static_cast<int>(key));
 	}
 	bool GetMouseKey(MouseKeyCode key) const noexcept {
-		return glfwGetMouseButton(m_WindowReference, static_cast<int>(key));
+		return glfwGetMouseButton(m_WindowReference->GetWindowResource().m_ptr, static_cast<int>(key));
 	}
 	void SetMouseInputMode(MouseMode mode) noexcept {
 
@@ -187,7 +187,7 @@ public:
 			m_LastCursorPositionY = CursorCapture::CursorY;
 		}
 
-		glfwSetInputMode(m_WindowReference, GLFW_CURSOR, static_cast<int>(mode));
+		glfwSetInputMode(m_WindowReference->GetWindowResource().m_ptr, GLFW_CURSOR, static_cast<int>(mode));
 	}
 
 	inline std::string GetLastExitMessage() const noexcept { return m_LastExitMessage; }
@@ -219,5 +219,5 @@ private:
 private:
 	std::string m_LastExitMessage;
 	MouseMode m_CurrentMouseMode = MouseMode::NORMAL;
-	GLFWwindow* m_WindowReference;
+	Window* m_WindowReference;
 };

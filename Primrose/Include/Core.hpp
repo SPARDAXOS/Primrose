@@ -13,10 +13,8 @@
 #include "GameObject.hpp"
 #include "Time.hpp"
 #include "Inputinator.hpp"
+#include "Editor.hpp"
 
-#include "ImGUI/imgui.h"
-#include "ImGUI/imgui_impl_glfw.h"
-#include "ImGUI/imgui_impl_opengl3.h"
 
 #pragma warning(push, 0)
 #include "STB_Image/stb_image.h"
@@ -92,4 +90,5 @@ public:
 	std::unique_ptr<EntityComponentSystem> m_ECS;
 	std::unique_ptr<Time> m_Time;
 	std::unique_ptr<Inputinator> m_Input;
+	std::unique_ptr<Editor> m_Editor;
 };

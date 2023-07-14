@@ -111,9 +111,9 @@ bool Renderer::Render2D() const {
         }
 
 
-        //Testing
-        TargetGameObject->GetTransform().m_Rotation.m_X += 1.0f;
-        TargetGameObject->GetTransform().m_Rotation.m_Y += 1.0f;
+        ////Testing
+        //TargetGameObject->GetTransform().m_Rotation.m_X += 1.0f;
+        //TargetGameObject->GetTransform().m_Rotation.m_Y += 1.0f;
 
         //MVP
         Camera* ViewportCamera = &m_ECSReference->GetViewportCamera();

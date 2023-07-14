@@ -10,9 +10,10 @@ Core::Core() noexcept {
 	m_TextureStorage = std::make_unique<TextureStorage>();
 	m_ECS = std::make_unique<EntityComponentSystem>();
 	m_Window = std::make_unique<Window>(m_ViewportWidth, m_ViewportHeight);
-	m_Renderer = std::make_unique<Renderer>(*m_ECS.get(), *m_Window.get());
+	m_Renderer = std::make_unique<Renderer>(*m_ECS, *m_Window);
 	m_Time = std::make_unique<Time>();
-	m_Input = std::make_unique<Inputinator>(*m_Window.get()->GetWindowResource().m_ptr);
+	m_Input = std::make_unique<Inputinator>(*m_Window);
+	m_Editor = std::make_unique<Editor>(*m_Window);
 }
 void Core::SetupCore() { // Sounds like 2 step initialization.
 
@@ -63,18 +64,6 @@ void Core::Run() {
 	//Should be when shader program is created. ? idk anymore
 	//ShaderProgramTest.SetUniform("uDiffuse", TextureUnit::DIFFUSE);
 
-
-	//ImGuiContext* GUIContext = ImGui::CreateContext();
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-
-	ImGuiIO& io = ImGui::GetIO();
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;		// IF using Docking Branch
-	
-	ImGui_ImplGlfw_InitForOpenGL(m_Window->GetWindowResource().m_ptr, true);
-	ImGui_ImplOpenGL3_Init();
 	
 	//ECS
 	GameObject* GameObjectTest = &m_ECS->CreateGameObject("Test");
@@ -92,6 +81,9 @@ void Core::Run() {
 	GameObjectTransform->m_Position = Vector3f(-0.6f, 0.2f, 0.0f);
 	GameObjectTransform->m_Rotation = Vector3f(0.0f, 0.0f, 0.0f);
 	GameObjectTransform->m_Scale = Vector3f(0.5f, 0.5f, 0.5f);
+
+	//ForTesting
+	m_Editor->m_TransformTest = &GameObjectTest->GetTransform();
 	
 	
 	//GameObject* InstansiatedGameObject = &m_ECS->Instantiate(*GameObjectTest);
@@ -113,16 +105,14 @@ void Core::Run() {
 void Core::Exit() {
 
 	PrintExitMessage();
-
-	ImGui_ImplOpenGL3_Shutdown();
-	ImGui_ImplGlfw_Shutdown();
-	ImGui::DestroyContext();
 }
 void Core::UpdateSystems() {
 
 
 	//TODO: Create a pool of threads and manage it by camsizing the allowed threads count depending on the system
 	//Do stuff like joinable checkls and whatever
+
+	//BUG: The aspect ratio maybe should be synced with the size of the screen?
 
 	m_Time->Update();
 
@@ -140,27 +130,15 @@ void Core::UpdateSystems() {
 		m_Running = false;
 	}
 
-
-	//Feed input and start GUI frame
-	ImGui_ImplOpenGL3_NewFrame();
-	ImGui_ImplGlfw_NewFrame();
-	ImGui::NewFrame();
-	ImGui::ShowDemoWindow();
-
-	//Render GUI
-	ImGui::Begin("Demo window");
-	ImGui::Button("Hello!");
-	ImGui::End();
-
+	//Clears the backbuffer too! Maybe change it?
 	if (!m_Renderer->Update()) {
 		RegisterExitMessage("Engine closed down.\nReason: " + m_Renderer->GetLastExitMessage());
 		m_Running = false;
 	}
 
-	//Render GUI to screen
-	ImGui::Render();
-	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+	m_Editor->Render();
 
+	//Needs to be manual thing to call from window - Remove from Renderer - Maybe add this and clear to window
 	glfwSwapBuffers(m_Window->GetWindowResource().m_ptr);
 
 

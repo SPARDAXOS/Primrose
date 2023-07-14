@@ -186,6 +186,7 @@
     <ClInclude Include="Dependencies\Includes\STB_Image\STB_Image.h" />
     <ClInclude Include="Include\Components\CameraComponent.hpp" />
     <ClInclude Include="Include\Components\Component.hpp" />
+    <ClInclude Include="Include\Editor.hpp" />
     <ClInclude Include="Include\EntityComponentSystem.hpp" />
     <ClInclude Include="Include\FileManagment.hpp" />
     <ClInclude Include="Include\GameObject.hpp" />
