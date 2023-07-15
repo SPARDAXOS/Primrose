@@ -87,12 +87,10 @@ public:
 	inline WindowResource& GetWindowResource() noexcept { return *m_Window.get(); }
 	
 
-	void BindOpenGLContext() {
-		glfwMakeContextCurrent(m_Window->m_ptr);
-	}
-	void UnbindOpenGLContext() {
-		glfwMakeContextCurrent(nullptr);
-	}
+	void ClearBuffer() const noexcept;
+	void SwapBuffer() const noexcept;
+	void BindOpenGLContext() const noexcept;
+	void UnbindOpenGLContext() const noexcept;
 
 
 private:

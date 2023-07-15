@@ -29,10 +29,6 @@ private:
 	[[nodiscard]] bool Render3D() const;
 
 private:
-	void Clear() const noexcept;
-	void SwapBuffers() const noexcept;
-
-private:
 	inline void RegisterExitMessage(std::string message) noexcept { m_LastExitMessage = message; };
 
 

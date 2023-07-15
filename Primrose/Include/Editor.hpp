@@ -37,16 +37,23 @@ public:
 	Editor& operator=(Editor&&) = delete;
 
 public:
+	[[nodiscard]] bool Update() {
+
+		Render();
+
+		return true;
+	}
+
+private:
 	void Render() {//TODO: REturn const to this after getting rid of the text transform
 
 		StartFrame();
 
 		RenderDetailsMenu();
+		RenderHeirarchyMenu();
 
 		RenderFrame();
 	}
-
-private:
 	void StartFrame() const {
 		//Feed input and start GUI frame
 		ImGui_ImplOpenGL3_NewFrame();
@@ -171,6 +178,31 @@ private:
 
 		ImGui::End();
 	}
+	void RenderHeirarchyMenu() const {
+
+		//TODO: Temporary make the heirarchy and use the selected GameObject from it in the details tab work
+		//TODO: To do the parent thing, do only the ones that their parent is NOT the scene and their parent. You will end up with the heirarchy.
+
+		//TODO: For this to work, i need to change how the parent code works in GO. Make it store references to its children. SetParent(), AddChild(GameObject& *this)
+
+		//TODO: Add more Children support for GameObject class. FindChild() AddChild() GetChildren()
+		ImGui::SetNextWindowSize(ImVec2(200.0f, m_GUIViewport->Size.y));
+		ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
+		ImGui::Begin("Heirarchy");
+
+		//Get gameobjects from Ecs
+		//Create entry for each one using the data from the game objects
+
+
+
+
+
+
+
+		ImGui::End();
+	}
+
+
 	void RenderFrame() const {
 		//Render GUI to screen
 		ImGui::Render();

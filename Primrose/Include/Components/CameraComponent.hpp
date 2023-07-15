@@ -91,8 +91,9 @@ private:
 
 private:
 	ProjectionType m_ProjectionType = ProjectionType::PERSPECTIVE;
-	float m_Width = 800.0f;
-	float m_Height = 600.0f;
+	//Weird - Either pass them in the constructor as references from the Core or ditch the idea and provide presets
+	float m_Width = 1920.0f;
+	float m_Height = 1080.0f;
 	float m_FOV = 45.0f;
 	float m_AspectRatio = m_Width / m_Height;
 	float m_NearClipPlane = 0.1f;

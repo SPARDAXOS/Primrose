@@ -7,8 +7,18 @@ EntityComponentSystem::EntityComponentSystem() noexcept {
 	m_MainScene = new GameObject(*this, MAIN_SCENE_OBJECT_ID);
 	m_MainScene->SetName("Scene");
 
-	GameObject* MainCameraObject = &CreateGameObject("ViewportCamera"); //Does it need to be a gameobject? maybe cause the features are reusable?
-	m_ViewportCamera = MainCameraObject->AddComponent<Camera>();
+
+	//Viewport camera is special and should not be a child of the scene?
+	//Regradless
+	//BUG: the viewport camera has the same GO id as the scene for some reason. Test it thoroughly
+	//GameObject* MainCameraObject = &CreateGameObject("ViewportCamera"); //Does it need to be a gameobject? maybe cause the features are reusable?
+
+	//Move into its own function as a special GO
+	GameObject* NewGameObject = new GameObject(*this, m_CurrentObjectIDIndex);
+	NewGameObject->Awake();
+	m_GameObjects.push_back(NewGameObject);
+	m_CurrentObjectIDIndex++;
+	m_ViewportCamera = NewGameObject->AddComponent<Camera>();
 }
 EntityComponentSystem::~EntityComponentSystem() {
 	//Clean all Gameobjects and Components
@@ -28,11 +38,15 @@ EntityComponentSystem::~EntityComponentSystem() {
 	return true;
 }
 
+//TODO: Remove GameObject? make sure to adjust the mainscene children list too then!
+
 
 GameObject& EntityComponentSystem::CreateGameObject() {
 	//Creats one simply
 	GameObject* NewGameObject = new GameObject(*this, m_CurrentObjectIDIndex);
-	NewGameObject->SetParent(m_MainScene);
+	//NewGameObject->SetParent(m_MainScene);
+
+	m_MainScene->AddChild(NewGameObject);
 	NewGameObject->Awake();
 	m_GameObjects.push_back(NewGameObject);
 	m_CurrentObjectIDIndex++;
@@ -41,7 +55,9 @@ GameObject& EntityComponentSystem::CreateGameObject() {
 GameObject& EntityComponentSystem::CreateGameObject(const std::string& name) {
 	//Sets name as well
 	GameObject* NewGameObject = new GameObject(*this, m_CurrentObjectIDIndex);
-	NewGameObject->SetParent(m_MainScene);
+	//NewGameObject->SetParent(m_MainScene);
+
+	m_MainScene->AddChild(NewGameObject);
 	NewGameObject->SetName(name);
 	NewGameObject->Awake();
 	m_GameObjects.push_back(NewGameObject);
@@ -52,6 +68,7 @@ GameObject& EntityComponentSystem::Instantiate(const GameObject& object) {
 	//Compies
 	GameObject* NewGameObject = new GameObject(*this, m_CurrentObjectIDIndex);
 	*NewGameObject = object;
+
 	NewGameObject->Awake();
 	m_GameObjects.push_back(NewGameObject);
 	m_CurrentObjectIDIndex++;

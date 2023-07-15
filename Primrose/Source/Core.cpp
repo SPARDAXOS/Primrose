@@ -70,6 +70,14 @@ void Core::Run() {
 	GameObjectTest->AddComponent<SpriteRenderer>();
 	SpriteRenderer* Component = GameObjectTest->GetComponent<SpriteRenderer>();
 	Component->SetSprite(CrateTexture);
+
+	GameObject* GameObjectTestChild = &m_ECS->CreateGameObject("TestChild");
+	GameObjectTestChild->AddComponent<SpriteRenderer>();
+	SpriteRenderer* ComponentChild = GameObjectTestChild->GetComponent<SpriteRenderer>();
+	ComponentChild->SetSprite(CrateTexture);
+
+	GameObjectTest->AddChild(GameObjectTestChild);
+
 	//Component->SetTint(Colors::Red); //TODO: Remove vertex color attribute + clean up shaders + readjust attributes afterwards
 
 	//GameObjectTest->HasComponent<SpriteRenderer>();
@@ -130,16 +138,21 @@ void Core::UpdateSystems() {
 		m_Running = false;
 	}
 
-	//Clears the backbuffer too! Maybe change it?
+
+	m_Window->ClearBuffer();
+
+
 	if (!m_Renderer->Update()) {
 		RegisterExitMessage("Engine closed down.\nReason: " + m_Renderer->GetLastExitMessage());
 		m_Running = false;
 	}
-
-	m_Editor->Render();
+	if (!m_Editor->Update()) {
+		//TODO: Implement error handling in Editor class
+		m_Running = false;
+	}
 
 	//Needs to be manual thing to call from window - Remove from Renderer - Maybe add this and clear to window
-	glfwSwapBuffers(m_Window->GetWindowResource().m_ptr);
+	m_Window->SwapBuffer();
 
 
 	UpdateViewportControls();

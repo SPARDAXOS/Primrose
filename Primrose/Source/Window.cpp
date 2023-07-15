@@ -20,6 +20,25 @@ bool Window::Update() noexcept {
     }
 }
 
+
+
+void Window::ClearBuffer() const noexcept {
+    const Color ClearColor = Colors::PaleGreen;
+    GLCall(glClearColor(ClearColor.m_R, ClearColor.m_G, ClearColor.m_B, ClearColor.m_A));
+    GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+}
+void Window::SwapBuffer() const noexcept {
+    glfwSwapBuffers(m_Window->m_ptr);
+}
+void Window::BindOpenGLContext() const noexcept {
+    glfwMakeContextCurrent(m_Window->m_ptr);
+}
+void Window::UnbindOpenGLContext() const noexcept {
+    glfwMakeContextCurrent(nullptr);
+}
+
+
+
 void Window::CreateWindow() {
     m_Window = std::make_unique<WindowResource>(m_Width, m_Height, "Primrose", nullptr, nullptr);
     if (m_Window->m_ptr == nullptr) {

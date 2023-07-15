@@ -142,8 +142,11 @@ public:
 
 	void SetName(std::string name) noexcept;
 	void SetEnabled(bool state) noexcept;
-	void SetParent(GameObject* parent) noexcept;
 
+	//void SetParent(GameObject* parent) noexcept;
+	bool AddChild(GameObject* child) noexcept;
+	bool RemoveChild(GameObject* child) noexcept;
+	GameObject* FindChild(std::string_view name) const noexcept;
 
 private:
 	bool m_Enabled{ true };
@@ -152,6 +155,7 @@ private:
 
 private:
 	Transform m_Transform;
+	std::vector<GameObject*> m_Children;
 	EntityComponentSystem* m_ECS;
 	GameObject* m_Parent{ nullptr };
 	uint32 m_ComponentFlags{ 0 };
