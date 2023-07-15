@@ -74,8 +74,8 @@ private:
 
 	bool m_ViewportNavigationMode = false;
 
-	int32 m_ViewportWidth = 800;
-	int32 m_ViewportHeight = 600;
+	int32 m_ViewportWidth = 1920;
+	int32 m_ViewportHeight = 1080;
 
 private:
 	std::string m_ExitMessage;

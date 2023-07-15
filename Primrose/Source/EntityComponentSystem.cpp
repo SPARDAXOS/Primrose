@@ -3,8 +3,13 @@
 
 
 EntityComponentSystem::EntityComponentSystem() noexcept {
+
+
+	//TODO: Move these into functions that are called by the core or in intitialization if custom ctor is used
+
 	//Is this even necessary? I could just create a normal object using the function
 	m_MainScene = new GameObject(*this, MAIN_SCENE_OBJECT_ID);
+	m_MainScene->Awake(); //sure...
 	m_MainScene->SetName("Scene");
 
 
@@ -13,12 +18,14 @@ EntityComponentSystem::EntityComponentSystem() noexcept {
 	//BUG: the viewport camera has the same GO id as the scene for some reason. Test it thoroughly
 	//GameObject* MainCameraObject = &CreateGameObject("ViewportCamera"); //Does it need to be a gameobject? maybe cause the features are reusable?
 
+
+	//Hmmmm this makes the index thing more complicated and weird now..
 	//Move into its own function as a special GO
-	GameObject* NewGameObject = new GameObject(*this, m_CurrentObjectIDIndex);
-	NewGameObject->Awake();
-	m_GameObjects.push_back(NewGameObject);
-	m_CurrentObjectIDIndex++;
-	m_ViewportCamera = NewGameObject->AddComponent<Camera>();
+	m_ViewportCameraGO = new GameObject(*this, VIEWPORT_CAMERA_OBJECT_ID);
+	m_ViewportCameraGO->Awake(); //sure...
+	m_ViewportCameraGO->SetName("ViewportCamera");
+	m_GameObjects.push_back(m_ViewportCameraGO);
+	m_ViewportCamera = m_ViewportCameraGO->AddComponent<Camera>();
 }
 EntityComponentSystem::~EntityComponentSystem() {
 	//Clean all Gameobjects and Components
@@ -43,6 +50,10 @@ EntityComponentSystem::~EntityComponentSystem() {
 
 GameObject& EntityComponentSystem::CreateGameObject() {
 	//Creats one simply
+	while (!IsObjectIDAllowed(m_CurrentObjectIDIndex)) {
+		m_CurrentObjectIDIndex++;
+	}
+
 	GameObject* NewGameObject = new GameObject(*this, m_CurrentObjectIDIndex);
 	//NewGameObject->SetParent(m_MainScene);
 
@@ -54,6 +65,10 @@ GameObject& EntityComponentSystem::CreateGameObject() {
 }
 GameObject& EntityComponentSystem::CreateGameObject(const std::string& name) {
 	//Sets name as well
+	while (!IsObjectIDAllowed(m_CurrentObjectIDIndex)) {
+		m_CurrentObjectIDIndex++;
+	}
+
 	GameObject* NewGameObject = new GameObject(*this, m_CurrentObjectIDIndex);
 	//NewGameObject->SetParent(m_MainScene);
 
@@ -66,6 +81,10 @@ GameObject& EntityComponentSystem::CreateGameObject(const std::string& name) {
 }
 GameObject& EntityComponentSystem::Instantiate(const GameObject& object) {
 	//Compies
+	while (!IsObjectIDAllowed(m_CurrentObjectIDIndex)) {
+		m_CurrentObjectIDIndex++;
+	}
+
 	GameObject* NewGameObject = new GameObject(*this, m_CurrentObjectIDIndex);
 	*NewGameObject = object;
 
@@ -98,4 +117,12 @@ int32 EntityComponentSystem::FindCamera(uint64 objectID) const noexcept {
 		}
 	}
 	return -1;
+}
+bool EntityComponentSystem::IsObjectIDAllowed(uint64 objectID) const noexcept {
+	if (objectID == MAIN_SCENE_OBJECT_ID)
+		return false;
+	else if (objectID == VIEWPORT_CAMERA_OBJECT_ID)
+		return false;
+
+	return true;
 }

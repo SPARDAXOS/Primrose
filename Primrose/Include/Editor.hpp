@@ -4,13 +4,14 @@
 #include "ImGUI/imgui_impl_opengl3.h"
 
 #include "Window.hpp"
+#include <iostream>
 
 
 class Editor final {
 public:
 	Editor() = delete;
-	Editor(Window& window)
-		: m_WindowReference(&window)
+	Editor(Window& window, EntityComponentSystem& ecs)
+		: m_WindowReference(&window), m_ECSReference(&ecs)
 	{
 		IMGUI_CHECKVERSION();
 		m_GUIContext = ImGui::CreateContext();
@@ -41,6 +42,8 @@ public:
 
 		Render();
 
+		//Clear selected on right click
+
 		return true;
 	}
 
@@ -48,7 +51,7 @@ private:
 	void Render() {//TODO: REturn const to this after getting rid of the text transform
 
 		StartFrame();
-
+		
 		RenderDetailsMenu();
 		RenderHeirarchyMenu();
 
@@ -61,12 +64,18 @@ private:
 		ImGui::NewFrame();
 		//ImGui::ShowDemoWindow();
 	}
+	void RenderFrame() const {
+		//Render GUI to screen
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+	}
+
+
 	void RenderDetailsMenu()  { //TODO: REturn const to this after getting rid of the text transform
 
 
 		//Notes:
 		//This could be abstracted away since DRY
-		//I get the selected GameObject from ECS? or Somewhere at least and do all this if its valid
 
 
 		//TODO: Add the ability to reorder these one day
@@ -79,142 +88,184 @@ private:
 		ImGui::SetNextWindowPos(ImVec2(m_GUIViewport->Size.x - 400.0f, 0.0f));
 
 		ImGui::Begin("Details");
-		if (ImGui::CollapsingHeader("Transform")) {
 
-			ImGui::Text("Position");
+		if (m_SelectedGameObject != nullptr) {
+			////////////
+			//Transform
+			////////////
+			Transform* SelectedTransform = &m_SelectedGameObject->GetTransform();
+			if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen)) {
 
-			ImGui::SameLine(100.0f);
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
-			ImGui::Text("X");
-			ImGui::PopStyleColor();
+				ImGui::Text("Position");
 
-			ImGui::SameLine(120.0f);
-			ImGui::PushItemWidth(50.0F);
-			ImGui::InputFloat("##PX", &m_TransformTest->m_Position.m_X);
+				ImGui::SameLine(100.0f);
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+				ImGui::Text("X");
+				ImGui::PopStyleColor();
 
-			ImGui::SameLine(200.0f);
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
-			ImGui::Text("Y");
-			ImGui::PopStyleColor();
+				ImGui::SameLine(120.0f);
+				ImGui::PushItemWidth(50.0F);
+				ImGui::InputFloat("##PX", &SelectedTransform->m_Position.m_X);
 
-			ImGui::SameLine(220.0f);
-			ImGui::PushItemWidth(50.0F);
-			ImGui::InputFloat("##PY", &m_TransformTest->m_Position.m_Y);
+				ImGui::SameLine(200.0f);
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
+				ImGui::Text("Y");
+				ImGui::PopStyleColor();
 
-			ImGui::SameLine(300.0f);
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 1.0f, 1.0f));
-			ImGui::Text("Z");
-			ImGui::PopStyleColor();
+				ImGui::SameLine(220.0f);
+				ImGui::PushItemWidth(50.0F);
+				ImGui::InputFloat("##PY", &SelectedTransform->m_Position.m_Y);
 
-			ImGui::SameLine(320.0f);
-			ImGui::PushItemWidth(50.0F);
-			ImGui::InputFloat("##PZ", &m_TransformTest->m_Position.m_Z);
+				ImGui::SameLine(300.0f);
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 1.0f, 1.0f));
+				ImGui::Text("Z");
+				ImGui::PopStyleColor();
 
-
-			ImGui::Text("Rotation");
-
-			ImGui::SameLine(100.0f);
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
-			ImGui::Text("X");
-			ImGui::PopStyleColor();
-
-			ImGui::SameLine(120.0f);
-			ImGui::PushItemWidth(50.0F);
-			ImGui::InputFloat("##RX", &m_TransformTest->m_Rotation.m_X);
-
-			ImGui::SameLine(200.0f);
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
-			ImGui::Text("Y");
-			ImGui::PopStyleColor();
-
-			ImGui::SameLine(220.0f);
-			ImGui::PushItemWidth(50.0F);
-			ImGui::InputFloat("##RY", &m_TransformTest->m_Rotation.m_Y);
-
-			ImGui::SameLine(300.0f);
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 1.0f, 1.0f));
-			ImGui::Text("Z");
-			ImGui::PopStyleColor();
-
-			ImGui::SameLine(320.0f);
-			ImGui::PushItemWidth(50.0F);
-			ImGui::InputFloat("##RZ", &m_TransformTest->m_Rotation.m_Z);
+				ImGui::SameLine(320.0f);
+				ImGui::PushItemWidth(50.0F);
+				ImGui::InputFloat("##PZ", &SelectedTransform->m_Position.m_Z);
 
 
-			ImGui::Text("Scale");
+				ImGui::Text("Rotation");
 
-			ImGui::SameLine(100.0f);
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
-			ImGui::Text("X");
-			ImGui::PopStyleColor();
+				ImGui::SameLine(100.0f);
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+				ImGui::Text("X");
+				ImGui::PopStyleColor();
 
-			ImGui::SameLine(120.0f);
-			ImGui::PushItemWidth(50.0F);
-			ImGui::InputFloat("##SX", &m_TransformTest->m_Scale.m_X);
+				ImGui::SameLine(120.0f);
+				ImGui::PushItemWidth(50.0F);
+				ImGui::InputFloat("##RX", &SelectedTransform->m_Rotation.m_X);
 
-			ImGui::SameLine(200.0f);
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
-			ImGui::Text("Y");
-			ImGui::PopStyleColor();
+				ImGui::SameLine(200.0f);
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
+				ImGui::Text("Y");
+				ImGui::PopStyleColor();
 
-			ImGui::SameLine(220.0f);
-			ImGui::PushItemWidth(50.0F);
-			ImGui::InputFloat("##SY", &m_TransformTest->m_Scale.m_Y);
+				ImGui::SameLine(220.0f);
+				ImGui::PushItemWidth(50.0F);
+				ImGui::InputFloat("##RY", &SelectedTransform->m_Rotation.m_Y);
 
-			ImGui::SameLine(300.0f);
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 1.0f, 1.0f));
-			ImGui::Text("Z");
-			ImGui::PopStyleColor();
+				ImGui::SameLine(300.0f);
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 1.0f, 1.0f));
+				ImGui::Text("Z");
+				ImGui::PopStyleColor();
 
-			ImGui::SameLine(320.0f);
-			ImGui::PushItemWidth(50.0F);
-			ImGui::InputFloat("##SZ", &m_TransformTest->m_Scale.m_Z);
-
-		}
-		if (ImGui::CollapsingHeader("SpriteRenderer")) {
+				ImGui::SameLine(320.0f);
+				ImGui::PushItemWidth(50.0F);
+				ImGui::InputFloat("##RZ", &SelectedTransform->m_Rotation.m_Z);
 
 
+				ImGui::Text("Scale");
+
+				ImGui::SameLine(100.0f);
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+				ImGui::Text("X");
+				ImGui::PopStyleColor();
+
+				ImGui::SameLine(120.0f);
+				ImGui::PushItemWidth(50.0F);
+				ImGui::InputFloat("##SX", &SelectedTransform->m_Scale.m_X);
+
+				ImGui::SameLine(200.0f);
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
+				ImGui::Text("Y");
+				ImGui::PopStyleColor();
+
+				ImGui::SameLine(220.0f);
+				ImGui::PushItemWidth(50.0F);
+				ImGui::InputFloat("##SY", &SelectedTransform->m_Scale.m_Y);
+
+				ImGui::SameLine(300.0f);
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 1.0f, 1.0f));
+				ImGui::Text("Z");
+				ImGui::PopStyleColor();
+
+				ImGui::SameLine(320.0f);
+				ImGui::PushItemWidth(50.0F);
+				ImGui::InputFloat("##SZ", &SelectedTransform->m_Scale.m_Z);
+
+			}
+
+			////////////
+			//SpriteRenderer
+			////////////
+			if (m_SelectedGameObject->HasComponent<SpriteRenderer>()) {
+				if (ImGui::CollapsingHeader("SpriteRenderer")) {
+
+
+				}
+			}
 		}
 
 		ImGui::End();
 	}
-	void RenderHeirarchyMenu() const {
+	void RenderHeirarchyMenu() {
 
-		//TODO: Temporary make the heirarchy and use the selected GameObject from it in the details tab work
-		//TODO: To do the parent thing, do only the ones that their parent is NOT the scene and their parent. You will end up with the heirarchy.
-
-		//TODO: For this to work, i need to change how the parent code works in GO. Make it store references to its children. SetParent(), AddChild(GameObject& *this)
-
-		//TODO: Add more Children support for GameObject class. FindChild() AddChild() GetChildren()
 		ImGui::SetNextWindowSize(ImVec2(200.0f, m_GUIViewport->Size.y));
 		ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
 		ImGui::Begin("Heirarchy");
 
-		//Get gameobjects from Ecs
-		//Create entry for each one using the data from the game objects
-
-
-
-
-
-
+		//TODO: This needs cleanup, especially the id check down there.
+		std::vector<GameObject*> GameObjects = m_ECSReference->GetGameObjects();
+		for (uint32 i = 0; i < GameObjects.size(); i++) {
+			if (GameObjects.at(i)->GetObjectID() != VIEWPORT_CAMERA_OBJECT_ID && GameObjects.at(i)->GetParent() == nullptr)
+				AddHeirarchyEntry(GameObjects.at(i));
+		}
 
 		ImGui::End();
 	}
 
 
-	void RenderFrame() const {
-		//Render GUI to screen
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+	void AddHeirarchyEntry(GameObject* entry) {
+
+		if (entry == nullptr)
+			return;
+
+		bool IsLeaf = false;
+		if (!entry->HasChildren())
+			IsLeaf = true;
+
+		if (IsLeaf) {
+
+			bool IsOpen = false;
+			if (ImGui::TreeNodeEx(entry->GetName().data(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_OpenOnArrow)) {
+
+				IsOpen = true;
+
+				if (ImGui::IsItemClicked()) {
+					m_SelectedGameObject = entry;
+
+				}
+
+				ImGui::TreePop();
+			}
+		}
+		else {
+			if (ImGui::TreeNodeEx(entry->GetName().data(), ImGuiTreeNodeFlags_OpenOnArrow)) {
+
+				if (ImGui::IsItemClicked()) {
+					m_SelectedGameObject = entry;
+
+				}
+
+				std::vector<GameObject*> Children = entry->GetChildren();
+				for (auto& x : Children)
+					AddHeirarchyEntry(x);
+
+				ImGui::TreePop();
+			}
+		}
 	}
 
 public:
-	Transform* m_TransformTest;
-
+	GameObject* m_SelectedGameObject;
 
 private:
 	Window* m_WindowReference;
+	EntityComponentSystem* m_ECSReference;
+
+private:
 	ImGuiContext* m_GUIContext;
 	ImGuiViewport* m_GUIViewport;
 	ImGuiIO* m_IO;

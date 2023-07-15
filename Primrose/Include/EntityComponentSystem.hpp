@@ -127,7 +127,12 @@ public:
 		return static_cast<uint32>(m_Cameras.size());
 	}
 
-public:
+
+public: //TODO: maybe rework this to use lists? simply passes the vector?
+
+	inline std::vector<GameObject*> GetGameObjects() const noexcept { return m_GameObjects; }
+
+
 	template<typename T>
 	T* GetComponentForUpdate();
 	template<>
@@ -153,6 +158,8 @@ private:
 	int32 FindSpriteRenderer(uint64 objectID) const noexcept;
 	int32 FindCamera(uint64 objectID) const noexcept;
 
+	bool IsObjectIDAllowed(uint64 objectID) const noexcept;
+
 private:
 	inline void RegisterExitMessage(std::string message) noexcept { m_LastExitMessage = message; }
 
@@ -171,7 +178,9 @@ private:
 
 	//Created or loaded later on
 	GameObject* m_MainScene; 
+	GameObject* m_ViewportCameraGO;
 	Camera* m_ViewportCamera;
+
 	uint64 m_CurrentObjectIDIndex = 1;
 };
 

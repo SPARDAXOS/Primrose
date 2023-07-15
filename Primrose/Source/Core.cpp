@@ -13,7 +13,7 @@ Core::Core() noexcept {
 	m_Renderer = std::make_unique<Renderer>(*m_ECS, *m_Window);
 	m_Time = std::make_unique<Time>();
 	m_Input = std::make_unique<Inputinator>(*m_Window);
-	m_Editor = std::make_unique<Editor>(*m_Window);
+	m_Editor = std::make_unique<Editor>(*m_Window, *m_ECS);
 }
 void Core::SetupCore() { // Sounds like 2 step initialization.
 
@@ -76,7 +76,36 @@ void Core::Run() {
 	SpriteRenderer* ComponentChild = GameObjectTestChild->GetComponent<SpriteRenderer>();
 	ComponentChild->SetSprite(CrateTexture);
 
-	GameObjectTest->AddChild(GameObjectTestChild);
+	GameObject* GameObjectTestChildChild = &m_ECS->CreateGameObject("TestChildChild");
+	GameObjectTestChildChild->AddComponent<SpriteRenderer>();
+	SpriteRenderer* ComponentChildChild = GameObjectTestChildChild->GetComponent<SpriteRenderer>();
+	ComponentChildChild->SetSprite(CrateTexture);
+
+
+	GameObject* GameObjectTest2 = &m_ECS->CreateGameObject("Test2");
+	GameObjectTest2->AddComponent<SpriteRenderer>();
+	SpriteRenderer* Component2 = GameObjectTest2->GetComponent<SpriteRenderer>();
+	Component2->SetSprite(CrateTexture);
+
+	GameObject* GameObjectTestChild2 = &m_ECS->CreateGameObject("TestChild2");
+	GameObjectTestChild2->AddComponent<SpriteRenderer>();
+	SpriteRenderer* ComponentChild2 = GameObjectTestChild2->GetComponent<SpriteRenderer>();
+	ComponentChild2->SetSprite(CrateTexture);
+
+	GameObject* GameObjectTestChildChild2 = &m_ECS->CreateGameObject("TestChildChild2");
+	GameObjectTestChildChild2->AddComponent<SpriteRenderer>();
+	SpriteRenderer* ComponentChildChild2 = GameObjectTestChildChild2->GetComponent<SpriteRenderer>();
+	ComponentChildChild2->SetSprite(CrateTexture);
+
+
+
+	GameObjectTest->AddChild(GameObjectTestChild); //Add
+	GameObjectTestChild->AddChild(GameObjectTestChildChild); //Multiple Steps Deep
+	//GameObjectTestChild->AddChild(GameObjectTest); //Swap
+	//GameObjectTestChild->RemoveChild(GameObjectTestChildChild); //Removal
+
+	GameObjectTest2->AddChild(GameObjectTestChild2); //Add
+	GameObjectTestChild2->AddChild(GameObjectTestChildChild2); //Multiple Steps Deep
 
 	//Component->SetTint(Colors::Red); //TODO: Remove vertex color attribute + clean up shaders + readjust attributes afterwards
 
@@ -89,9 +118,6 @@ void Core::Run() {
 	GameObjectTransform->m_Position = Vector3f(-0.6f, 0.2f, 0.0f);
 	GameObjectTransform->m_Rotation = Vector3f(0.0f, 0.0f, 0.0f);
 	GameObjectTransform->m_Scale = Vector3f(0.5f, 0.5f, 0.5f);
-
-	//ForTesting
-	m_Editor->m_TransformTest = &GameObjectTest->GetTransform();
 	
 	
 	//GameObject* InstansiatedGameObject = &m_ECS->Instantiate(*GameObjectTest);

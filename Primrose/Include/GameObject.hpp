@@ -143,10 +143,20 @@ public:
 	void SetName(std::string name) noexcept;
 	void SetEnabled(bool state) noexcept;
 
-	//void SetParent(GameObject* parent) noexcept;
+public:
 	bool AddChild(GameObject* child) noexcept;
 	bool RemoveChild(GameObject* child) noexcept;
+	inline bool HasChildren() const noexcept {
+		if (m_Children.size() == 0)
+			return false;
+		return true;
+	}
 	GameObject* FindChild(std::string_view name) const noexcept;
+
+
+	inline std::vector<GameObject*> GetChildren() const noexcept {
+		return m_Children;
+	}
 
 private:
 	bool m_Enabled{ true };
