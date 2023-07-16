@@ -195,8 +195,21 @@ private:
 			//SpriteRenderer
 			////////////
 			if (m_SelectedGameObject->HasComponent<SpriteRenderer>()) {
+				SpriteRenderer* SelectedSpriteRenderer = m_SelectedGameObject->GetComponent<SpriteRenderer>();
 				if (ImGui::CollapsingHeader("SpriteRenderer")) {
 
+					Color CurrentColor = SelectedSpriteRenderer->GetTint();
+					
+					//ImGui::PushItemWidth(200.0f);
+					if (ImGui::ColorEdit4("Tint", &CurrentColor.m_R, ImGuiColorEditFlags_NoInputs)) {
+						SelectedSpriteRenderer->SetTint(CurrentColor);
+
+					}
+					//if (ImGui::ColorButton("Tint", Tint)) {
+					//	PrintMessage("Changed!");
+					//	Color NewTint = { Tint.x, Tint.y, Tint.z, Tint.w };
+					//	SelectedSpriteRenderer->SetTint(NewTint);
+					//}
 
 				}
 			}

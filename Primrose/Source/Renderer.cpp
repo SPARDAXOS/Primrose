@@ -83,7 +83,7 @@ bool Renderer::Render2D() const {
         ShaderProgramTest.SetUniform("uDiffuse", TextureUnit::DIFFUSE);
         ShaderProgramTest.SetUniform("uTint", TargetComponent->GetTint());
 
-
+        //TODO: Add clearcolor to camera! It would require some restructuring
 
 
         Transform* TargetTransform = &TargetGameObject->GetTransform();
