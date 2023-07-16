@@ -33,6 +33,7 @@ public:
 	inline void SetFilteringMode(FilteringMode min, FilteringMode mag) noexcept { m_FilteringModeMin = min; m_FilteringModeMag = mag; }
 
 
+public:
 	inline Texture2D* GetSprite() const noexcept { return m_Sprite; }
 	inline Color GetTint() const noexcept { return m_Tint; }
 	inline bool GetFlipX() const noexcept { return m_FlipX; }

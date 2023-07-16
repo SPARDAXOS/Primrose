@@ -66,33 +66,33 @@ void Core::Run() {
 
 	
 	//ECS
-	GameObject* GameObjectTest = &m_ECS->CreateGameObject("Test");
+	GameObject* GameObjectTest = &m_ECS->CreateGameObject("1");
 	GameObjectTest->AddComponent<SpriteRenderer>();
 	SpriteRenderer* Component = GameObjectTest->GetComponent<SpriteRenderer>();
 	Component->SetSprite(CrateTexture);
 
-	GameObject* GameObjectTestChild = &m_ECS->CreateGameObject("TestChild");
+	GameObject* GameObjectTestChild = &m_ECS->CreateGameObject("2");
 	GameObjectTestChild->AddComponent<SpriteRenderer>();
 	SpriteRenderer* ComponentChild = GameObjectTestChild->GetComponent<SpriteRenderer>();
 	ComponentChild->SetSprite(CrateTexture);
 
-	GameObject* GameObjectTestChildChild = &m_ECS->CreateGameObject("TestChildChild");
+	GameObject* GameObjectTestChildChild = &m_ECS->CreateGameObject("3");
 	GameObjectTestChildChild->AddComponent<SpriteRenderer>();
 	SpriteRenderer* ComponentChildChild = GameObjectTestChildChild->GetComponent<SpriteRenderer>();
 	ComponentChildChild->SetSprite(CrateTexture);
 
 
-	GameObject* GameObjectTest2 = &m_ECS->CreateGameObject("Test2");
+	GameObject* GameObjectTest2 = &m_ECS->CreateGameObject("4");
 	GameObjectTest2->AddComponent<SpriteRenderer>();
 	SpriteRenderer* Component2 = GameObjectTest2->GetComponent<SpriteRenderer>();
 	Component2->SetSprite(CrateTexture);
 
-	GameObject* GameObjectTestChild2 = &m_ECS->CreateGameObject("TestChild2");
+	GameObject* GameObjectTestChild2 = &m_ECS->CreateGameObject("5");
 	GameObjectTestChild2->AddComponent<SpriteRenderer>();
 	SpriteRenderer* ComponentChild2 = GameObjectTestChild2->GetComponent<SpriteRenderer>();
 	ComponentChild2->SetSprite(CrateTexture);
 
-	GameObject* GameObjectTestChildChild2 = &m_ECS->CreateGameObject("TestChildChild2");
+	GameObject* GameObjectTestChildChild2 = &m_ECS->CreateGameObject("6");
 	GameObjectTestChildChild2->AddComponent<SpriteRenderer>();
 	SpriteRenderer* ComponentChildChild2 = GameObjectTestChildChild2->GetComponent<SpriteRenderer>();
 	ComponentChildChild2->SetSprite(CrateTexture);

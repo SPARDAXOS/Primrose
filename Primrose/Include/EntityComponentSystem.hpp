@@ -23,7 +23,7 @@ public:
 	GameObject& Instantiate(const GameObject& object);
 
 public:
-	[[nodiscard]] bool Update() const;
+	[[nodiscard]] bool Update();
 	
 
 public:
@@ -153,6 +153,9 @@ public:
 	inline Camera& GetViewportCamera() const noexcept { return *m_ViewportCamera; };
 
 	GameObject* FindGameObject(uint64 ObjectID) const noexcept;
+
+private:
+	void CalculateTransformations(GameObject& object);
 
 private:
 	int32 FindSpriteRenderer(uint64 objectID) const noexcept;

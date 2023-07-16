@@ -56,6 +56,8 @@ public:
 	}
 
 	bool operator==(const GameObject& rhs) const noexcept {
+		if (&rhs == nullptr)
+			return false;
 		if (this->m_ObjectID == rhs.m_ObjectID)
 			return true;
 		return false;

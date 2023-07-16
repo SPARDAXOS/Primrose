@@ -90,6 +90,10 @@ private:
 		ImGui::Begin("Details");
 
 		if (m_SelectedGameObject != nullptr) {
+
+
+			//TODO: Abstract these into separate functions for clarity
+
 			////////////
 			//Transform
 			////////////
@@ -206,7 +210,7 @@ private:
 		ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
 		ImGui::Begin("Heirarchy");
 
-		//TODO: This needs cleanup, especially the id check down there.
+		//TODO: This needs cleanup, especially the id check down there. Like test if the ID is reserved or something
 		std::vector<GameObject*> GameObjects = m_ECSReference->GetGameObjects();
 		for (uint32 i = 0; i < GameObjects.size(); i++) {
 			if (GameObjects.at(i)->GetObjectID() != VIEWPORT_CAMERA_OBJECT_ID && GameObjects.at(i)->GetParent() == nullptr)
@@ -235,7 +239,25 @@ private:
 
 				if (ImGui::IsItemClicked()) {
 					m_SelectedGameObject = entry;
+				}
 
+				if (ImGui::BeginDragDropSource()) {
+					auto PointerToReference = &entry;
+					ImGui::SetDragDropPayload("HeirarchyEntry", PointerToReference, sizeof(PointerToReference));
+
+					
+					ImGui::EndDragDropSource();
+				}
+				if (ImGui::BeginDragDropTarget()) {
+
+					auto Payload = ImGui::AcceptDragDropPayload("HeirarchyEntry");
+					if (Payload != nullptr) {
+						auto PointerToReference = static_cast<GameObject**>(Payload->Data);
+						GameObject* PointerToEntry = *PointerToReference;
+						entry->AddChild(PointerToEntry);
+					}
+
+					ImGui::EndDragDropTarget();
 				}
 
 				ImGui::TreePop();
@@ -249,8 +271,25 @@ private:
 
 				}
 
-				std::vector<GameObject*> Children = entry->GetChildren();
-				for (auto& x : Children)
+				if (ImGui::BeginDragDropSource()) {
+					auto PointerToReference = &entry;
+					ImGui::SetDragDropPayload("HeirarchyEntry", PointerToReference, sizeof(PointerToReference));
+
+					ImGui::EndDragDropSource();
+				}
+				if (ImGui::BeginDragDropTarget()) {
+					
+					auto Payload = ImGui::AcceptDragDropPayload("HeirarchyEntry");
+					if (Payload != nullptr) {
+						auto PointerToReference = static_cast<GameObject**>(Payload->Data);
+						GameObject* PointerToEntry = *PointerToReference;
+						entry->AddChild(PointerToEntry);
+					}
+					
+					ImGui::EndDragDropTarget();
+				}
+
+				for (auto& x : entry->GetChildren())
 					AddHeirarchyEntry(x);
 
 				ImGui::TreePop();
@@ -264,6 +303,7 @@ public:
 private:
 	Window* m_WindowReference;
 	EntityComponentSystem* m_ECSReference;
+	GameObject* GameObjectPtr;
 
 private:
 	ImGuiContext* m_GUIContext;

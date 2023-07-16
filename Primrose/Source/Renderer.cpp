@@ -86,33 +86,14 @@ bool Renderer::Render2D() const {
 
 
 
-
-
         Transform* TargetTransform = &TargetGameObject->GetTransform();
         glm::mat4* TargetMatrix = &TargetTransform->GetMatrix();
-
-        GameObject* Parent = TargetGameObject->GetParent(); //Inconsistency. Transform is ref and this is ptr
-
-
-        if (Parent != nullptr) {
-
-            Transform* ParentTransform = &Parent->GetTransform();
-            *TargetMatrix *= ParentTransform->GetMatrix();
-        }
-
-
-
-
-
-
-
-
-
-
-
-        //Bad api change it! Update all transforms in ECS so that when i do this here, they would all be updated. Im calling update regradless every frame.
-        //One problem is that i dont save the results of the matrix which i probably should do
-
+        //The target matrix could be improved upon even further. I could check if the target has moved for an example and not update it if thats the case
+        //The only thing left for the heirarchy is that if i unparent then their current values set them whereever the it would in world space. So it doesnt stay where
+        //-it is and adapt its transform, it switches!. Test unparenting and you will notice it. It could be solved somehow but i forget how as im writing this
+        //There is one bug left i think which is that for some reason, when doing the double unparenting thing, some cubes will be offset even though its at 0 until 
+        //-i change its scale to 1 then it actually moves back to correct position. Idk if this is a bug or something im missing.
+        //Scaling moves the thing for some reason, this really seems like a bug. Maybe i shoulnt have just multiplied the matrices but instead tranformed on top of it!
 
         //Flipping - Needs to be done before MVP
         if (TargetComponent->GetFlipX() || TargetComponent->GetFlipY()) {

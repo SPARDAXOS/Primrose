@@ -15,17 +15,40 @@ bool GameObject::AddChild(GameObject* child) noexcept {
 	if (child == nullptr)
 		return false;
 
+	//Case 3
 	const GameObject* TargetChild = FindChild(child->GetName());
-	if (TargetChild != nullptr) //Child already exists
-		return false;
+	if (TargetChild != nullptr) {
+		RemoveChild(child);
+		if (m_Parent != nullptr) {
+			child->m_Parent = m_Parent;
+			m_Parent->AddChild(child);
+		}
+		return true;
+	}
 
 	//Case 1
-	if (child == m_Parent) {
+	if (*child == *m_Parent) {
 		//Swap them!
-		child->RemoveChild(this);
 		m_Parent = child->m_Parent;
-		child->m_Parent = this;
+		if (m_Parent != nullptr) { //If parents parent was not nullptr
+			m_Parent->RemoveChild(child);
+			m_Parent->AddChild(this);
+		}
+
+		child->RemoveChild(this);
+		auto CachedChildren = this->GetChildren();
+		auto SwapChildren = child->GetChildren();
+		this->m_Children = SwapChildren;
+		for (auto& e : m_Children)
+			e->m_Parent = this;
+
 		m_Children.push_back(child);
+
+		child->m_Parent = this;
+		child->m_Children = CachedChildren;
+		for (auto& e : child->m_Children)
+			e->m_Parent = child;
+		
 		return true;
 	}
 	else {
@@ -45,7 +68,8 @@ bool GameObject::RemoveChild(GameObject* child) noexcept {
 
 	for (uint32 i = 0; i < m_Children.size(); i++) {
 		if (m_Children.at(i) == child) {
-			child->m_Parent = nullptr;
+			if (child->m_Parent == this)
+				child->m_Parent = nullptr;
 			m_Children.erase(std::begin(m_Children) + i);
 			return true;
 		}

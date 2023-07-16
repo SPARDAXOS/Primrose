@@ -31,17 +31,16 @@ EntityComponentSystem::~EntityComponentSystem() {
 	//Clean all Gameobjects and Components
 }
 
-[[nodiscard]] bool EntityComponentSystem::Update() const {
+[[nodiscard]] bool EntityComponentSystem::Update() {
 
 	for (auto& Object : m_GameObjects) {
 		if (Object->GetEnabled()) {
 			if (!Object->GetStarted())
 				Object->Start();
 
-			Transform* TargetTransform = &Object->GetTransform();
-			TargetTransform->ClearMatrix();
-			TargetTransform->UpdateMatrix();
-			
+
+			CalculateTransformations(*Object);
+
 
 			Object->Update();
 		}
@@ -49,6 +48,28 @@ EntityComponentSystem::~EntityComponentSystem() {
 
 	return true;
 }
+
+void EntityComponentSystem::CalculateTransformations(GameObject& object) {
+
+	Transform* TargetTransform = &object.GetTransform();
+	if (TargetTransform == nullptr)
+		return;
+
+	TargetTransform->ClearMatrix();
+	TargetTransform->UpdateMatrix();
+
+	GameObject* Parent = object.GetParent();
+	if (Parent != nullptr) {
+		TargetTransform->GetMatrix() *= Parent->GetTransform().GetMatrix();
+	}
+	if (object.HasChildren()) {
+
+		for (auto& e : object.GetChildren()) {
+			CalculateTransformations(*e);
+		}
+	}
+}
+
 
 //TODO: Remove GameObject? make sure to adjust the mainscene children list too then!
 
