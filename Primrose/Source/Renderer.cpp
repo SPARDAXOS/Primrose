@@ -84,8 +84,35 @@ bool Renderer::Render2D() const {
         ShaderProgramTest.SetUniform("uTint", TargetComponent->GetTint());
 
 
+
+
+
+
         Transform* TargetTransform = &TargetGameObject->GetTransform();
-        glm::mat4 TargetMatrix = TargetTransform->GetMatrix();
+        glm::mat4* TargetMatrix = &TargetTransform->GetMatrix();
+
+        GameObject* Parent = TargetGameObject->GetParent(); //Inconsistency. Transform is ref and this is ptr
+
+
+        if (Parent != nullptr) {
+
+            Transform* ParentTransform = &Parent->GetTransform();
+            *TargetMatrix *= ParentTransform->GetMatrix();
+        }
+
+
+
+
+
+
+
+
+
+
+
+        //Bad api change it! Update all transforms in ECS so that when i do this here, they would all be updated. Im calling update regradless every frame.
+        //One problem is that i dont save the results of the matrix which i probably should do
+
 
         //Flipping - Needs to be done before MVP
         if (TargetComponent->GetFlipX() || TargetComponent->GetFlipY()) {
@@ -101,7 +128,7 @@ bool Renderer::Render2D() const {
             else
                 ScaleY = 0;
 
-            TargetMatrix = glm::scale(TargetMatrix, glm::vec3(ScaleX, ScaleY, 0.0f)); //This is kinda sus
+            *TargetMatrix = glm::scale(*TargetMatrix, glm::vec3(ScaleX, ScaleY, 0.0f)); //This is kinda sus
         }
 
 
@@ -112,7 +139,7 @@ bool Renderer::Render2D() const {
         //MVP
         Camera* ViewportCamera = &m_ECSReference->GetViewportCamera();
 
-        ShaderProgramTest.SetUniform("uModel", TargetMatrix); //Construct matrix here instead of getting to apply the flipx anmd y?
+        ShaderProgramTest.SetUniform("uModel", *TargetMatrix); //Construct matrix here instead of getting to apply the flipx anmd y?
         ShaderProgramTest.SetUniform("uView", ViewportCamera->GetViewMatrix());
         ShaderProgramTest.SetUniform("uProjection", ViewportCamera->GetProjectionMatrix());
 

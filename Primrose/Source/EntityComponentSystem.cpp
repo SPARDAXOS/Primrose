@@ -38,6 +38,11 @@ EntityComponentSystem::~EntityComponentSystem() {
 			if (!Object->GetStarted())
 				Object->Start();
 
+			Transform* TargetTransform = &Object->GetTransform();
+			TargetTransform->ClearMatrix();
+			TargetTransform->UpdateMatrix();
+			
+
 			Object->Update();
 		}
 	}

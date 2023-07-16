@@ -51,11 +51,8 @@ public:
 	}
 
 public:
-	[[nodiscard]] inline glm::mat4 GetMatrix() { UpdateMatrix(); return m_Matrix; };
-
-private:
+	inline void ClearMatrix() { m_Matrix = glm::mat4(1.0f); }
 	void UpdateMatrix() {
-		m_Matrix = glm::mat4(1.0f);
 
 		m_Matrix = glm::translate(m_Matrix, glm::vec3(m_Position.m_X, m_Position.m_Y, m_Position.m_Z));
 
@@ -65,6 +62,10 @@ private:
 		m_Matrix = glm::rotate(m_Matrix, glm::radians(m_Rotation.m_Y), glm::vec3(0.0f, 1.0f, 0.0f));
 		m_Matrix = glm::rotate(m_Matrix, glm::radians(m_Rotation.m_Z), glm::vec3(0.0f, 0.0f, 1.0f));
 	}
+
+	[[nodiscard]] inline glm::mat4& GetMatrix() noexcept { return m_Matrix; };
+
+
 
 public:
 	Vector3f m_Position{ 0.0f };
