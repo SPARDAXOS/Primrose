@@ -41,7 +41,6 @@ EntityComponentSystem::~EntityComponentSystem() {
 
 			CalculateTransformations(*Object);
 
-
 			Object->Update();
 		}
 	}
@@ -63,10 +62,8 @@ void EntityComponentSystem::CalculateTransformations(GameObject& object) {
 		TargetTransform->GetMatrix() *= Parent->GetTransform().GetMatrix();
 	}
 	if (object.HasChildren()) {
-
-		for (auto& e : object.GetChildren()) {
+		for (auto& e : object.GetChildren())
 			CalculateTransformations(*e);
-		}
 	}
 }
 
@@ -119,6 +116,24 @@ GameObject& EntityComponentSystem::Instantiate(const GameObject& object) {
 	m_CurrentObjectIDIndex++;
 	return *NewGameObject;
 }
+//This func should probably by on the gameobject interface instead. It makes more sense to just do GameObject1.Destroy();
+void EntityComponentSystem::DestroyGameObject(uint64 objectID) {
+
+	
+
+	for (uint32 index = 0; index < m_GameObjects.size(); index++) {
+		if (m_GameObjects.at(index)->GetObjectID() == objectID) {
+			delete m_GameObjects.at(index);
+			m_GameObjects.erase(std::begin(m_GameObjects) + index);
+		}
+	}
+		
+
+
+	//Get components flags then delete all associated components
+	//Delete All children if has any
+	//Delete gameobject
+}
 
 GameObject* EntityComponentSystem::FindGameObject(uint64 objectID) const noexcept {
 	for (auto& x : m_GameObjects) {
@@ -144,6 +159,8 @@ int32 EntityComponentSystem::FindCamera(uint64 objectID) const noexcept {
 	}
 	return -1;
 }
+
+//Maybe change this to IsIDReserved and make it accessable somewhere else maybe
 bool EntityComponentSystem::IsObjectIDAllowed(uint64 objectID) const noexcept {
 	if (objectID == MAIN_SCENE_OBJECT_ID)
 		return false;

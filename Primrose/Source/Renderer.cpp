@@ -99,17 +99,31 @@ bool Renderer::Render2D() const {
         if (TargetComponent->GetFlipX() || TargetComponent->GetFlipY()) {
             float ScaleX = TargetTransform->m_Scale.m_X;
             float ScaleY = TargetTransform->m_Scale.m_Y;
+            float ScaleZ = TargetTransform->m_Scale.m_Z;
+
+            if (ScaleX > 1.0f || ScaleX < 1.0f)
+                ScaleX *= 2.0f;
+            if (ScaleY > 1.0f || ScaleY < 1.0f)
+                ScaleY *= 2.0f;
+            if (ScaleZ > 1.0f || ScaleZ < 1.0f)
+                ScaleZ *= 2.0f;
+
+
+            //if (TargetGameObject->GetParent() == nullptr) {
+            //    ScaleX *= 2;
+            //    ScaleY *= 2;
+            //    ScaleZ *= 2;
+            //}
 
             if (TargetComponent->GetFlipX())
-                ScaleX *= -1;
-            else
-                ScaleX = 0;
-            if (TargetComponent->GetFlipY())
-                ScaleY *= -1;
-            else
-                ScaleY = 0;
+                ScaleX *= -1.0f;
 
-            *TargetMatrix = glm::scale(*TargetMatrix, glm::vec3(ScaleX, ScaleY, 0.0f)); //This is kinda sus
+            if (TargetComponent->GetFlipY())
+                ScaleY *= -1.0f;
+
+            //Add parent position in case of disconnecting from it to fix last heriarchy bug
+
+            *TargetMatrix = glm::scale(*TargetMatrix, glm::vec3(ScaleX, ScaleY, ScaleZ)); //This is kinda sus
         }
 
 

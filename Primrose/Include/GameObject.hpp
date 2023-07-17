@@ -95,7 +95,6 @@ public:
 			return NewComponent;
 		}
 	}
-
 	template<typename T>
 	void RemoveComponent() noexcept {
 		static_assert(std::is_base_of_v<ComponentBase, T>);
@@ -107,7 +106,6 @@ public:
 		const uint32 ComponentID = Components::GetComponentID<T>();
 		m_ComponentFlags ^= ComponentID;
 	}
-
 	template<typename T>
 	T* GetComponent() {
 		static_assert(std::is_base_of_v<ComponentBase, T>);
@@ -116,7 +114,6 @@ public:
 		
 		return m_ECS->GetComponent<T>(m_ObjectID);
 	}
-
 	template<typename T>
 	bool HasComponent() noexcept {
 		static_assert(std::is_base_of_v<ComponentBase, T>);
@@ -130,10 +127,30 @@ public:
 			return false;
 	}
 
+	void Destroy() {
+
+		//Needs to be done for every components type
+		if (HasComponent<SpriteRenderer>())
+			RemoveComponent<SpriteRenderer>();
+		if (HasComponent<Camera>())
+			RemoveComponent<Camera>();
+
+		if (HasChildren()) {
+			for (auto& child : m_Children)
+				child->Destroy();
+		}
+
+		if (m_Parent != nullptr)
+			m_Parent->RemoveChild(this);
+
+		m_ECS->DestroyGameObject(m_ObjectID);
+	}
+
 public:
 
 	inline uint64 GetObjectID() const noexcept { return m_ObjectID; }
 	inline std::string GetName() const noexcept { return m_ObjectName; }
+	inline std::string& GetNameRef() noexcept { return m_ObjectName; }
 
 	inline bool GetEnabled() const noexcept { return m_Enabled; }
 	inline bool GetStarted() const noexcept { return m_Started; }

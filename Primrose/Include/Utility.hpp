@@ -3,6 +3,7 @@
 #include <string_view>
 #include <sstream>
 #include <fstream>
+#include <exception>
 
 #include "Profiler.hpp" //For testing
 

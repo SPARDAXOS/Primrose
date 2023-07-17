@@ -1,7 +1,8 @@
 #include "GameObject.hpp"
 
 void GameObject::SetName(std::string name) noexcept {
-	m_ObjectName = name;
+	if (!name.empty())
+		m_ObjectName = name;
 }
 void GameObject::SetEnabled(bool state) noexcept {
 	m_Enabled = state;
@@ -68,8 +69,10 @@ bool GameObject::RemoveChild(GameObject* child) noexcept {
 
 	for (uint32 i = 0; i < m_Children.size(); i++) {
 		if (m_Children.at(i) == child) {
-			if (child->m_Parent == this)
+			if (child->m_Parent == this) {
 				child->m_Parent = nullptr;
+				child->GetTransform().m_Position += m_Transform.m_Position; //here!!!!!!!
+			}
 			m_Children.erase(std::begin(m_Children) + i);
 			return true;
 		}

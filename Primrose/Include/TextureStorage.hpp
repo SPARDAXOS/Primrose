@@ -10,20 +10,24 @@
 #include <algorithm>
 
 
-//TODO: Should these even be here?
+//TODO: Should these even be here? Ye this is starting to pile up here. It all needs to be moved and the includes updated in the spriterenderer and the editor
 enum class AddressingMode {
 	MIRRORED = GL_MIRRORED_REPEAT,
 	CLAMPED_TO_EDGE = GL_CLAMP_TO_EDGE,
 	CLAMPED_TO_BORDER = GL_CLAMP_TO_BORDER,
 	REPEAT = GL_REPEAT
 };
-enum class FilteringMode {
+enum class FilteringModeMin {
 	LINEAR = GL_LINEAR,
 	NEAREST = GL_NEAREST,
 	LINEAR_MIPMAP_LINEAR = GL_LINEAR_MIPMAP_LINEAR,
 	NEAREST_MIPMAP_NEAREST = GL_NEAREST_MIPMAP_NEAREST,
 	LINEAR_MIPMAP_NEAREST = GL_LINEAR_MIPMAP_NEAREST,
 	NEAREST_MIPMAP_LINEAR = GL_NEAREST_MIPMAP_LINEAR
+};
+enum class FilteringModeMag {
+	LINEAR = GL_LINEAR,
+	NEAREST = GL_NEAREST
 };
 enum class BlendEquation {
 	ADDITIVE = GL_FUNC_ADD,
@@ -63,6 +67,190 @@ enum class DestinationBlendMode {
 	CONSTANT_ALPHA = GL_CONSTANT_ALPHA,
 	ONE_MINUS_CONSTANT_ALPHA = GL_ONE_MINUS_CONSTANT_ALPHA,
 };
+
+namespace EnumToText {
+
+	inline const char* ToText(AddressingMode type) {
+
+		switch (type) {
+		case AddressingMode::CLAMPED_TO_BORDER: {
+			return "Clamped To Border";
+		}
+		case AddressingMode::CLAMPED_TO_EDGE: {
+			return "Clamped To Edge";
+		}
+		case AddressingMode::MIRRORED: {
+			return "Mirrored";
+		}
+		case AddressingMode::REPEAT: {
+			return "Repeat";
+		}
+		default: {
+			throw std::invalid_argument("Wrong argument type sent to EnumToText - AddressingMode");
+		}
+		}
+	}
+	inline const char* ToText(FilteringModeMin type) {
+
+		switch (type) {
+		case FilteringModeMin::LINEAR: {
+			return "Linear";
+		}
+		case FilteringModeMin::LINEAR_MIPMAP_LINEAR: {
+			return "Linear Mipmap Linear";
+		}
+		case FilteringModeMin::LINEAR_MIPMAP_NEAREST: {
+			return "Linear Mipmap Nearest";
+		}
+		case FilteringModeMin::NEAREST: {
+			return "Nearest";
+		}
+		case FilteringModeMin::NEAREST_MIPMAP_LINEAR: {
+			return "Nearet Mipmap Linear";
+		}
+		case FilteringModeMin::NEAREST_MIPMAP_NEAREST: {
+			return "Nearest Mipmap Nearest";
+		}
+		default: {
+			throw std::invalid_argument("Wrong argument type sent to EnumToText - FilteringModeMin");
+		}
+		}
+	}
+	inline const char* ToText(FilteringModeMag type) {
+
+		switch (type) {
+		case FilteringModeMag::LINEAR: {
+			return "Linear";
+		}
+		case FilteringModeMag::NEAREST: {
+			return "Nearest";
+		}
+		default: {
+			throw std::invalid_argument("Wrong argument type sent to EnumToText - FilteringModeMag");
+		}
+		}
+	}
+	inline const char* ToText(BlendEquation type) {
+
+		switch (type) {
+		case BlendEquation::ADDITIVE: {
+			return "Additive";
+		}
+		case BlendEquation::SUBTRACTIVE: {
+			return "Subtractive";
+		}
+		case BlendEquation::REVERSE_SUBTRACTIVE: {
+			return "Reverse Subtractive";
+		}
+		default: {
+			throw std::invalid_argument("Wrong argument type sent to EnumToText - BlendEquation");
+		}
+		}
+	}
+	inline const char* ToText(SourceBlendMode type) {
+
+		switch (type) {
+		case SourceBlendMode::ZERO: {
+			return "Zero";
+		}
+		case SourceBlendMode::ONE: {
+			return "One";
+		}
+		case SourceBlendMode::SOURCE_COLOR: {
+			return "Source Color";
+		}
+		case SourceBlendMode::ONE_MINUS_SOURCE_COLOR: {
+			return "One Minus Source Color";
+		}
+		case SourceBlendMode::DESTINATION_COLOR: {
+			return "Destination Color";
+		}
+		case SourceBlendMode::ONE_MINUS_DESTINATION_COLOR: {
+			return "One Minus Destination Color";
+		}
+		case SourceBlendMode::SOURCE_ALPHA: {
+			return "Source Alpha";
+		}
+		case SourceBlendMode::ONE_MINUS_SOURCE_ALPHA: {
+			return "One Minus Source Alpha";
+		}
+		case SourceBlendMode::DESTINATION_ALPHA: {
+			return "Destination Alpha";
+		}
+		case SourceBlendMode::ONE_MINUS_DESTINATION_ALPHA: {
+			return "One Minus Destination Alpha";
+		}
+		case SourceBlendMode::CONSTANT_COLOR: {
+			return "Constant Color";
+		}
+		case SourceBlendMode::ONE_MINUS_CONSTANT_COLOR: {
+			return "One Minus Constant Color";
+		}
+		case SourceBlendMode::CONSTANT_ALPHA: {
+			return "Constant Alpha";
+		}
+		case SourceBlendMode::ONE_MINUS_CONSTANT_ALPHA: {
+			return "One Minus Constant Alpha";
+		}
+		case SourceBlendMode::SOURCE_ALPHA_SATURATE: {
+			return "Source Alpha Saturate";
+		}
+		default: {
+			throw std::invalid_argument("Wrong argument type sent to EnumToText - SourceBlendMode");
+		}
+		}
+	}
+	inline const char* ToText(DestinationBlendMode type) {
+
+		switch (type) {
+		case DestinationBlendMode::ZERO: {
+			return "Zero";
+		}
+		case DestinationBlendMode::ONE: {
+			return "One";
+		}
+		case DestinationBlendMode::SOURCE_COLOR: {
+			return "Source Color";
+		}
+		case DestinationBlendMode::ONE_MINUS_SOURCE_COLOR: {
+			return "One Minus Source Color";
+		}
+		case DestinationBlendMode::DESTINATION_COLOR: {
+			return "Destination Color";
+		}
+		case DestinationBlendMode::ONE_MINUS_DESTINATION_COLOR: {
+			return "One Minus Destination Color";
+		}
+		case DestinationBlendMode::SOURCE_ALPHA: {
+			return "Source Alpha";
+		}
+		case DestinationBlendMode::ONE_MINUS_SOURCE_ALPHA: {
+			return "One Minus Source Alpha";
+		}
+		case DestinationBlendMode::DESTINATION_ALPHA: {
+			return "Destination Alpha";
+		}
+		case DestinationBlendMode::ONE_MINUS_DESTINATION_ALPHA: {
+			return "One Minus Destination Alpha";
+		}
+		case DestinationBlendMode::CONSTANT_COLOR: {
+			return "Constant Color";
+		}
+		case DestinationBlendMode::ONE_MINUS_CONSTANT_COLOR: {
+			return "One Minus Constant Color";
+		}
+		case DestinationBlendMode::CONSTANT_ALPHA: {
+			return "Constant Alpha";
+		}
+		case DestinationBlendMode::ONE_MINUS_CONSTANT_ALPHA: {
+			return "One Minus Constant Alpha";
+		}
+		default: {
+			throw std::invalid_argument("Wrong argument type sent to EnumToText - DestinationBlendMode");
+		}
+		}
+	}
+}
 
 
 

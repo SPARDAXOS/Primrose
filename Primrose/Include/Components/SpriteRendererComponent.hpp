@@ -12,7 +12,7 @@ public:
 	~SpriteRenderer();
 
 
-	//For now it is not possbile to move or copy components
+	//For now it is not possbile to move or copy components - Maybe copying values should be allowed
 	SpriteRenderer(const SpriteRenderer& other) = delete;
 	SpriteRenderer& operator=(const SpriteRenderer& other) = delete;
 
@@ -29,9 +29,10 @@ public:
 	inline void SetSourceBlendMode(SourceBlendMode mode) noexcept { m_SourceBlendMode = mode; }
 	inline void SetDestinationBlendMode(DestinationBlendMode mode) noexcept { m_DestinationBlendMode = mode; }
 
-	inline void SetAddressingMode(AddressingMode s, AddressingMode t) noexcept { m_AddressingModeS = s; m_AddressingModeT = t; }
-	inline void SetFilteringMode(FilteringMode min, FilteringMode mag) noexcept { m_FilteringModeMin = min; m_FilteringModeMag = mag; }
-
+	inline void SetAddressingModeS(AddressingMode s) noexcept { m_AddressingModeS = s; }
+	inline void SetAddressingModeT(AddressingMode t) noexcept { m_AddressingModeT = t; }
+	inline void SetFilteringModeMin(FilteringModeMin min) noexcept { m_FilteringModeMin = min; }
+	inline void SetFilteringModeMag(FilteringModeMag mag) noexcept { m_FilteringModeMag = mag; }
 
 public:
 	inline Texture2D* GetSprite() const noexcept { return m_Sprite; }
@@ -45,8 +46,8 @@ public:
 
 	inline AddressingMode GetAddressingModeS() const noexcept { return m_AddressingModeS; }
 	inline AddressingMode GetAddressingModeT() const noexcept { return m_AddressingModeT; }
-	inline FilteringMode GetFilteringModeMin() const noexcept { return m_FilteringModeMin; }
-	inline FilteringMode GetFilteringModeMag() const noexcept { return m_FilteringModeMag; }
+	inline FilteringModeMin GetFilteringModeMin() const noexcept { return m_FilteringModeMin; }
+	inline FilteringModeMag GetFilteringModeMag() const noexcept { return m_FilteringModeMag; }
 
 	inline VAO* GetVAO() const noexcept { return m_VAO; }
 	inline EBO* GetEBO() const noexcept { return m_EBO; }
@@ -65,8 +66,8 @@ private:
 
 	AddressingMode m_AddressingModeS = AddressingMode::REPEAT;
 	AddressingMode m_AddressingModeT = AddressingMode::REPEAT;
-	FilteringMode m_FilteringModeMin = FilteringMode::LINEAR_MIPMAP_LINEAR;
-	FilteringMode m_FilteringModeMag = FilteringMode::LINEAR;
+	FilteringModeMin m_FilteringModeMin = FilteringModeMin::LINEAR_MIPMAP_LINEAR;
+	FilteringModeMag m_FilteringModeMag = FilteringModeMag::LINEAR;
 
 private:
 	Cube m_Primitive; //Change to square for 2D

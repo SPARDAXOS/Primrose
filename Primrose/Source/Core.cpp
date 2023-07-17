@@ -32,7 +32,7 @@ void Core::Run() {
 	//one from the storage. It checks by path and not name! or?
 	const std::string_view TexturePath = "Resources/Textures/Crate.jpg";
 	const std::string_view TextureName = "Create";
-	Texture2D* CrateTexture;
+	Texture2D* CrateTexture; //TODO: Change how the texture storage works and make it so that it actually stores them
 	
 	if (!m_TextureStorage->LoadTexture2D(TexturePath, TextureName, CrateTexture))
 	PrintMessage("It failed to load the texture!");
@@ -66,33 +66,33 @@ void Core::Run() {
 
 	
 	//ECS
-	GameObject* GameObjectTest = &m_ECS->CreateGameObject("1");
+	GameObject* GameObjectTest = &m_ECS->CreateGameObject("GameObject1");
 	GameObjectTest->AddComponent<SpriteRenderer>();
 	SpriteRenderer* Component = GameObjectTest->GetComponent<SpriteRenderer>();
 	Component->SetSprite(CrateTexture);
 
-	GameObject* GameObjectTestChild = &m_ECS->CreateGameObject("2");
+	GameObject* GameObjectTestChild = &m_ECS->CreateGameObject("GameObject2");
 	GameObjectTestChild->AddComponent<SpriteRenderer>();
 	SpriteRenderer* ComponentChild = GameObjectTestChild->GetComponent<SpriteRenderer>();
 	ComponentChild->SetSprite(CrateTexture);
 
-	GameObject* GameObjectTestChildChild = &m_ECS->CreateGameObject("3");
+	GameObject* GameObjectTestChildChild = &m_ECS->CreateGameObject("GameObject3");
 	GameObjectTestChildChild->AddComponent<SpriteRenderer>();
 	SpriteRenderer* ComponentChildChild = GameObjectTestChildChild->GetComponent<SpriteRenderer>();
 	ComponentChildChild->SetSprite(CrateTexture);
 
 
-	GameObject* GameObjectTest2 = &m_ECS->CreateGameObject("4");
+	GameObject* GameObjectTest2 = &m_ECS->CreateGameObject("GameObject4");
 	GameObjectTest2->AddComponent<SpriteRenderer>();
 	SpriteRenderer* Component2 = GameObjectTest2->GetComponent<SpriteRenderer>();
 	Component2->SetSprite(CrateTexture);
 
-	GameObject* GameObjectTestChild2 = &m_ECS->CreateGameObject("5");
+	GameObject* GameObjectTestChild2 = &m_ECS->CreateGameObject("GameObject5");
 	GameObjectTestChild2->AddComponent<SpriteRenderer>();
 	SpriteRenderer* ComponentChild2 = GameObjectTestChild2->GetComponent<SpriteRenderer>();
 	ComponentChild2->SetSprite(CrateTexture);
 
-	GameObject* GameObjectTestChildChild2 = &m_ECS->CreateGameObject("6");
+	GameObject* GameObjectTestChildChild2 = &m_ECS->CreateGameObject("GameObject6");
 	GameObjectTestChildChild2->AddComponent<SpriteRenderer>();
 	SpriteRenderer* ComponentChildChild2 = GameObjectTestChildChild2->GetComponent<SpriteRenderer>();
 	ComponentChildChild2->SetSprite(CrateTexture);
@@ -101,21 +101,15 @@ void Core::Run() {
 
 	GameObjectTest->AddChild(GameObjectTestChild); //Add
 	GameObjectTestChild->AddChild(GameObjectTestChildChild); //Multiple Steps Deep
-	//GameObjectTestChild->AddChild(GameObjectTest); //Swap
-	//GameObjectTestChild->RemoveChild(GameObjectTestChildChild); //Removal
 
 	GameObjectTest2->AddChild(GameObjectTestChild2); //Add
 	GameObjectTestChild2->AddChild(GameObjectTestChildChild2); //Multiple Steps Deep
 
 	//Component->SetTint(Colors::Red); //TODO: Remove vertex color attribute + clean up shaders + readjust attributes afterwards
 
-	//GameObjectTest->HasComponent<SpriteRenderer>();
-	//GameObjectTest->RemoveComponent<SpriteRenderer>();
-	//GameObjectTest->HasComponent<SpriteRenderer>();
-	//GameObjectTest->AddComponent<SpriteRenderer>();
-	//GameObjectTest->HasComponent<SpriteRenderer>();
+
 	Transform* GameObjectTransform = &GameObjectTest->GetTransform();
-	GameObjectTransform->m_Position = Vector3f(-0.6f, 0.2f, 0.0f);
+	GameObjectTransform->m_Position = Vector3f(5.0f, 0.0f, 0.0f);
 	GameObjectTransform->m_Rotation = Vector3f(0.0f, 0.0f, 0.0f);
 	GameObjectTransform->m_Scale = Vector3f(0.5f, 0.5f, 0.5f);
 	

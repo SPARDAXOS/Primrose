@@ -22,6 +22,8 @@ public:
 	GameObject& CreateGameObject(const std::string& name);
 	GameObject& Instantiate(const GameObject& object);
 
+	void DestroyGameObject(uint64 objectID);
+
 public:
 	[[nodiscard]] bool Update();
 	
