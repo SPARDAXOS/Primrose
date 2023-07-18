@@ -59,7 +59,7 @@ void EntityComponentSystem::CalculateTransformations(GameObject& object) {
 
 	GameObject* Parent = object.GetParent();
 	if (Parent != nullptr) {
-		TargetTransform->GetMatrix() *= Parent->GetTransform().GetMatrix();
+		TargetTransform->GetMatrix() = Parent->GetTransform().GetMatrix() * TargetTransform->GetMatrix();
 	}
 	if (object.HasChildren()) {
 		for (auto& e : object.GetChildren())
@@ -123,6 +123,7 @@ void EntityComponentSystem::DestroyGameObject(uint64 objectID) {
 
 	for (uint32 index = 0; index < m_GameObjects.size(); index++) {
 		if (m_GameObjects.at(index)->GetObjectID() == objectID) {
+			m_MainScene->RemoveChild(m_GameObjects.at(index));
 			delete m_GameObjects.at(index);
 			m_GameObjects.erase(std::begin(m_GameObjects) + index);
 		}

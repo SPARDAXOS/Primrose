@@ -77,8 +77,10 @@ bool Renderer::Render2D() const {
 
         const Texture2D* Sprite = TargetComponent->GetSprite();
         //Sprite->Bind(); //WTF Check why this doesnt matter whether its called or not to render!
-        GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Sprite->GetWidth(), Sprite->GetHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, Sprite->GetData()));
-        GLCall(glGenerateMipmap(GL_TEXTURE_2D));
+        if (Sprite != nullptr) {
+            GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Sprite->GetWidth(), Sprite->GetHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, Sprite->GetData()));
+            GLCall(glGenerateMipmap(GL_TEXTURE_2D));
+        }
 
         ShaderProgramTest.SetUniform("uDiffuse", TextureUnit::DIFFUSE);
         ShaderProgramTest.SetUniform("uTint", TargetComponent->GetTint());

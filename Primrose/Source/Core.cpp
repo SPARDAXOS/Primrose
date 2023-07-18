@@ -97,7 +97,10 @@ void Core::Run() {
 	SpriteRenderer* ComponentChildChild2 = GameObjectTestChildChild2->GetComponent<SpriteRenderer>();
 	ComponentChildChild2->SetSprite(CrateTexture);
 
+	m_ECS->CreateGameObject("GameObjectNoSprite");
+	//GameObjectTestNoSprite->AddComponent<SpriteRenderer>();
 
+	//TODO: It is important to decide what to do when it comes to multiple components of the same type and such
 
 	GameObjectTest->AddChild(GameObjectTestChild); //Add
 	GameObjectTestChild->AddChild(GameObjectTestChildChild); //Multiple Steps Deep

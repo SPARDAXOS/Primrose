@@ -51,9 +51,39 @@ private:
 	void UpdateMenus() {//TODO: REturn const to this after getting rid of the text transform
 
 		StartFrame();
+
+		ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(0.4f, 0.0f, 0.0f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.4f, 0.0f, 0.0f, 1.0f));
+
+		ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.4f, 0.0f, 0.0f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.3f, 0.0f, 0.0f, 1.0f));
+		
+		ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.1f, 0.0f, 0.0f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.3f, 0.0f, 0.0f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.05f, 0.0f, 0.0f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_CheckMark, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.4f, 0.0f, 0.0f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.6f, 0.0f, 0.0f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.0f, 0.0f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.6f, 0.0f, 0.0f, 1.0f));
 		
 		RenderDetailsMenu();
+		RenderAddMenu();
 		RenderHeirarchyMenu();
+
+		ImGui::PopStyleColor();
+		ImGui::PopStyleColor();
+		ImGui::PopStyleColor();
+
+		ImGui::PopStyleColor();
+		ImGui::PopStyleColor();
+		ImGui::PopStyleColor();
+		ImGui::PopStyleColor();
+		ImGui::PopStyleColor();
+		ImGui::PopStyleColor();
+		ImGui::PopStyleColor();
+		ImGui::PopStyleColor();
+		ImGui::PopStyleColor();
 
 		RenderFrame();
 	}
@@ -85,24 +115,14 @@ private:
 		//Note: Will also lock position and size
 		ImGui::SetNextWindowSize(ImVec2(400.0f, m_GUIViewport->Size.y));
 		ImGui::SetNextWindowPos(ImVec2(m_GUIViewport->Size.x - 400.0f, 0.0f));
-		ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(0.4f, 0.0f, 0.0f, 1.0f));
-		ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.4f, 0.0f, 0.0f, 1.0f));
+		//ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(0.4f, 0.0f, 0.0f, 1.0f));
+		//ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.4f, 0.0f, 0.0f, 1.0f));
 		
 		ImGui::Begin("Details");
-		ImGui::PopStyleColor();
-		ImGui::PopStyleColor();
+		//ImGui::PopStyleColor();
+		//ImGui::PopStyleColor();
 		
 		//TODO: Should probably apply these somewhere before everything unless i want to do some spefic styling at some places
-
-		ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.4f, 0.0f, 0.0f, 1.0f));
-		ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.1f, 0.0f, 0.0f, 1.0f));
-		ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.3f, 0.0f, 0.0f, 1.0f));
-		ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.05f, 0.0f, 0.0f, 1.0f));
-		ImGui::PushStyleColor(ImGuiCol_CheckMark, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
-		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.0f, 0.0f, 1.0f));
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.6f, 0.0f, 0.0f, 1.0f));
-		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
-		ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.6f, 0.0f, 0.0f, 1.0f));
 
 		if (m_SelectedGameObject != nullptr) {
 
@@ -443,24 +463,54 @@ private:
 
 				}
 			}
+
+
+			////////////
+			//AddComponent
+			////////////
+			//Always at the bottom
+			ImGui::Separator();
+			AddSpacings(6);
+			ImGui::SameLine(150);
+			if (ImGui::Button("Add Component", ImVec2(100.0f, 20.0f))) {
+				ImVec2 PopupPosition = { ImGui::GetMousePos().x - 75, ImGui::GetMousePos().y }; //75 - Half box width
+				ImGui::SetNextWindowPos(PopupPosition);
+				ImGui::OpenPopup("AddComponentMenu");
+			}
+
+			if (ImGui::BeginPopup("AddComponentMenu")) {
+				
+				if (ImGui::Selectable("SpriteRenderer", false, 0, ImVec2(150, 20))) {
+					m_SelectedGameObject->AddComponent<SpriteRenderer>();
+				}
+				else if (ImGui::Selectable("Camera", false, 0, ImVec2(150, 20))) {
+					m_SelectedGameObject->AddComponent<Camera>();
+				}
+
+				ImGui::EndPopup();
+			}
+			//Popup with options
 		}
 
-		ImGui::PopStyleColor();
-		ImGui::PopStyleColor();
-		ImGui::PopStyleColor();
-		ImGui::PopStyleColor();
-		ImGui::PopStyleColor();
-		ImGui::PopStyleColor();
-		ImGui::PopStyleColor();
-		ImGui::PopStyleColor();
-		ImGui::PopStyleColor();
+		//BUG: The scale part of the transformation matrix effects the position. FIX THIS ASAP!
+
+		//ImGui::PopStyleColor();
+		//ImGui::PopStyleColor();
+		//ImGui::PopStyleColor();
+		//ImGui::PopStyleColor();
+		//ImGui::PopStyleColor();
+		//ImGui::PopStyleColor();
+		//ImGui::PopStyleColor();
+		//ImGui::PopStyleColor();
+		//ImGui::PopStyleColor();
+
 
 		ImGui::End();
 	}
 	void RenderHeirarchyMenu() {
 
-		ImGui::SetNextWindowSize(ImVec2(200.0f, m_GUIViewport->Size.y));
-		ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
+		ImGui::SetNextWindowSize(ImVec2(200.0f, m_GUIViewport->Size.y - 50.0f)); // 50.0f Size of Add Menu
+		ImGui::SetNextWindowPos(ImVec2(0.0f, 50.0f)); // 200 Size of Add Menu
 
 		ImGui::Begin("Heirarchy");
 
@@ -470,6 +520,42 @@ private:
 		for (uint32 i = 0; i < GameObjects.size(); i++) {
 			if (GameObjects.at(i)->GetObjectID() != VIEWPORT_CAMERA_OBJECT_ID && GameObjects.at(i)->GetParent() == nullptr)
 				AddHeirarchyEntry(GameObjects.at(i));
+		}
+
+		ImGui::End();
+	}
+	void RenderAddMenu() { //Terrible name
+		ImGui::SetNextWindowSize(ImVec2(200.0f, 50.0f)); //Size of Add Menu
+		ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
+		bool True = true;
+		ImGui::Begin("AddMenu", &True, ImGuiWindowFlags_NoTitleBar);
+		AddSpacings(2);
+		if (ImGui::Button("Add", ImVec2(50.0f, 20.0f))) {
+			ImVec2 PopupPosition = { ImGui::GetMousePos().x - 75, ImGui::GetMousePos().y }; //75 - Half box width
+			ImGui::SetNextWindowPos(PopupPosition);
+			ImGui::OpenPopup("AddGameObjectMenu");
+		}
+
+		if (ImGui::BeginPopup("AddGameObjectMenu")) {
+
+			if (ImGui::Selectable("Empty GameObject", false, 0, ImVec2(150, 20))) {
+				m_ECSReference->CreateGameObject();
+			}
+			else if (ImGui::Selectable("Cube", false, 0, ImVec2(150, 20))) {
+				GameObject* Object = &m_ECSReference->CreateGameObject("Cube");
+				Object->AddComponent<SpriteRenderer>(); //CHANGE THIS WHEN I HAVE ACTUAL 3D MESHES
+			}
+			else if (ImGui::Selectable("Sprite", false, 0, ImVec2(150, 20))) {
+				GameObject* Object = &m_ECSReference->CreateGameObject("Sprite"); //This breaks for some reason
+				Object->AddComponent<SpriteRenderer>(); //CHANGE THIS WHEN I HAVE ACTUAL 3D MESHES
+			}
+			else if (ImGui::Selectable("Camera", false, 0, ImVec2(150, 20))) {
+				GameObject* Object = &m_ECSReference->CreateGameObject("Camera"); //This breaks for some reason
+				Object->AddComponent<Camera>(); //CHANGE THIS WHEN I HAVE ACTUAL 3D MESHES
+			}
+			
+
+			ImGui::EndPopup();
 		}
 
 		ImGui::End();
@@ -521,6 +607,11 @@ private:
 					ImGui::OpenPopup("GODeleteConfirmation");
 				}
 				if (ImGui::BeginPopup("GODeleteConfirmation")) {
+
+					ImGui::Text("Are you sure?");
+					ImGui::Spacing();
+
+					ImGui::PushItemWidth(40.0f);
 					if (ImGui::Button("Yes")) {
 						if (entry == m_SelectedGameObject) //Note: Any pointers to objects like these need to be reseted to nullptr somehow.
 							m_SelectedGameObject = nullptr;
@@ -530,6 +621,9 @@ private:
 						ImGui::TreePop();
 						return; //It would break otherwise?
 					}
+					ImGui::SameLine(80.0f);
+
+					ImGui::PushItemWidth(40.0f);
 					if (ImGui::Button("No")) {
 						ImGui::CloseCurrentPopup();
 					}
@@ -609,6 +703,11 @@ private:
 					ImGui::OpenPopup("GODeleteConfirmation");
 				}
 				if (ImGui::BeginPopup("GODeleteConfirmation")) {
+
+					ImGui::Text("Are you sure?");
+					ImGui::Spacing();
+
+					ImGui::PushItemWidth(40.0f);
 					if (ImGui::Button("Yes")) {
 						if (entry == m_SelectedGameObject) //Note: Any pointers to objects like these need to be reseted to nullptr somehow.
 							m_SelectedGameObject = nullptr;
@@ -618,6 +717,9 @@ private:
 						ImGui::TreePop();
 						return; //It would break otherwise?
 					}
+					ImGui::SameLine(80.0f);
+
+					ImGui::PushItemWidth(40.0f);
 					if (ImGui::Button("No")) {
 						ImGui::CloseCurrentPopup();
 					}
@@ -707,6 +809,12 @@ private:
 			return true;
 		else
 			return false;
+	}
+
+private:
+	void AddSpacings(uint32 count) {
+		for (uint32 index = 0; index < count; index++)
+			ImGui::Spacing();
 	}
 
 

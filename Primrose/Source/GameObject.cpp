@@ -71,7 +71,16 @@ bool GameObject::RemoveChild(GameObject* child) noexcept {
 		if (m_Children.at(i) == child) {
 			if (child->m_Parent == this) {
 				child->m_Parent = nullptr;
-				child->GetTransform().m_Position += m_Transform.m_Position; //here!!!!!!!
+
+				//Keep getting parent transform and adding it
+				//Basically cascading the transform from child to the last parent
+
+				//In Adding, gotta make sure the object stays where it is in the world space
+				//Multiplied by scale
+				
+				//TODO:Maybe make into an option? Perserve World Position?
+				child->GetTransform().m_Position += m_Transform.m_Position * m_Transform.m_Scale; //here!!!!!!!
+				child->GetTransform().m_Scale = child->GetTransform().m_Scale * m_Transform.m_Scale;
 			}
 			m_Children.erase(std::begin(m_Children) + i);
 			return true;
