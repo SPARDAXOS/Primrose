@@ -62,7 +62,7 @@ bool Renderer::Render2D() const {
         GameObject* TargetGameObject = m_ECSReference->FindGameObject(TargetComponent->GetOwnerID());
         if (TargetGameObject == nullptr)
             continue;
-        if (!TargetGameObject->GetEnabled())
+        if (!TargetGameObject->GetActiveInHeirarchy())
             continue;
 
         //Texture
@@ -76,11 +76,12 @@ bool Renderer::Render2D() const {
         GLCall(glBlendEquation((GLuint)TargetComponent->GetBlendEquation()));
 
         const Texture2D* Sprite = TargetComponent->GetSprite();
-        //Sprite->Bind(); //WTF Check why this doesnt matter whether its called or not to render!
-        if (Sprite != nullptr) {
-            GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Sprite->GetWidth(), Sprite->GetHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, Sprite->GetData()));
-            GLCall(glGenerateMipmap(GL_TEXTURE_2D));
-        }
+        if (Sprite != nullptr)
+            Sprite->Bind(); //WTF Check why this doesnt matter whether its called or not to render!
+        //if (Sprite != nullptr) { // I think this is the binding
+        //    GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Sprite->GetWidth(), Sprite->GetHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, Sprite->GetData())); //THIS SHOULD BE BINDING
+        //    GLCall(glGenerateMipmap(GL_TEXTURE_2D));
+        //}
 
         ShaderProgramTest.SetUniform("uDiffuse", TextureUnit::DIFFUSE);
         ShaderProgramTest.SetUniform("uTint", TargetComponent->GetTint());

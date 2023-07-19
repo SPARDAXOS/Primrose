@@ -34,12 +34,11 @@ EntityComponentSystem::~EntityComponentSystem() {
 [[nodiscard]] bool EntityComponentSystem::Update() {
 
 	for (auto& Object : m_GameObjects) {
-		if (Object->GetEnabled()) {
+		if (Object->GetEnabled() && Object->GetActiveInHeirarchy()) {
 			if (!Object->GetStarted())
 				Object->Start();
-
-
-			CalculateTransformations(*Object);
+			if (!Object->GetStatic())
+				CalculateTransformations(*Object);
 
 			Object->Update();
 		}
@@ -116,10 +115,8 @@ GameObject& EntityComponentSystem::Instantiate(const GameObject& object) {
 	m_CurrentObjectIDIndex++;
 	return *NewGameObject;
 }
-//This func should probably by on the gameobject interface instead. It makes more sense to just do GameObject1.Destroy();
-void EntityComponentSystem::DestroyGameObject(uint64 objectID) {
 
-	
+void EntityComponentSystem::DestroyGameObject(uint64 objectID) {
 
 	for (uint32 index = 0; index < m_GameObjects.size(); index++) {
 		if (m_GameObjects.at(index)->GetObjectID() == objectID) {
@@ -128,12 +125,6 @@ void EntityComponentSystem::DestroyGameObject(uint64 objectID) {
 			m_GameObjects.erase(std::begin(m_GameObjects) + index);
 		}
 	}
-		
-
-
-	//Get components flags then delete all associated components
-	//Delete All children if has any
-	//Delete gameobject
 }
 
 GameObject* EntityComponentSystem::FindGameObject(uint64 objectID) const noexcept {

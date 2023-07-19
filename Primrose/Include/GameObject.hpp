@@ -147,20 +147,34 @@ public:
 	}
 
 public:
-
 	inline uint64 GetObjectID() const noexcept { return m_ObjectID; }
 	inline std::string GetName() const noexcept { return m_ObjectName; }
-	inline std::string& GetNameRef() noexcept { return m_ObjectName; }
+	inline std::string GetTag() const noexcept { return m_ObjectTag; }
 
 	inline bool GetEnabled() const noexcept { return m_Enabled; }
+	inline bool GetActiveInHeirarchy() const noexcept { return m_ActiveInHeirarchy; }
+	inline bool GetStatic() const noexcept { return m_Static; }
 	inline bool GetStarted() const noexcept { return m_Started; }
 	inline GameObject* GetParent() const noexcept { return m_Parent; }
 
 	inline Transform& GetTransform() noexcept { return m_Transform; }
 
+	inline void SetName(std::string name) noexcept { if (!name.empty()){ m_ObjectName = name; } }
+	inline void SetTag(std::string tag) noexcept { m_ObjectTag = tag; }
+	inline void SetEnabled(bool state) noexcept { 
+		
+		m_Enabled = state; 
+		SetActiveInHeirarchy(state);
+	}
+	inline void SetActiveInHeirarchy(bool state) noexcept { 
 
-	void SetName(std::string name) noexcept;
-	void SetEnabled(bool state) noexcept;
+		m_ActiveInHeirarchy = state; //Update this for unparented children and parented children
+		if (HasChildren()) {
+			for (auto& child : m_Children)
+				child->SetActiveInHeirarchy(state);
+		}
+	}
+	inline void SetStatic(bool state) noexcept { m_Static = state; }
 
 public:
 	bool AddChild(GameObject* child) noexcept;
@@ -172,22 +186,38 @@ public:
 	}
 	GameObject* FindChild(std::string_view name) const noexcept;
 
+	//FIX IDs for the heirarchy items having the same name and make sure that you cannot have items with the same name
+	// -Loop through comparing names, if found then add index(1) to it and try again, if found agin then add +1 to the number and keep trying like thart
+	//ActiveInHeirarchy for setting text color
+	//if entry is slected object, set selected bool for tree node
+	//propogate bool in set active maybe
+	//set enabled sets acrive in hierarchy for self and all children
+	//set active for heirarchy sets enablerd for self
+	//Test filesystem by printing icons of every sprite in the texturestorage, at least its a test of the gui part of it
 
 	inline std::vector<GameObject*> GetChildren() const noexcept {
 		return m_Children;
 	}
 
 private:
-	bool m_Enabled{ true };
-	bool m_Static{ false }; //Not Implemented yet
-	bool m_Started{ false };
+	bool m_Enabled				{ true };
+	bool m_ActiveInHeirarchy	{ true };
+	bool m_Static				{ false }; 
+	bool m_Started				{ false }; //For internal use only in ECS for calling Start()
 
 private:
 	Transform m_Transform;
-	std::vector<GameObject*> m_Children;
-	EntityComponentSystem* m_ECS;
+
+private:
 	GameObject* m_Parent{ nullptr };
+	std::vector<GameObject*> m_Children;
+
+private:
+	EntityComponentSystem* m_ECS;
 	uint32 m_ComponentFlags{ 0 };
+
+private:
 	uint64 m_ObjectID{ 0 };
 	std::string m_ObjectName{ "NewGameObject" };
+	std::string m_ObjectTag{ "None" };
 };

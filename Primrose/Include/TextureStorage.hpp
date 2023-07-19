@@ -346,6 +346,15 @@ public:
 			return;
 		}
 		GLCall(glBindTexture(GL_TEXTURE_2D, m_ID));
+
+		int Channels = 0;
+		if (m_Source.m_ColorChannelCount == 3)
+			Channels = GL_RGB;
+		if (m_Source.m_ColorChannelCount == 4)
+			Channels = GL_RGBA;
+
+		GLCall(glTexImage2D(GL_TEXTURE_2D, 0, Channels, m_Source.m_Width, m_Source.m_Height, 0, Channels, GL_UNSIGNED_BYTE, m_Source.m_Data));
+		GLCall(glGenerateMipmap(GL_TEXTURE_2D));
 	}
 	void Unbind() const noexcept {
 		if (!m_IsValid) {

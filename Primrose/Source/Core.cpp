@@ -13,7 +13,7 @@ Core::Core() noexcept {
 	m_Renderer = std::make_unique<Renderer>(*m_ECS, *m_Window);
 	m_Time = std::make_unique<Time>();
 	m_Input = std::make_unique<Inputinator>(*m_Window);
-	m_Editor = std::make_unique<Editor>(*m_Window, *m_ECS);
+	m_Editor = std::make_unique<Editor>(*m_Window, *m_ECS, *m_TextureStorage);
 }
 void Core::SetupCore() { // Sounds like 2 step initialization.
 
@@ -32,10 +32,11 @@ void Core::Run() {
 	//one from the storage. It checks by path and not name! or?
 	const std::string_view TexturePath = "Resources/Textures/Crate.jpg";
 	const std::string_view TextureName = "Create";
-	Texture2D* CrateTexture; //TODO: Change how the texture storage works and make it so that it actually stores them
-	
+	Texture2D* CrateTexture = nullptr; 
+
 	if (!m_TextureStorage->LoadTexture2D(TexturePath, TextureName, CrateTexture))
-	PrintMessage("It failed to load the texture!");
+		PrintMessage("It failed to load the texture!");
+
 	
 	//CreateTexture->Bind();
 	m_TextureStorage->ActivateTextureUnit(GL_TEXTURE0);

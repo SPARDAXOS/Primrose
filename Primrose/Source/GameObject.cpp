@@ -1,22 +1,16 @@
 #include "GameObject.hpp"
 
-void GameObject::SetName(std::string name) noexcept {
-	if (!name.empty())
-		m_ObjectName = name;
-}
-void GameObject::SetEnabled(bool state) noexcept {
-	m_Enabled = state;
-	
-}
-
 bool GameObject::AddChild(GameObject* child) noexcept {
 
 	//Important Note: The camera might be fine but its the cursor reaching the edge that was locking it!
 
+
+	//NOTE: This is a confusing API. Rework this or at least restructure it so that it makes more sense.
+
 	if (child == nullptr)
 		return false;
 
-	//Case 3
+	//Case 1 - This unparents the child from this gameobject
 	const GameObject* TargetChild = FindChild(child->GetName());
 	if (TargetChild != nullptr) {
 		RemoveChild(child);
@@ -24,10 +18,12 @@ bool GameObject::AddChild(GameObject* child) noexcept {
 			child->m_Parent = m_Parent;
 			m_Parent->AddChild(child);
 		}
+		else
+			child->SetActiveInHeirarchy(child->GetEnabled());
 		return true;
 	}
 
-	//Case 1
+	//Case 2 - This swaps the relationship between the child and parent 
 	if (*child == *m_Parent) {
 		//Swap them!
 		m_Parent = child->m_Parent;
@@ -52,15 +48,16 @@ bool GameObject::AddChild(GameObject* child) noexcept {
 		
 		return true;
 	}
-	else {
-		//Case 2
-		if (child->m_Parent != nullptr)
-			child->m_Parent->RemoveChild(child);
-		if (m_ObjectID != MAIN_SCENE_OBJECT_ID) //To not parent anything to the main scene
-			child->m_Parent = this;
-		m_Children.push_back(child);
-		return true;
-	}
+
+	//Case 3 - This parents the child to this gameobject
+	if (child->m_Parent != nullptr)
+		child->m_Parent->RemoveChild(child);
+	if (m_ObjectID != MAIN_SCENE_OBJECT_ID) //To not parent anything to the --MAIN-- scene
+		child->m_Parent = this;
+	child->SetEnabled(m_ActiveInHeirarchy); //Think about this thoroughly then rework the whole thing
+	m_Children.push_back(child);
+
+	return true;
 }
 bool GameObject::RemoveChild(GameObject* child) noexcept {
 

@@ -9,7 +9,7 @@ bool Window::Update() noexcept {
     if (!State) {
 
 
-        glfwPollEvents();
+        glfwPollEvents(); //TODO: Move this out to be put more clearly in the lower level loop
         return true;
     }
     else {
@@ -65,6 +65,7 @@ void Window::SetupViewport() noexcept {
     auto FrameBufferSizeCallback = [](GLFWwindow* window, int width, int height) { GLCall(glViewport(0, 0, width, height)); };
     glfwGetWindowSize(m_Window->m_ptr, &m_Width, &m_Height);
     glfwSetFramebufferSizeCallback(m_Window->m_ptr, FrameBufferSizeCallback);
+    
 }
 void Window::UpdateWindowSize() noexcept {
     GLCall(glViewport(0, 0, m_Width, m_Height));
