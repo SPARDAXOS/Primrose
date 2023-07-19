@@ -189,7 +189,7 @@ public:
 	//FIX IDs for the heirarchy items having the same name and make sure that you cannot have items with the same name
 	// -Loop through comparing names, if found then add index(1) to it and try again, if found agin then add +1 to the number and keep trying like thart
 	//ActiveInHeirarchy for setting text color
-	//if entry is slected object, set selected bool for tree node
+
 	//propogate bool in set active maybe
 	//set enabled sets acrive in hierarchy for self and all children
 	//set active for heirarchy sets enablerd for self

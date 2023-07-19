@@ -6,7 +6,7 @@
 
 #include "Renderer.hpp"
 #include "Window.hpp"
-#include "FileManagment.hpp"
+#include "FileSystem.hpp"
 #include "ShaderCompiler.hpp"
 #include "TextureStorage.hpp"
 #include "EntityComponentSystem.hpp"
@@ -88,6 +88,7 @@ public:
 	std::unique_ptr<Window> m_Window;
 	std::unique_ptr<TextureStorage> m_TextureStorage;
 	std::unique_ptr<EntityComponentSystem> m_ECS;
+	std::unique_ptr<FileSystem> m_FileSystem;
 	std::unique_ptr<Time> m_Time;
 	std::unique_ptr<Inputinator> m_Input;
 	std::unique_ptr<Editor> m_Editor;

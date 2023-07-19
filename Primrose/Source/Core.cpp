@@ -5,14 +5,13 @@
 
 Core::Core() noexcept {
 
-	//TODO: is error checking needed here? probably not since they throw and i should just let it bubble up.
-
+	m_Window = std::make_unique<Window>(m_ViewportWidth, m_ViewportHeight);
 	m_TextureStorage = std::make_unique<TextureStorage>();
 	m_ECS = std::make_unique<EntityComponentSystem>();
-	m_Window = std::make_unique<Window>(m_ViewportWidth, m_ViewportHeight);
-	m_Renderer = std::make_unique<Renderer>(*m_ECS, *m_Window);
+	m_FileSystem = std::make_unique<FileSystem>();
 	m_Time = std::make_unique<Time>();
 	m_Input = std::make_unique<Inputinator>(*m_Window);
+	m_Renderer = std::make_unique<Renderer>(*m_ECS, *m_Window);
 	m_Editor = std::make_unique<Editor>(*m_Window, *m_ECS, *m_TextureStorage);
 }
 void Core::SetupCore() { // Sounds like 2 step initialization.
@@ -59,11 +58,6 @@ void Core::Run() {
 	//GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, CreateTexture->GetWidth(), CreateTexture->GetHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, CreateTexture->GetData()));
 	//Image data might not be needed after this!
 	//GLCall(glGenerateMipmap(GL_TEXTURE_2D));
-	
-	//CreateTexture->Unbind();
-	
-	//Should be when shader program is created. ? idk anymore
-	//ShaderProgramTest.SetUniform("uDiffuse", TextureUnit::DIFFUSE);
 
 	
 	//ECS
@@ -116,7 +110,10 @@ void Core::Run() {
 	GameObjectTransform->m_Position = Vector3f(5.0f, 0.0f, 0.0f);
 	GameObjectTransform->m_Rotation = Vector3f(0.0f, 0.0f, 0.0f);
 	GameObjectTransform->m_Scale = Vector3f(0.5f, 0.5f, 0.5f);
+
+
 	
+	m_FileSystem->LoadProjectFiles();
 	
 	//GameObject* InstansiatedGameObject = &m_ECS->Instantiate(*GameObjectTest);
 	//SpriteRenderer* NewSpriteRenderer 

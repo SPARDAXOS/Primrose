@@ -42,8 +42,6 @@ public:
 
 		UpdateMenus();
 
-		//Clear selected on right click
-
 		return true;
 	}
 
@@ -132,8 +130,8 @@ private:
 		//ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.6f, 0.0f, 0.0f, 0.7f));
 		//ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.0f, 0.0f, 0.5f));
 
-		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.4f, 0.0f, 0.0f, 0.0f));
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.6f, 0.6f, 0.6f, 0.5f));
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.5f, 0.5f, 0.5f, 0.5f));
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.3f, 0.3f, 0.3f, 0.5f));
 	}
 	void ClearContentBrowserStyle() {
@@ -632,6 +630,15 @@ private:
 		CheckForHoveredWindows();
 
 		//Tree then add DirectoryEntry() on each element found
+		if (ImGui::TreeNodeEx("DirectoryTest")) {
+
+			if (ImGui::TreeNodeEx("DirectoryTest2", ImGuiTreeNodeFlags_Leaf)) {
+
+				ImGui::TreePop();
+			}
+
+			ImGui::TreePop();
+		}
 
 		
 		
@@ -663,7 +670,7 @@ private:
 		if (m_TextureStorageReference->LoadTexture2D("Resources/Textures/Folder.png", "Folder", FolderTexture, false)) {
 			FolderTexture->Bind();
 		}
-		auto ID = (void*)(intptr_t)(FolderTexture->GetID());
+		const auto ID = (void*)(intptr_t)(FolderTexture->GetID());
 
 
 		if (ImGui::ImageButton("##TextureTest1", ID, ImVec2(100.0f, 100.0f))) {

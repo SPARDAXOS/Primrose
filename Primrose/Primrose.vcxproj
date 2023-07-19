@@ -188,7 +188,7 @@
     <ClInclude Include="Include\Components\Component.hpp" />
     <ClInclude Include="Include\Editor.hpp" />
     <ClInclude Include="Include\EntityComponentSystem.hpp" />
-    <ClInclude Include="Include\FileManagment.hpp" />
+    <ClInclude Include="Include\FileSystem.hpp" />
     <ClInclude Include="Include\GameObject.hpp" />
     <ClInclude Include="Include\GraphicsResources.hpp" />
     <ClInclude Include="Include\GLErrorHandling.hpp" />
