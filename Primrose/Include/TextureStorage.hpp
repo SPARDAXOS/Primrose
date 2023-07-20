@@ -265,20 +265,23 @@ namespace TextureUnit {
 }
 
 
-class Texture2DSourceData final {
-public:
-	uint8* m_Data;
-	int32 m_Width;
-	int32 m_Height;
-	int32 m_ColorChannelCount;
-	std::string_view m_Name;
-};
-class Texture2D final {
+struct Texture2DSourceData final {
+	uint8* m_Data				{ nullptr };
+	int32 m_Width				{ 0 };
+	int32 m_Height				{ 0 };
+	int32 m_ColorChannelCount	{ 0 };
+	std::string m_Name;
+}; 
+class Texture2D final : Asset {
 public:
 
 	Texture2D() = delete;
-	Texture2D(Texture2DSourceData& data) noexcept {
+	Texture2D(Asset asset, Texture2DSourceData data) noexcept 
+	{
 		m_Source = data;
+		m_AssetPath = asset.m_AssetPath;
+		m_Type = asset.m_Type;
+
 		GLCall(glGenTextures(1, &m_ID));
 		if (m_ID != 0)
 			m_IsValid = true;
@@ -295,49 +298,8 @@ public:
 	Texture2D(const Texture2D&) = delete;
 	Texture2D& operator=(const Texture2D&) = delete;
 
-	//Texture2D(const Texture2D& rhs) noexcept {
-	//	this->m_IsValid = rhs.IsValid();
-	//	this->m_ID = rhs.GetID();
-	//	this->m_Source = rhs.m_Source;
-	//}
-	//Texture2D& operator=(const Texture2D& rhs) noexcept {
-	//	this->m_IsValid = rhs.IsValid();
-	//	this->m_ID = rhs.GetID();
-	//	this->m_Source = rhs.m_Source;
-	//	return *this;
-	//}
-
 	Texture2D(Texture2D&&) = delete;
 	Texture2D& operator=(Texture2D&&) = delete;
-
-	//Texture2D(Texture2D&& rhs) {
-	//	this->m_IsValid = rhs.IsValid();
-	//	this->m_ID = rhs.GetID();
-	//	this->m_Source = rhs.m_Source;
-	//}
-	//Texture2D& operator=(Texture2D&& rhs) {
-	//	this->m_IsValid = rhs.IsValid();
-	//	this->m_ID = rhs.GetID();
-	//	this->m_Source = rhs.m_Source;
-	//	return *this;
-	//}
-
-	//bool operator==(const Texture2D& rhs) const noexcept {
-	//	if (this->GetWidth() != rhs.GetWidth())
-	//		return false;
-	//	else if (this->GetHeight() != rhs.GetHeight())
-	//		return false;
-	//	else if (this->GetColorChannelCount() != rhs.GetColorChannelCount())
-	//		return false;
-	//	else if (this->GetID() != rhs.GetID())
-	//		return false;
-	//	else
-	//		return true;
-	//}
-	//size_t operator()(const Texture2D& t) const
-	//{
-	//	return t.GetID();
-	//}
 
 public:
 	void Bind() const noexcept {
@@ -348,9 +310,9 @@ public:
 		GLCall(glBindTexture(GL_TEXTURE_2D, m_ID));
 
 		int Channels = 0;
-		if (m_Source.m_ColorChannelCount == 3)
+		if (GetColorChannelCount() == 3)
 			Channels = GL_RGB;
-		if (m_Source.m_ColorChannelCount == 4)
+		if (GetColorChannelCount() == 4)
 			Channels = GL_RGBA;
 
 		GLCall(glTexImage2D(GL_TEXTURE_2D, 0, Channels, m_Source.m_Width, m_Source.m_Height, 0, Channels, GL_UNSIGNED_BYTE, m_Source.m_Data));
@@ -364,7 +326,6 @@ public:
 		GLCall(glBindTexture(GL_TEXTURE_2D, 0));
 	}
 
-
 public:
 	[[nodiscard]] inline bool IsValid() const noexcept { return m_IsValid; };
 	inline GLuint GetID() const noexcept { return m_ID; };
@@ -372,6 +333,8 @@ public:
 	inline int32 GetHeight() const noexcept { return m_Source.m_Height; };
 	inline int32 GetColorChannelCount() const noexcept { return m_Source.m_ColorChannelCount; };
 	inline uint8* GetData() const noexcept { return m_Source.m_Data; };
+	inline std::string_view GetName() const noexcept { return m_Source.m_Name; }
+	inline std::string_view GetFilePath() const { return m_AssetPath.string(); }
 
 private:
 	bool m_IsValid;
@@ -381,16 +344,24 @@ private:
 	Texture2DSourceData m_Source;
 };
 
+
+
+
+
+
+
 class TextureStorage final {
 public:
 
 	explicit TextureStorage() noexcept = default;
+
+	//NEEDS REWORK!
 	~TextureStorage() {
-		if (!m_Storage.empty()) {
-			auto Lambda = [](std::pair<std::string_view, Texture2D*> pair) { delete pair.second; };
-			std::for_each(std::begin(m_Storage), std::end(m_Storage), Lambda);
-			m_Storage.clear();
-		}
+		//if (!m_Storage.empty()) {
+		//	auto Lambda = [](std::pair<std::string_view, Texture2D*> pair) { delete pair.second; };
+		//	std::for_each(std::begin(m_Storage), std::end(m_Storage), Lambda);
+		//	m_Storage.clear();
+		//}
 		PrintMessage("[Exit] TextureStorage was exited successfully.");
 	}
 
@@ -401,38 +372,64 @@ public:
 	TextureStorage& operator=(TextureStorage&&) = delete;
 
 public:
-	[[nodiscard]] bool LoadTexture2D(const std::string_view& path, const std::string_view& name, Texture2D*& ptr, bool flipped = true) {
+	//NOTE: With the introduction of "Asset", this api is now weird to work with. Either provide some API for loading specific textures
+	//- at specific directories and constructing a valid Asset out of it
+	//- OR simply change it so that everything is loaded and you simple call GetTexture to get them
+	//IMPORTANT: Why am i even calling it texture 2d? Just cause there are Texture 1D and 3D? I dont know if i will be adding support to those.
 
-		if (FindTexture2D(name, ptr)) {
-			return true;
+
+	//Old _____[[nodiscard]] bool LoadTexture2D(const std::string_view& path, const std::string_view& name, Texture2D*& ptr, bool flipped = true)
+
+	[[nodiscard]] bool LoadTexture2D(Asset& asset, bool flipped = true) { //Flipped will be kinda problamatic now...
+
+		std::string AssetPath = asset.m_AssetPath.string();
+		if (FindTexture2D(AssetPath)) {
+			return true; // Should it just be true? If it was loaded already?
 		}
 		else {
 			Texture2DSourceData Buffer;
 			stbi_set_flip_vertically_on_load(flipped);
-			if (LoadFromFile(path, name, Buffer)) {
-				Texture2D* NewTexture2D = new Texture2D(Buffer);
-				m_Storage.emplace(name, NewTexture2D);
-				ptr = NewTexture2D;
+			if (LoadFromFile(asset, Buffer)) {
+				Texture2D* NewTexture2D = new Texture2D(asset, Buffer);
+				m_Storage.emplace_back(NewTexture2D);
+				//ptr = NewTexture2D;
 				return true;
 			}
 			else
 				return false;
 		}
 	}
-	void UnloadTexture2D(const std::string_view& name) {
+
+	//Unfinished after rework
+	void UnloadTexture2D(const std::string_view path) {
 		Texture2D* TargetTexture;
-		if (!FindTexture2D(name, TargetTexture))
+		if (!FindTexture2D(path)) //Make it return the index of where it found it!
 			return;
 		else {
 			delete TargetTexture;
-			m_Storage.erase(name);
+			//m_Storage.erase(std::begin()path);
 		}
 	}
-	[[nodiscard]] bool GetTexture2D(const std::string_view& name, Texture2D*& ptr) {
-		if (!FindTexture2D(name, ptr))
-			return false;
-		else
-			return true;
+
+	//TODO: Add more finding functions. By Path?
+	[[nodiscard]] bool GetTexture2D(const std::string_view name, Texture2D*& ptr) {
+
+		for (auto& texture : m_Storage) {
+			if (texture->GetName() == name) {
+				ptr = texture;
+				return true;
+			}
+		}
+		return false;
+
+
+
+		//for (auto& texture : m_Storage) {
+		//	if (texture.second->GetName() == name) {
+		//		ptr = texture.second;
+		//		return true;
+		//	}
+		//}
 	}
 
 public:
@@ -441,27 +438,37 @@ public:
 	}
 
 private:
-	[[nodiscard]] bool FindTexture2D(const std::string_view& name, Texture2D*& ptr) {
-		if (m_Storage.find(name) != m_Storage.end()) {
-			ptr = m_Storage[name];
-			return true;
+	//Terrible function name - misleading
+	[[nodiscard]] bool FindTexture2D(const std::string_view path) { 
+
+		for (auto& texture : m_Storage) {
+			if (texture->GetFilePath() == path)
+				return true;
 		}
-		else
-			return false;
+		return false;
+		//if (m_Storage.find(path) != m_Storage.end()) {
+		//	//ptr = m_Storage[name];
+		//	return true;
+		//}
+		//else
+		//	return false;
 	}
-	[[nodiscard]] bool LoadFromFile(const std::string_view& path, const std::string_view& name, Texture2DSourceData& buffer) noexcept {
-		unsigned char* data = stbi_load(path.data(), &buffer.m_Width, &buffer.m_Height, &buffer.m_ColorChannelCount, 0);
+	[[nodiscard]] bool LoadFromFile(Asset& asset, Texture2DSourceData& buffer) {
+
+		std::string AssetPath = asset.m_AssetPath.string();
+		std::string AssetName = asset.m_AssetPath.filename().replace_extension().string();
+		unsigned char* data = stbi_load(AssetPath.data(), &buffer.m_Width, &buffer.m_Height, &buffer.m_ColorChannelCount, 0);
 		if (data == nullptr)
 			return false;
 		else {
 			buffer.m_Data = data;
-			buffer.m_Name = name;
+			buffer.m_Name = AssetName;
 			return true;
 		}
 	}
 
 
 private:
-	std::unordered_map<std::string_view, Texture2D*> m_Storage;
-
+	//std::unordered_map<std::string_view, Texture2D*> m_Storage;
+	std::vector<Texture2D*> m_Storage;
 };

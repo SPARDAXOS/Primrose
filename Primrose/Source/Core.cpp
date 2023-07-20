@@ -8,11 +8,11 @@ Core::Core() noexcept {
 	m_Window = std::make_unique<Window>(m_ViewportWidth, m_ViewportHeight);
 	m_TextureStorage = std::make_unique<TextureStorage>();
 	m_ECS = std::make_unique<EntityComponentSystem>();
-	m_FileSystem = std::make_unique<FileSystem>();
+	m_FileSystem = std::make_unique<FileSystem>(*m_TextureStorage);
 	m_Time = std::make_unique<Time>();
 	m_Input = std::make_unique<Inputinator>(*m_Window);
 	m_Renderer = std::make_unique<Renderer>(*m_ECS, *m_Window);
-	m_Editor = std::make_unique<Editor>(*m_Window, *m_ECS, *m_TextureStorage);
+	m_Editor = std::make_unique<Editor>(*m_Window, *m_ECS, *m_TextureStorage, *m_FileSystem);
 }
 void Core::SetupCore() { // Sounds like 2 step initialization.
 
@@ -27,13 +27,18 @@ void Core::Run() {
 	//Textures
 	//TODO: Implement own image loader! for bitmaps at least own decoder
 
+
+
+	m_FileSystem->LoadProjectFiles();
+	m_Editor->SaveEngineTexturesReferences();
+
 	//TODO: Maybe switch this up so it returns a texture pointer. The actual texture is stored in the storage so if you attempt to load it again, it will return the 
 	//one from the storage. It checks by path and not name! or?
 	const std::string_view TexturePath = "Resources/Textures/Crate.jpg";
-	const std::string_view TextureName = "Create";
+	const std::string_view TextureName = "Crate";
 	Texture2D* CrateTexture = nullptr; 
 
-	if (!m_TextureStorage->LoadTexture2D(TexturePath, TextureName, CrateTexture))
+	if (!m_TextureStorage->GetTexture2D(TextureName, CrateTexture))
 		PrintMessage("It failed to load the texture!");
 
 	
@@ -112,8 +117,7 @@ void Core::Run() {
 	GameObjectTransform->m_Scale = Vector3f(0.5f, 0.5f, 0.5f);
 
 
-	
-	m_FileSystem->LoadProjectFiles();
+
 	
 	//GameObject* InstansiatedGameObject = &m_ECS->Instantiate(*GameObjectTest);
 	//SpriteRenderer* NewSpriteRenderer 

@@ -1,11 +1,4 @@
-﻿  CameraComponent.cpp
-  SpriteRendererComponent.cpp
-  Core.cpp
-  EntityComponentSystem.cpp
-  GameObject.cpp
+﻿  Core.cpp
   Main.cpp
-  Renderer.cpp
-  ShaderCompiler.cpp
-  Window.cpp
   Generating Code...
   Primrose.vcxproj -> C:\Users\alexm\Primrose\Primrose\Build\Debug\Primrose.exe

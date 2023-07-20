@@ -8,6 +8,7 @@ C:\Users\alexm\Primrose\Primrose\Dependencies\Includes\ImGUI\imgui_tables.cpp;C:
 C:\Users\alexm\Primrose\Primrose\Dependencies\Includes\ImGUI\imgui_widgets.cpp;C:\Users\alexm\Primrose\Primrose\Build\Debug\Intermediate\imgui_widgets.obj
 C:\Users\alexm\Primrose\Primrose\Source\Components\CameraComponent.cpp;C:\Users\alexm\Primrose\Primrose\Build\Debug\Intermediate\CameraComponent.obj
 C:\Users\alexm\Primrose\Primrose\Source\EntityComponentSystem.cpp;C:\Users\alexm\Primrose\Primrose\Build\Debug\Intermediate\EntityComponentSystem.obj
+C:\Users\alexm\Primrose\Primrose\Source\FileSystem.cpp;C:\Users\alexm\Primrose\Primrose\Build\Debug\Intermediate\FileSystem.obj
 C:\Users\alexm\Primrose\Primrose\Source\GameObject.cpp;C:\Users\alexm\Primrose\Primrose\Build\Debug\Intermediate\GameObject.obj
 C:\Users\alexm\Primrose\Primrose\Source\Components\SpriteRendererComponent.cpp;C:\Users\alexm\Primrose\Primrose\Build\Debug\Intermediate\SpriteRendererComponent.obj
 C:\Users\alexm\Primrose\Primrose\Source\STB_Image.cpp;C:\Users\alexm\Primrose\Primrose\Build\Debug\Intermediate\STB_Image.obj

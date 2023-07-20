@@ -5,40 +5,98 @@
 #include <fstream>
 #include <iostream>
 #include "Utility.hpp"
+#include "Profiler.hpp"
 
 
-class AssetPath final {//Maybe change name to directory?
-	//Contains a folder path and a list of all Assets in there
-
-	std::filesystem::path m_ParentPath;
-	//std::vector<Asset<int>> m_Files; //This is going to be a problem - Maybe devide them into separate vectors based on type? It might not be redundant since each will
-	//be sent to the appropriate system for loading so im saving myself the trouble of reiterating. Unless, i go through all one by one and depending on type i load 
-	//using the appropriate system
-	std::vector<std::filesystem::path> m_Folders;
-
-	//After finish loading up all the paths, i go through all the assets and load them using the paths saved in the asset file
+enum class AssetType {
+	INVALID = 0,
+	TEXTURE
 };
 
 //Maybe make some asset hierarchy? texture2D ineheriting from AssetBase
-template<class AssetType>
-class Asset final {
-	//Contains a file path and a pointer to that loaded asset.
-	Asset() = delete;
+class Asset {
+public:
+	Asset() = default;
 	Asset(std::filesystem::path path)
 		: m_AssetPath(path)
 	{
 	}
+	Asset(std::filesystem::path path, AssetType type)
+		: m_AssetPath(path), m_Type(type)
+	{
+	}
 
+	~Asset() = default;
+
+	Asset(const Asset& other) {
+		*this = other;
+	}
+	Asset& operator=(const Asset& other) {
+		if (*this == other) {
+			return *this;
+		}
+		else {
+			this->m_AssetPath = other.m_AssetPath;
+			this->m_Type = other.m_Type;
+			return *this;
+		}
+	}
+
+	Asset(Asset&&) = delete;
+	Asset& operator=(Asset&&) = delete;
+
+	bool operator==(const Asset& other) const noexcept {
+		if (m_AssetPath != other.m_AssetPath)
+			return false;
+		else if (m_Type != other.m_Type)
+			return false;
+		else
+			return true;
+	}
+	bool operator!=(const Asset& other) const noexcept {
+		if (!(*this == other))
+			return true;
+		else
+			return false;
+	}
+
+public:
 	std::filesystem::path m_AssetPath;
-	AssetType* m_Data;
+	AssetType m_Type{ AssetType::INVALID };
+};
+
+class Directory final {//Maybe change name to directory?
+public:
+	Directory() = delete;
+	Directory(std::filesystem::path path) 
+		:	m_Path(path)
+	{
+	}
+
+
+	//Contains a folder path and a list of all Assets in there
+
+	std::filesystem::path m_Path;
+	std::filesystem::path m_ParentPath; //This might not be needed actually. At least not for constructing the hierarchy
+	std::vector<Asset*> m_Assets; //This is going to be a problem - Maybe devide them into separate vectors based on type? It might not be redundant since each will
+	//be sent to the appropriate system for loading so im saving myself the trouble of reiterating. Unless, i go through all one by one and depending on type i load 
+	//using the appropriate system
+	std::vector<Directory*> m_Folders;
+
+	//After finish loading up all the paths, i go through all the assets and load them using the paths saved in the asset file
 };
 
 
+class TextureStorage;
 
 class FileSystem final {
 public:
 
-	explicit FileSystem() noexcept = default;
+	FileSystem() = delete;
+	FileSystem(TextureStorage& textureStorage) 
+		:	m_TextureStorageReference(&textureStorage)
+	{
+	}
 	~FileSystem() {
 
 	}
@@ -50,20 +108,11 @@ public:
 	FileSystem& operator=(FileSystem&&) = delete;
 
 public:
-	bool LoadProjectFiles() {
+	bool LoadProjectFiles();
 
-		if (!CheckForContentDirectory())
-			return false;
 
-		for (auto& directory : std::filesystem::directory_iterator(std::filesystem::current_path())) {
-			if (directory.path().filename() == "Content") {
-				CheckDirectory(directory);
-			}
-		}
-
-		return true;
-	}
-
+public:
+	inline Directory* GetRoot() const noexcept { return m_Root; }
 
 public:
 	[[nodiscard]] inline static bool Read(const std::string_view& filePath, std::string& buffer) {
@@ -119,43 +168,36 @@ public:
 		return true;
 	}
 
-
+	//TODO: Send extension to function along with newasset pointer to determine asset type! and set it !
+	//TODO: Add opening file at spot functionality
+	//TODO: Use main scene for the gameobjects heirarchy instead
+	//TODO: Changing names is gonna be hard to fix cause renaming affects it and creating new gameobjects does too.
+	//NOTE: There is a lot of clean up and such that could be done in these recent classes ive made
 
 
 
 private:
-	bool CheckForContentDirectory() {
-
-		if (std::filesystem::exists("Content")) {
-			//TODO: Implement proper error handling for this class
-			PrintMessage("Content folder was found!");
-			return true;
-		}
-
-		return false;
-	}
-	void CheckDirectory(std::filesystem::path path) {
-
-		for (auto& directory : std::filesystem::directory_iterator(path)) {
-			if (directory.is_regular_file()) {
-				std::cout << "File at: " << directory.path() << std::endl;
-				m_FilePaths.push_back(directory);
-			}
-			else {
-				std::cout << "Folder at: " << directory.path() << std::endl;
-				m_FolderPaths.push_back(directory);
-				CheckDirectory(directory);
-			}
-		}
-	}
+	bool CheckForContentDirectory();
+	bool ScanForContent();
+	void ScanDirectory(std::filesystem::path path, Directory& parent);
+	void CheckAssetType(Asset& asset);
+	bool LoadAssets();
 	
-
 
 private:
 
 	//Rethink this first. Directories list might be more applicable
-	std::vector<std::filesystem::path> m_FilePaths;
-	std::vector<std::filesystem::path> m_FolderPaths;
+
+	Profiler LoadingProfiler;
+
+	std::vector<Directory*> m_Directories;
+	Directory* m_Root;
+
+	//Since they will be cleaned up from here
+	//Copies on the stack might be better 
+	std::vector<Asset*> m_TexturesAssets;
+
+	TextureStorage* m_TextureStorageReference;
 };
 
 

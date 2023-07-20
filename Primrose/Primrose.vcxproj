@@ -161,6 +161,7 @@
     <ClCompile Include="Dependencies\Includes\ImGUI\imgui_widgets.cpp" />
     <ClCompile Include="Source\Components\CameraComponent.cpp" />
     <ClCompile Include="Source\EntityComponentSystem.cpp" />
+    <ClCompile Include="Source\FileSystem.cpp" />
     <ClCompile Include="Source\GameObject.cpp" />
     <ClCompile Include="Source\Components\SpriteRendererComponent.cpp" />
     <ClCompile Include="Source\STB_Image.cpp" />

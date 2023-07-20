@@ -10,8 +10,8 @@
 class Editor final {
 public:
 	Editor() = delete;
-	Editor(Window& window, EntityComponentSystem& ecs, TextureStorage& textureStorage)
-		: m_WindowReference(&window), m_ECSReference(&ecs), m_TextureStorageReference(&textureStorage)
+	Editor(Window& window, EntityComponentSystem& ecs, TextureStorage& textureStorage, FileSystem& fileSystem)
+		: m_WindowReference(&window), m_ECSReference(&ecs), m_TextureStorageReference(&textureStorage), m_FileSystemReference(&fileSystem)
 	{
 		IMGUI_CHECKVERSION();
 		m_GUIContext = ImGui::CreateContext();
@@ -43,6 +43,14 @@ public:
 		UpdateMenus();
 
 		return true;
+	}
+
+public:
+	void SaveEngineTexturesReferences() {
+
+		if (!m_TextureStorageReference->GetTexture2D("Folder", m_FolderTexture))
+			PrintMessage("Failed to save reference to engine texture [Folder]");
+
 	}
 
 private:
@@ -629,24 +637,17 @@ private:
 		ImGui::Begin("Directory Explorer", &Open, Flags);
 		CheckForHoveredWindows();
 
-		//Tree then add DirectoryEntry() on each element found
-		if (ImGui::TreeNodeEx("DirectoryTest")) {
+		auto Root = m_FileSystemReference->GetRoot();
+		if (m_SelectedDirectory == nullptr)
+			m_SelectedDirectory = Root;
 
-			if (ImGui::TreeNodeEx("DirectoryTest2", ImGuiTreeNodeFlags_Leaf)) {
-
-				ImGui::TreePop();
-			}
-
-			ImGui::TreePop();
-		}
-
-		
+		AddFileExplorerEntry(Root);
 		
 		ImGui::End();
 	}
 	void RenderContentBrowser() {
 
-		ImGui::SetNextWindowSize(ImVec2(1170.0f, 300.0f));
+		ImGui::SetNextWindowSize(m_CBWindowSize);
 		ImGui::SetNextWindowPos(ImVec2(350.0f, m_GUIViewport->Size.y - 300.0f));
 
 		bool Open = true;
@@ -658,155 +659,45 @@ private:
 		ImGui::Begin("Content Browser", &Open, Flags);
 		CheckForHoveredWindows();
 
+		//NOTE: Use m_SelectedDirectory to figure out what to draw.
+
 
 		//NOTE: Ideally, you would calculate the position and sizes depending on multiple factors such as name size and window size.
 		//NOTE: It should be calculated depending on the resizing of the window
 		//NOTE: The index 0 is the texture handle from opengl
 
-		//TODO: Move this to SetContentBrowserStyle()
-		SetupContentBrowserStyle();
+		if (m_SelectedDirectory != nullptr) {
 
-		Texture2D* FolderTexture = nullptr;
-		if (m_TextureStorageReference->LoadTexture2D("Resources/Textures/Folder.png", "Folder", FolderTexture, false)) {
-			FolderTexture->Bind();
+			SetupContentBrowserStyle();
+
+			//TODO: Implement some countermeasure in case the texture was not found
+			void* TextureID = nullptr;
+			if (m_FolderTexture) {
+				m_FolderTexture->Bind();
+				TextureID = (void*)(intptr_t)(m_FolderTexture->GetID());
+			}
+			for (auto& Folder : m_SelectedDirectory->m_Folders) {
+				std::string Name = "##" + Folder->m_Path.filename().replace_extension().string();
+
+
+
+
+				if (ImGui::ImageButton(Name.data(), TextureID, m_CBElementSize)) {
+
+				}
+			}
+			if (m_FolderTexture)
+				m_FolderTexture->Unbind();
+
+			ClearContentBrowserStyle();
 		}
-		const auto ID = (void*)(intptr_t)(FolderTexture->GetID());
-
-
-		if (ImGui::ImageButton("##TextureTest1", ID, ImVec2(100.0f, 100.0f))) {
-
-		}
-		
-		ImGui::SameLine(100.0f * 1 + 50.0f * 1); //Buttons Count * Button Width + Buttons Count * Button Padding
-		if (ImGui::ImageButton("##TextureTest2", ID, ImVec2(100.0f, 100.0f))) {
-
-		}
-
-		ImGui::SameLine(100.0f * 2 + 50.0f * 2); //Buttons Count * Button Width + Buttons Count * Button Padding
-		if (ImGui::ImageButton("##TextureTest3", ID, ImVec2(100.0f, 100.0f))) {
-
-		}
-
-		ImGui::SameLine(100.0f * 3 + 50.0f * 3); //Buttons Count * Button Width + Buttons Count * Button Padding
-		if (ImGui::ImageButton("##TextureTest4", ID, ImVec2(100.0f, 100.0f))) {
-
-		}
-
-		ImGui::SameLine(100.0f * 4 + 50.0f * 4); //Buttons Count * Button Width + Buttons Count * Button Padding
-		if (ImGui::ImageButton("##TextureTest5", ID, ImVec2(100.0f, 100.0f))) {
-
-		}
-
-		//Then you run text pass to add the texts - Probably save them in a container for each line then clear it after being done with the text pass
-
-		AddSpacings(1);
-		ImGui::SameLine(25.0f); 
-		ImGui::Text("Texture1");
-
-		ImGui::SameLine(25.0f + 150.0f * 1); 
-		ImGui::Text("Texture2");
-
-		ImGui::SameLine(25.0f + 150.0f * 2);
-		ImGui::Text("Texture3");
-
-		ImGui::SameLine(25.0f + 150.0f * 3); 
-		ImGui::Text("Texture4");
-
-		ImGui::SameLine(25.0f + 150.0f * 4); 
-		ImGui::Text("Texture5");
-
-
-		AddSpacings(1);
-		if (ImGui::ImageButton("##TextureTest6", ID, ImVec2(100.0f, 100.0f))) {
-
-		}
-
-		ImGui::SameLine(100.0f * 1 + 50.0f * 1); //Buttons Count * Button Width + Buttons Count * Button Padding
-		if (ImGui::ImageButton("##TextureTest7", ID, ImVec2(100.0f, 100.0f))) {
-
-		}
-
-		ImGui::SameLine(100.0f * 2 + 50.0f * 2); //Buttons Count * Button Width + Buttons Count * Button Padding
-		if (ImGui::ImageButton("##TextureTest8", ID, ImVec2(100.0f, 100.0f))) {
-
-		}
-
-		ImGui::SameLine(100.0f * 3 + 50.0f * 3); //Buttons Count * Button Width + Buttons Count * Button Padding
-		if (ImGui::ImageButton("##TextureTest9", ID, ImVec2(100.0f, 100.0f))) {
-
-		}
-
-		ImGui::SameLine(100.0f * 4 + 50.0f * 4); //Buttons Count * Button Width + Buttons Count * Button Padding
-		if (ImGui::ImageButton("##TextureTest10", ID, ImVec2(100.0f, 100.0f))) {
-
-		}
-
-
-		AddSpacings(1);
-		ImGui::SameLine(25.0f);
-		ImGui::Text("Texture6");
-
-		ImGui::SameLine(25.0f + 150.0f * 1);
-		ImGui::Text("Texture7");
-
-		ImGui::SameLine(25.0f + 150.0f * 2);
-		ImGui::Text("Texture8");
-
-		ImGui::SameLine(25.0f + 150.0f * 3);
-		ImGui::Text("Texture9");
-
-		ImGui::SameLine(25.0f + 150.0f * 4);
-		ImGui::Text("Texture10");
-
-
-		if (ImGui::ImageButton("##TextureTest11", ID, ImVec2(100.0f, 100.0f))) {
-
-		}
-
-		ImGui::SameLine(100.0f * 1 + 50.0f * 1); //Buttons Count * Button Width + Buttons Count * Button Padding
-		if (ImGui::ImageButton("##TextureTest12", ID, ImVec2(100.0f, 100.0f))) {
-
-		}
-
-		ImGui::SameLine(100.0f * 2 + 50.0f * 2); //Buttons Count * Button Width + Buttons Count * Button Padding
-		if (ImGui::ImageButton("##TextureTest13", ID, ImVec2(100.0f, 100.0f))) {
-
-		}
-
-		ImGui::SameLine(100.0f * 3 + 50.0f * 3); //Buttons Count * Button Width + Buttons Count * Button Padding
-		if (ImGui::ImageButton("##TextureTest14", ID, ImVec2(100.0f, 100.0f))) {
-
-		}
-
-		ImGui::SameLine(100.0f * 4 + 50.0f * 4); //Buttons Count * Button Width + Buttons Count * Button Padding
-		if (ImGui::ImageButton("##TextureTest15", ID, ImVec2(100.0f, 100.0f))) {
-
-		}
-
-		AddSpacings(1);
-		ImGui::SameLine(25.0f);
-		ImGui::Text("Texture11");
-
-		ImGui::SameLine(25.0f + 150.0f * 1);
-		ImGui::Text("Texture12");
-
-		ImGui::SameLine(25.0f + 150.0f * 2);
-		ImGui::Text("Texture13");
-
-		ImGui::SameLine(25.0f + 150.0f * 3);
-		ImGui::Text("Texture14");
-
-		ImGui::SameLine(25.0f + 150.0f * 4);
-		ImGui::Text("Texture15");
-
-		ClearContentBrowserStyle();
-
 
 		ImGui::End();
 	}
 
 
 private:
+	//They should be const since they shouldnt change anything
 	void AddHeirarchyEntry(GameObject* entry) {
 
 		if (entry == nullptr)
@@ -938,6 +829,39 @@ private:
 			PushedStyles--;
 		}
 	}
+	void AddFileExplorerEntry(Directory* entry) {
+
+		if (entry == nullptr)
+			return;
+
+		ImGuiTreeNodeFlags Flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_DefaultOpen;
+		bool IsLeaf = false;
+		if (entry->m_Folders.size() == 0) {
+			Flags |= ImGuiTreeNodeFlags_Leaf;
+			IsLeaf = true;
+		}
+
+		if (entry == m_SelectedDirectory)
+			Flags |= ImGuiTreeNodeFlags_Selected;
+
+		if (ImGui::TreeNodeEx(entry->m_Path.filename().string().data(), Flags)) {
+
+			if (ImGui::IsItemClicked()) {
+				SetSelectedDirectory(entry);
+			}
+
+			if (!IsLeaf) {
+				for (auto& x : entry->m_Folders)
+					AddFileExplorerEntry(x);
+			}
+
+			ImGui::TreePop();
+		}
+
+	}
+	void AddContentBrowserEntry() {
+
+	}
 
 	bool AddBlendModeSelectable(SourceBlendMode mode) {
 		using namespace EnumToText;
@@ -993,6 +917,10 @@ private:
 			strcpy_s(m_TagInputBuffer, m_SelectedGameObject->GetTag().c_str());
 		}
 	}
+	void SetSelectedDirectory(Directory* directory) noexcept {
+
+		m_SelectedDirectory = directory;
+	}
 	void CheckForHoveredWindows() noexcept {
 
 		if (ImGui::IsWindowHovered())
@@ -1001,14 +929,23 @@ private:
 
 private:
 	GameObject* m_SelectedGameObject;
+	Directory* m_SelectedDirectory;
 	char m_NameInputBuffer[33];
 	char m_TagInputBuffer[33];
 	bool m_IsAnyWindowHovered{ false };
+
+private: //Most of these are relative to each other. Calculate them in runtime and maybe once at the start. Think about this.
+	ImVec2 m_CBWindowSize { 1170.0f, 300.0f };
+	ImVec2 m_CBElementSize{ 100.0f, 100.0f };
+
+private:
+	Texture2D* m_FolderTexture;
 
 private:
 	Window* m_WindowReference;
 	EntityComponentSystem* m_ECSReference;
 	TextureStorage* m_TextureStorageReference;
+	FileSystem* m_FileSystemReference;
 
 private:
 	ImGuiContext* m_GUIContext;
