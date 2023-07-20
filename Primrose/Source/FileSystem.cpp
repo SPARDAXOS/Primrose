@@ -79,7 +79,7 @@ void FileSystem::ScanDirectory(std::filesystem::path path, Directory& parent) {
 }
 void FileSystem::CheckAssetType(Asset& asset) {
 
-	auto Extension = asset.m_AssetPath.extension();
+	auto Extension = asset.m_Path.extension();
 
 	//Any new supported asset types should be added here for checking
 	if (Extension == ".jpg" || Extension == ".png") {
@@ -96,19 +96,17 @@ bool FileSystem::LoadAssets() {
 	//-them in engine. Maybe texture editor? Tick the option and the image will be reloaded!
 
 	//IMPORTANT NOTE: String_view is meant to keep track of one block of memory. So assigning to it a copy will be invalid since it will keep track of the copies data
-	LoadingProfiler.StartProfile("Loading Assets");
 	std::cout << "Started loading assets..." << std::endl;
 	for (auto& TextureAsset : m_TexturesAssets) {
 		//NOTE: Flipping or not is going to be a problem to figure out
-		std::string FileName = TextureAsset->m_AssetPath.filename().replace_extension().string();
+		std::string FileName = TextureAsset->m_Path.filename().replace_extension().string();
 		if (!m_TextureStorageReference->LoadTexture2D(*TextureAsset)) {
-			std::cout << "Asset failed to load [Texture] [" << FileName << "] " << TextureAsset->m_AssetPath << std::endl;
+			std::cout << "Asset failed to load [Texture] [" << FileName << "] " << TextureAsset->m_Path << std::endl;
 		}
 		else
-			std::cout << "Asset loaded successfully [Texture] [" << FileName << "] " << TextureAsset->m_AssetPath << std::endl;
+			std::cout << "Asset loaded successfully [Texture] [" << FileName << "] " << TextureAsset->m_Path << std::endl;
 	}
 
-	LoadingProfiler.EndProfile("Loading Assets");
 	std::cout << "Finished loading assets successfully!" << std::endl;
 	return true;
 }

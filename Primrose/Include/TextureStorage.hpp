@@ -279,7 +279,7 @@ public:
 	Texture2D(Asset asset, Texture2DSourceData data) noexcept 
 	{
 		m_Source = data;
-		m_AssetPath = asset.m_AssetPath;
+		m_Path = asset.m_Path;
 		m_Type = asset.m_Type;
 
 		GLCall(glGenTextures(1, &m_ID));
@@ -334,7 +334,7 @@ public:
 	inline int32 GetColorChannelCount() const noexcept { return m_Source.m_ColorChannelCount; };
 	inline uint8* GetData() const noexcept { return m_Source.m_Data; };
 	inline std::string_view GetName() const noexcept { return m_Source.m_Name; }
-	inline std::string_view GetFilePath() const { return m_AssetPath.string(); }
+	inline std::string_view GetFilePath() const { return m_Path.string(); }
 
 private:
 	bool m_IsValid;
@@ -382,7 +382,7 @@ public:
 
 	[[nodiscard]] bool LoadTexture2D(Asset& asset, bool flipped = true) { //Flipped will be kinda problamatic now...
 
-		std::string AssetPath = asset.m_AssetPath.string();
+		std::string AssetPath = asset.m_Path.string();
 		if (FindTexture2D(AssetPath)) {
 			return true; // Should it just be true? If it was loaded already?
 		}
@@ -455,8 +455,8 @@ private:
 	}
 	[[nodiscard]] bool LoadFromFile(Asset& asset, Texture2DSourceData& buffer) {
 
-		std::string AssetPath = asset.m_AssetPath.string();
-		std::string AssetName = asset.m_AssetPath.filename().replace_extension().string();
+		std::string AssetPath = asset.m_Path.string();
+		std::string AssetName = asset.m_Path.filename().replace_extension().string();
 		unsigned char* data = stbi_load(AssetPath.data(), &buffer.m_Width, &buffer.m_Height, &buffer.m_ColorChannelCount, 0);
 		if (data == nullptr)
 			return false;

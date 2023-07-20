@@ -18,11 +18,11 @@ class Asset {
 public:
 	Asset() = default;
 	Asset(std::filesystem::path path)
-		: m_AssetPath(path)
+		: m_Path(path)
 	{
 	}
 	Asset(std::filesystem::path path, AssetType type)
-		: m_AssetPath(path), m_Type(type)
+		: m_Path(path), m_Type(type)
 	{
 	}
 
@@ -36,17 +36,28 @@ public:
 			return *this;
 		}
 		else {
-			this->m_AssetPath = other.m_AssetPath;
+			this->m_Path = other.m_Path;
 			this->m_Type = other.m_Type;
 			return *this;
 		}
 	}
 
-	Asset(Asset&&) = delete;
-	Asset& operator=(Asset&&) = delete;
+	Asset(Asset&& other) {
+		*this = std::move(other);
+	}
+	Asset& operator=(Asset&& other) {
+		if (*this == other) {
+			return *this;
+		}
+		else {
+			this->m_Path = std::move(other.m_Path);
+			this->m_Type = std::move(other.m_Type);
+			return *this;
+		}
+	}
 
 	bool operator==(const Asset& other) const noexcept {
-		if (m_AssetPath != other.m_AssetPath)
+		if (m_Path != other.m_Path)
 			return false;
 		else if (m_Type != other.m_Type)
 			return false;
@@ -61,7 +72,7 @@ public:
 	}
 
 public:
-	std::filesystem::path m_AssetPath;
+	std::filesystem::path m_Path;
 	AssetType m_Type{ AssetType::INVALID };
 };
 
@@ -72,6 +83,8 @@ public:
 		:	m_Path(path)
 	{
 	}
+
+
 
 
 	//Contains a folder path and a list of all Assets in there

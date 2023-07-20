@@ -144,6 +144,7 @@ struct Vector3f {
 			return *this;
 		}
 	}
+
 	Vector3f(Vector3f&& other) noexcept {
 		*this = std::move(other);
 	}
