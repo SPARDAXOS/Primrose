@@ -700,15 +700,16 @@ private:
 
 			//m_QueuedContentTexts
 
-
-
-			//If list not empty yet then flush it!
-			if (m_QueuedRenderFolderTexts.size() > 0)
-				FlushFolderTexts((uint32)m_QueuedRenderFolderTexts.size());
+			if (m_QueuedContentTexts.size() > 0)
+				FlushContentTexts();
 
 			//If list not empty yet then flush it!
-			if (m_QueuedRenderAssetTexts.size() > 0)
-				FlushAssetTexts((uint32)m_QueuedRenderAssetTexts.size(), false);
+			//if (m_QueuedRenderFolderTexts.size() > 0)
+			//	FlushFolderTexts((uint32)m_QueuedRenderFolderTexts.size());
+
+			////If list not empty yet then flush it!
+			//if (m_QueuedRenderAssetTexts.size() > 0)
+			//	FlushAssetTexts((uint32)m_QueuedRenderAssetTexts.size(), false);
 
 
 			ClearContentBrowserStyle();
@@ -881,12 +882,12 @@ private:
 		}
 
 	}
+
+private:
 	void NewContentBrowserFrame() {
 		ContentElementCursor = 0.0f;
 		ContentLineElementsCount = 0;
 	}
-
-
 	void UpdateContentBrowserFolderEntries() {
 
 		//TODO: Implement some countermeasure in case the texture was not found
@@ -897,49 +898,37 @@ private:
 			TextureID = (void*)(intptr_t)(m_FolderTexture->GetID());
 		}
 
-		uint32 RenderedElements = 0;
-
 		for (auto& Folder : m_SelectedDirectory->m_Folders) {
 
-			std::string Name = "##" + Folder->m_Path.filename().replace_extension().string();
+			std::string Name = Folder->m_Path.filename().replace_extension().string();
+			std::string ID = "##" + Name;
 
 			//Calculate position and check if new line is necessary
 			ContentElementCursor = (m_ContentBrowserElementPadding * (ContentLineElementsCount + 1)) + m_ContentBrowserElementSize.x * ContentLineElementsCount;
 			if (ContentElementCursor + m_ContentBrowserElementSize.x >= m_ContentBrowserWindowSize.x) {
-				FlushFolderTexts(RenderedElements);
-				AddSpacings(2); //To go to next line
+				FlushContentTexts();
 				ContentElementCursor = m_ContentBrowserElementPadding;
 				ContentLineElementsCount = 0; //This means its a new line!
-				RenderedElements = 0; //So it doesnt attempt to add at 1<index after vector was cleared
 			}
 
 			//Render content
 			ImGui::SameLine(ContentElementCursor);
-			if (ImGui::ImageButton(Name.data(), TextureID, m_ContentBrowserElementSize)) {
+			if (ImGui::ImageButton(ID.data(), TextureID, m_ContentBrowserElementSize)) {
 				m_SelectedDirectory = Folder;
 				break;
 			}
 
 			//Book keeping
-			m_QueuedRenderFolderTexts.insert(std::begin(m_QueuedRenderFolderTexts) + RenderedElements, Folder); //Save it at its CurrentElements count
-			m_QueuedContentTexts.emplace_back(Name); //THIS!
+			m_QueuedContentTexts.emplace_back(Name);
 
 			ContentLineElementsCount++;
-			RenderedElements++;
 		}
-
-		////If list not empty yet then flush it!
-		//if (m_QueuedRenderFolderTexts.size() > 0)
-		//	FlushFolderTexts((uint32)m_QueuedRenderFolderTexts.size());
 
 		//Unbind texture
 		if (m_FolderTexture)
 			m_FolderTexture->Unbind();
 	}
 	void UpdateContentBrowserAssetEntries() {
-
-
-		uint32 RenderedElements = 0;
 
 		for (auto& Asset : m_SelectedDirectory->m_Assets) {
 
@@ -952,53 +941,43 @@ private:
 			}
 
 
-			std::string Name = "##" + Asset->m_Path.filename().replace_extension().string();
+			std::string Name = Asset->m_Path.filename().replace_extension().string();
+			std::string ID = "##" + Name;
 
 			//Calculate position and check if new line is necessary
 			ContentElementCursor = (m_ContentBrowserElementPadding * (ContentLineElementsCount + 1)) + m_ContentBrowserElementSize.x * ContentLineElementsCount;
 			if (ContentElementCursor + m_ContentBrowserElementSize.x >= m_ContentBrowserWindowSize.x) {
-				FlushFolderTexts(RenderedElements);
-				AddSpacings(2); //To go to next line
+				
+				FlushContentTexts();
 				ContentElementCursor = m_ContentBrowserElementPadding;
 				ContentLineElementsCount = 0; //This means its a new line!
-				RenderedElements = 0; //So it doesnt attempt to add at 1<index after vector was cleared
 			}
 
 			//Render content
 			ImGui::SameLine(ContentElementCursor);
-			if (ImGui::ImageButton(Name.data(), TextureID, m_ContentBrowserElementSize)) {
+			if (ImGui::ImageButton(ID.data(), TextureID, m_ContentBrowserElementSize)) {
 
 			}
 
-			//Book keeping
-			//NOTE: PUSH BACK IS PROBABLY ENOUGH.
-			m_QueuedRenderAssetTexts.insert(std::begin(m_QueuedRenderAssetTexts) + RenderedElements, Asset); //Save it at its CurrentElements count
-			RenderedElements++;
+			m_QueuedContentTexts.emplace_back(Name);
 			ContentLineElementsCount++;
 
 			if (IconTexture != nullptr)
 				IconTexture->Unbind();
 		}
-
-		////If list not empty yet then flush it!
-		//if (m_QueuedRenderAssetTexts.size() > 0)
-		//	FlushAssetTexts((uint32)m_QueuedRenderAssetTexts.size());
-
-
 	}
-	void FlushFolderTexts(uint32 count, bool newLine = true) {
+	void FlushContentTexts() {
 
-		if (newLine)
-			AddSpacings(1);
+		AddSpacings(1);
 
 		float CurrentX = 0.0f;
 
-		for (uint32 elements = 0; elements < count; elements++) {
+		for (uint32 Index = 0; Index < m_QueuedContentTexts.size(); Index++) {
 
-			std::string ElementName = m_QueuedRenderFolderTexts.at(elements)->m_Path.filename().replace_extension().string();
+			std::string ElementName = m_QueuedContentTexts.at(Index);
 
 			ImVec2 TextSize = ImGui::CalcTextSize(ElementName.data());
-			CurrentX = (m_ContentBrowserElementPadding * (elements + 1)) + m_ContentBrowserElementSize.x * elements; //Same pos as content
+			CurrentX = (m_ContentBrowserElementPadding * (Index + 1)) + m_ContentBrowserElementSize.x * Index; //Same pos as content
 			CurrentX += m_ContentBrowserElementSize.x / 2; //Shift it by button half button size
 			CurrentX -= TextSize.x / 2; //Shift it back by text half width
 
@@ -1006,37 +985,11 @@ private:
 			ImGui::Text(ElementName.data());
 		}
 
-		m_QueuedRenderFolderTexts.clear();
-
-		//if (newLine)
-		//	AddSpacings(2);
-	}
-	void FlushAssetTexts(uint32 count, bool newLine = true) {
-
-		if (newLine)
-			AddSpacings(1);
-		
-		float CurrentX = 0.0f;
-
-		for (uint32 elements = 0; elements < count; elements++) {
-
-			std::string ElementName = m_QueuedRenderAssetTexts.at(elements)->m_Path.filename().replace_extension().string();
-
-			ImVec2 TextSize = ImGui::CalcTextSize(ElementName.data());
-			CurrentX = (m_ContentBrowserElementPadding * (elements + 1)) + m_ContentBrowserElementSize.x * elements; //Same pos as content
-			CurrentX += m_ContentBrowserElementSize.x / 2; //Shift it by button half button size
-			CurrentX -= TextSize.x / 2; //Shift it back by text half width
-
-			ImGui::SameLine(CurrentX);
-			ImGui::Text(ElementName.data());
-		}
-
-		m_QueuedRenderAssetTexts.clear();
-
-		//if (newLine)
-		//	AddSpacings(2);
+		m_QueuedContentTexts.clear();
+		AddSpacings(2);
 	}
 
+private:
 	bool AddBlendModeSelectable(SourceBlendMode mode) {
 		using namespace EnumToText;
 
@@ -1104,6 +1057,8 @@ private:
 
 		Texture2D* IconTexture;
 
+		//TODO: Set the alpha blending for these icons cause transparency is borked currenrtly
+
 		switch (asset.m_Type)
 		{
 		case AssetType::TEXTURE: {
@@ -1138,10 +1093,6 @@ private:
 	Texture2D* m_FolderTexture;
 	float ContentElementCursor = 0.0f;
 	uint32 ContentLineElementsCount = 0;
-
-	std::vector<Directory*> m_QueuedRenderFolderTexts; //Saved as Directory* to avoid reconstructing std::strings
-	std::vector<Asset*> m_QueuedRenderAssetTexts; //Saved as Asset* to avoid reconstructing std::strings
-
 	std::vector<std::string> m_QueuedContentTexts;
 
 private:

@@ -380,7 +380,7 @@ public:
 
 	//Old _____[[nodiscard]] bool LoadTexture2D(const std::string_view& path, const std::string_view& name, Texture2D*& ptr, bool flipped = true)
 
-	[[nodiscard]] bool LoadTexture2D(Asset& asset, bool flipped = true) { //Flipped will be kinda problamatic now...
+	[[nodiscard]] bool LoadTexture2D(Asset& asset, bool flipped = false) { //Flipped will be kinda problamatic now...
 
 		std::string AssetPath = asset.m_Path.string();
 		if (FindTexture2D(AssetPath)) {
@@ -392,7 +392,6 @@ public:
 			if (LoadFromFile(asset, Buffer)) {
 				Texture2D* NewTexture2D = new Texture2D(asset, Buffer);
 				m_Storage.emplace_back(NewTexture2D);
-				//ptr = NewTexture2D;
 				return true;
 			}
 			else
