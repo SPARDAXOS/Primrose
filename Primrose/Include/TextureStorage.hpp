@@ -1,5 +1,5 @@
 #pragma once
-#include "FileSystem.hpp"
+#include "AssetManager.hpp"
 #include "Utility.hpp"
 #include <string>
 #include <string_view>
@@ -304,15 +304,15 @@ public:
 public:
 	void Bind() const noexcept {
 		if (!m_IsValid) {
-			PrintMessage("[User Error] Attempted to unbind invalid Texture2D.");
+			PrintMessage("[User Error] Attempted to bind invalid Texture2D.");
 			return;
 		}
 		GLCall(glBindTexture(GL_TEXTURE_2D, m_ID));
 
-		int Channels = 0;
+		int Channels = GL_RGB;
 		if (GetColorChannelCount() == 3)
 			Channels = GL_RGB;
-		if (GetColorChannelCount() == 4)
+		else if (GetColorChannelCount() == 4)
 			Channels = GL_RGBA;
 
 		GLCall(glTexImage2D(GL_TEXTURE_2D, 0, Channels, m_Source.m_Width, m_Source.m_Height, 0, Channels, GL_UNSIGNED_BYTE, m_Source.m_Data));

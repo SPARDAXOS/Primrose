@@ -1,7 +1,7 @@
 #pragma once
 #include <GLAD/glad/glad.h>
 #include "GLErrorHandling.hpp"
-#include "FileSystem.hpp"
+#include "AssetManager.hpp"
 
 class Shader final {
 public:
@@ -30,7 +30,7 @@ public:
 
 private:
 	[[nodiscard]] bool LoadShader(const std::string_view& filePath) {
-		return FileSystem::CRead(filePath, m_Source);
+		return AssetManager::CRead(filePath, m_Source);
 	}
 	[[nodiscard]] bool CompileShader() noexcept {
 		ClearGLErrors();

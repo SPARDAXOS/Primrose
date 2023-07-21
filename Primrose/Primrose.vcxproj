@@ -161,7 +161,7 @@
     <ClCompile Include="Dependencies\Includes\ImGUI\imgui_widgets.cpp" />
     <ClCompile Include="Source\Components\CameraComponent.cpp" />
     <ClCompile Include="Source\EntityComponentSystem.cpp" />
-    <ClCompile Include="Source\FileSystem.cpp" />
+    <ClCompile Include="Source\AssetManager.cpp" />
     <ClCompile Include="Source\GameObject.cpp" />
     <ClCompile Include="Source\Components\SpriteRendererComponent.cpp" />
     <ClCompile Include="Source\STB_Image.cpp" />
@@ -170,6 +170,7 @@
     <ClCompile Include="Source\Profiler.cpp" />
     <ClCompile Include="Source\Renderer.cpp" />
     <ClCompile Include="Source\ShaderCompiler.cpp" />
+    <ClCompile Include="Source\Systems\Editor.cpp" />
     <ClCompile Include="Source\Window.cpp" />
     <ClCompile Include="Dependencies\Includes\GLAD\glad.c" />
   </ItemGroup>
@@ -189,11 +190,11 @@
     <ClInclude Include="Include\Components\Component.hpp" />
     <ClInclude Include="Include\Editor.hpp" />
     <ClInclude Include="Include\EntityComponentSystem.hpp" />
-    <ClInclude Include="Include\FileSystem.hpp" />
+    <ClInclude Include="Include\AssetManager.hpp" />
     <ClInclude Include="Include\GameObject.hpp" />
     <ClInclude Include="Include\GraphicsResources.hpp" />
     <ClInclude Include="Include\GLErrorHandling.hpp" />
-    <ClInclude Include="Include\Inputinator.hpp" />
+    <ClInclude Include="Include\Input.hpp" />
     <ClInclude Include="Include\Math.hpp" />
     <ClInclude Include="Include\Profiler.hpp" />
     <ClInclude Include="Include\Core.hpp" />

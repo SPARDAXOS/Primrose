@@ -8,11 +8,11 @@ Core::Core() noexcept {
 	m_Window = std::make_unique<Window>(m_ViewportWidth, m_ViewportHeight);
 	m_TextureStorage = std::make_unique<TextureStorage>();
 	m_ECS = std::make_unique<EntityComponentSystem>();
-	m_FileSystem = std::make_unique<FileSystem>(*m_TextureStorage);
+	m_AssetManager = std::make_unique<AssetManager>(*m_TextureStorage);
 	m_Time = std::make_unique<Time>();
-	m_Input = std::make_unique<Inputinator>(*m_Window);
+	m_Input = std::make_unique<Input>(*m_Window);
 	m_Renderer = std::make_unique<Renderer>(*m_ECS, *m_Window);
-	m_Editor = std::make_unique<Editor>(*m_Window, *m_ECS, *m_TextureStorage, *m_FileSystem);
+	m_Editor = std::make_unique<Editor>(*this);
 }
 void Core::SetupCore() { // Sounds like 2 step initialization.
 
@@ -29,7 +29,7 @@ void Core::Run() {
 
 
 
-	m_FileSystem->LoadProjectFiles();
+	m_AssetManager->LoadProjectFiles();
 	m_Editor->SaveEngineTexturesReferences();
 
 	//TODO: Maybe switch this up so it returns a texture pointer. The actual texture is stored in the storage so if you attempt to load it again, it will return the 
@@ -179,80 +179,7 @@ void Core::UpdateSystems() {
 	//Needs to be manual thing to call from window - Remove from Renderer - Maybe add this and clear to window
 	m_Window->SwapBuffer();
 
-
-	UpdateViewportControls();
-
-
 	//glfwPollEvents(); //Needs to be outside of the worker thread calls
-}
-void Core::UpdateViewportControls() {
-	
-	if (m_Input->GetMouseKey(MouseKeyCode::RIGHT) && !m_ViewportNavigationMode) {
-		m_ViewportNavigationMode = true;
-		m_Input->SetMouseInputMode(MouseMode::HIDDEN);
-	}
-	else if (!m_Input->GetMouseKey(MouseKeyCode::RIGHT) && m_ViewportNavigationMode) {
-		m_ViewportNavigationMode = false;
-		m_Input->SetMouseInputMode(MouseMode::NORMAL);
-	}
-	
-	if (!m_ViewportNavigationMode) {
-		return;
-	}
-
-	Camera* ViewportCamera = &m_ECS->GetViewportCamera();
-	if (ViewportCamera == nullptr)
-		return;
-
-	const float DeltaTime = static_cast<float>(m_Time->GetDeltaTime());
-
-	
-	if (m_Input->GetKey(Keycode::W)){
-		ViewportCamera->MoveY(m_CameraMovementSpeed * DeltaTime);
-	}
-	if (m_Input->GetKey(Keycode::S)) {
-		ViewportCamera->MoveY((m_CameraMovementSpeed * DeltaTime) * -1);
-	}
-	if (m_Input->GetKey(Keycode::A)) {
-		ViewportCamera->MoveX((m_CameraMovementSpeed * DeltaTime) * -1);
-	}
-	if (m_Input->GetKey(Keycode::D)) {
-		ViewportCamera->MoveX(m_CameraMovementSpeed * DeltaTime);
-	}
-	if (m_Input->GetKey(Keycode::E)) {
-		ViewportCamera->MoveVertical(m_CameraMovementSpeed * DeltaTime);
-	}
-	if (m_Input->GetKey(Keycode::Q)) {
-		ViewportCamera->MoveVertical((m_CameraMovementSpeed * DeltaTime) * -1);
-	}
-
-	const Vector2f CursorDelta = m_Input->GetMouseCursorDelta();
-
-	//TODO: Moving the camera and also looking in one direction will break it after a while
-	//Make funcs for those
-	if (CursorDelta.m_X >= m_FreeLookSensitivity)
-		ViewportCamera->RotateY(m_FreeLookSpeed * DeltaTime * CursorDelta.m_X);
-	if (CursorDelta.m_X <= -m_FreeLookSensitivity)
-		ViewportCamera->RotateY((m_FreeLookSpeed * DeltaTime * -CursorDelta.m_X) * -1);
-
-	if (CursorDelta.m_Y >= m_FreeLookSensitivity)
-		ViewportCamera->RotateX(m_FreeLookSpeed * DeltaTime * CursorDelta.m_Y);
-	if (CursorDelta.m_Y <= -m_FreeLookSensitivity)
-		ViewportCamera->RotateX((m_FreeLookSpeed * DeltaTime * -CursorDelta.m_Y) * -1);
-
-	const float ScrollDelta = m_Input->GetScrollDelta();
-
-	//Scroll Wheel
-	if (ScrollDelta > 0.0f) {
-		m_CameraMovementSpeed += m_CameraSpeedIncrease * DeltaTime;
-		if (m_CameraMovementSpeed > m_CameraSpeedMax)
-			m_CameraMovementSpeed = m_CameraSpeedMax;
-	}
-	else if (ScrollDelta < 0.0f) {
-		m_CameraMovementSpeed -= m_CameraSpeedDecrease * DeltaTime;
-		if (m_CameraMovementSpeed < m_CameraSpeedMin)
-			m_CameraMovementSpeed = m_CameraSpeedMin;
-	}
 }
 
 void Core::RegisterExitMessage(std::string message) noexcept {

@@ -6,13 +6,13 @@
 
 #include "Renderer.hpp"
 #include "Window.hpp"
-#include "FileSystem.hpp"
+#include "AssetManager.hpp"
 #include "ShaderCompiler.hpp"
 #include "TextureStorage.hpp"
 #include "EntityComponentSystem.hpp"
 #include "GameObject.hpp"
 #include "Time.hpp"
-#include "Inputinator.hpp"
+#include "Input.hpp"
 #include "Editor.hpp"
 
 
@@ -21,16 +21,6 @@
 #pragma warning(pop)
 
 #include "Utility.hpp"
-
-
-/*
-TODO: Implement RendererBackend
-TODO: Implement Renderer
-TODO: Implement TextureStorage
-TODO: Implement ECS
-
-//Test Comment
-*/
 
 
 class Core final {
@@ -42,7 +32,14 @@ public:
 
 
 public:
-	[[nodiscard]] inline Window* GetWindow() const noexcept { return m_Window.get(); };
+	[[nodiscard]] inline Renderer* GetRenderer() const noexcept { return m_Renderer.get(); }
+	[[nodiscard]] inline Window* GetWindow() const noexcept { return m_Window.get(); }
+	[[nodiscard]] inline TextureStorage* GetTextureStorage() const noexcept { return m_TextureStorage.get(); }
+	[[nodiscard]] inline EntityComponentSystem* GetECS() const noexcept { return m_ECS.get(); }
+	[[nodiscard]] inline AssetManager* GetAssetManager() const noexcept { return m_AssetManager.get(); }
+	[[nodiscard]] inline Time* GetTime() const noexcept { return m_Time.get(); }
+	[[nodiscard]] inline Input* GetInput() const noexcept { return m_Input.get(); }
+	[[nodiscard]] inline Editor* GetEditor() const noexcept { return m_Editor.get(); }
 
 private:
 	void SetupCore();
@@ -55,24 +52,6 @@ private:
 private:
 	void RegisterExitMessage(std::string message) noexcept;
 	void PrintExitMessage() noexcept;
-
-	//TODO: move all input code to some other class
-	void UpdateViewportControls();
-
-	//TODO: make function in inputinator that retunrs differens betwenn last 2 frames
-	double m_LastCursorPositionX;
-	double m_LastCursorPositionY;
-
-	float m_FreeLookSensitivity = 0.1f;
-	float m_FreeLookSpeed = 10.0f;
-
-	float m_CameraMovementSpeed = 5.0f;
-	float m_CameraSpeedMax = 10.0f;
-	float m_CameraSpeedMin = 1.0f;
-	float m_CameraSpeedDecrease = 20.0f;
-	float m_CameraSpeedIncrease = 20.0f;
-
-	bool m_ViewportNavigationMode = false;
 
 	int32 m_ViewportWidth = 1920;
 	int32 m_ViewportHeight = 1080;
@@ -88,8 +67,8 @@ public:
 	std::unique_ptr<Window> m_Window;
 	std::unique_ptr<TextureStorage> m_TextureStorage;
 	std::unique_ptr<EntityComponentSystem> m_ECS;
-	std::unique_ptr<FileSystem> m_FileSystem;
+	std::unique_ptr<AssetManager> m_AssetManager;
 	std::unique_ptr<Time> m_Time;
-	std::unique_ptr<Inputinator> m_Input;
+	std::unique_ptr<Input> m_Input;
 	std::unique_ptr<Editor> m_Editor;
 };
