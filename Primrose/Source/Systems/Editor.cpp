@@ -30,6 +30,8 @@ Editor::Editor(Core& core)
 	m_IO->ConfigFlags |= ImGuiConfigFlags_DockingEnable;		// IF using Docking Branch
 	m_IO->ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange; //Disable IMGUI from interfering with glfw when it comes to cursor visibility and shape
 
+
+
 	ImGui_ImplGlfw_InitForOpenGL(m_WindowReference->GetWindowResource().m_ptr, true);
 	ImGui_ImplOpenGL3_Init();
 
@@ -69,11 +71,11 @@ void Editor::Render() {//TODO: REturn const to this after getting rid of the tex
 
 	//TODO: All the menus sizes and positions are relative to each other. Make sure to make the values used relative to each other instead of relying on literals
 	RenderDetailsMenu();
-	RenderAddGameObjectButton();
 	RenderHeirarchyMenu();
+	RenderAddGameObjectButton();
 	RenderDirectoryExplorer();
 	RenderContentBrowser();
-
+	//ImGui::ShowMetricsWindow(); Good for debugging
 
 	ClearEditorStyle();
 
@@ -514,10 +516,14 @@ void Editor::RenderDetailsMenu() { //TODO: REturn const to this after getting ri
 }
 void Editor::RenderHeirarchyMenu() {
 
-	ImGui::SetNextWindowSize(ImVec2(200.0f, m_GUIViewport->Size.y - 350.0f)); // 50.0f Size of Add Menu
-	ImGui::SetNextWindowPos(ImVec2(0.0f, 50.0f)); // 200 Size of Add Menu
+	ImGui::SetNextWindowSize(ImVec2(200.0f, m_GUIViewport->Size.y - 300.0f)); // 50.0f Size of Add Menu
+	ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f)); // 200 Size of Add Menu
+	bool Open = true;
+	if (ImGui::Begin("Heirarchy", &Open, ImGuiWindowFlags_NoBringToFrontOnFocus))
+		AddGameObjectMenuOpened = true;
+	else
+		AddGameObjectMenuOpened = false;
 
-	ImGui::Begin("Heirarchy");
 	CheckForHoveredWindows();
 
 	//TODO: This needs cleanup, especially the id check down there. Like test if the ID is reserved or something
@@ -528,23 +534,37 @@ void Editor::RenderHeirarchyMenu() {
 	}
 
 	ImGui::End();
+	
 }
 void Editor::RenderAddGameObjectButton() {
 
 
+	if (!AddGameObjectMenuOpened)
+		return;
+
+	ImGuiWindowFlags Flags = 0;
+	Flags |= ImGuiWindowFlags_NoTitleBar;
+	Flags |= ImGuiWindowFlags_NoResize;
+	Flags |= ImGuiWindowFlags_NoMove;
+	Flags |= ImGuiWindowFlags_NoScrollbar;
+	Flags |= ImGuiWindowFlags_NoBackground;
+	Flags |= ImGuiWindowFlags_NoFocusOnAppearing;
+	//Flags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
+
 	//NOTE: put this at the edge of the hierarchy bar!
-	ImGui::SetNextWindowSize(ImVec2(200.0f, 50.0f)); //Size of Add Menu
-	ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
-	bool True = true;
-	ImGui::Begin("AddMenu", &True, ImGuiWindowFlags_NoTitleBar);
+	ImGui::SetNextWindowSize(ImVec2(100.0f, 0.0f)); //As big as the button
+	ImGui::SetNextWindowPos(ImVec2(121.0f, -9.0f));
+	ImGui::Begin("##AddGameObjectMenu", &AddGameObjectMenuOpened, Flags);
 	CheckForHoveredWindows();
 
-	AddSpacings(2);
-	if (ImGui::Button("Add", ImVec2(50.0f, 20.0f))) {
-		ImVec2 PopupPosition = { ImGui::GetMousePos().x - 75, ImGui::GetMousePos().y }; //75 - Half box width
+	if (ImGui::Button("##AddButton", ImVec2(70.0f, 20.0f))) {
+		const ImVec2 PopupPosition = { ImGui::GetMousePos().x - 75, ImGui::GetMousePos().y }; //75 - Half box width
 		ImGui::SetNextWindowPos(PopupPosition);
 		ImGui::OpenPopup("AddGameObjectMenu");
 	}
+
+	ImGui::SameLine(30.0f, 1.0f); //Manually adjusted
+	ImGui::Text("Add..");
 
 	if (ImGui::BeginPopup("AddGameObjectMenu")) {
 
@@ -594,12 +614,15 @@ void Editor::RenderDirectoryExplorer() {
 void Editor::RenderContentBrowser() {
 
 
+	float static PositionX;
+	float static PositionY;
+
 
 	ImGuiWindowFlags ContentWindowFlags = 0;
 	ContentWindowFlags |= ImGuiWindowFlags_NoCollapse;
 	ContentWindowFlags |= ImGuiWindowFlags_AlwaysVerticalScrollbar;
 	ContentWindowFlags |= ImGuiWindowFlags_AlwaysHorizontalScrollbar;
-	ContentWindowFlags |= ImGuiWindowFlags_NoResize;
+	//ContentWindowFlags |= ImGuiWindowFlags_NoResize;
 
 	ImGuiWindowFlags TabsWindowFlags = 0;
 	TabsWindowFlags |= ImGuiWindowFlags_NoCollapse;
@@ -609,15 +632,19 @@ void Editor::RenderContentBrowser() {
 	TabsWindowFlags |= ImGuiWindowFlags_NoBackground;
 	TabsWindowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
 
-	ImVec2 WindowPosition = ImVec2(m_DirectoryExplorerWindowSize.x, m_GUIViewport->Size.y - m_ContentBrowserWindowSize.y);
-
+	//ImVec2 WindowPosition = ImVec2(m_DirectoryExplorerWindowSize.x, m_GUIViewport->Size.y - m_ContentBrowserWindowSize.y);
+	m_ContentBrowserWindowPosition = ImVec2(m_DirectoryExplorerWindowSize.x, m_GUIViewport->Size.y - m_ContentBrowserWindowSize.y);
 
 	bool ContentBrowserOpened = false;
 	bool LogOpened = false;
-
+	std::string TabName = "";
 
 	ImGui::SetNextWindowSize(ImVec2(m_ContentBrowserWindowSize.x, 30.0f));
-	ImGui::SetNextWindowPos(ImVec2(WindowPosition.x, WindowPosition.y - 26.0f)); //I found 26 to be the closest to hiding the bar
+	//ImGui::SetNextWindowPos(ImVec2(m_ContentBrowserWindowPosition.x, m_ContentBrowserWindowPosition.y - 26.0f)); //I found 26 to be the closest to hiding the bar
+	
+	
+	ImGui::SetNextWindowPos(ImVec2(m_DirectoryExplorerWindowSize.x, PositionY));
+	
 	bool Opened2 = true;
 	if (ImGui::Begin("##TabsWindow", &Opened2, TabsWindowFlags)) {
 
@@ -625,10 +652,12 @@ void Editor::RenderContentBrowser() {
 
 			if (ImGui::BeginTabItem("ContentBrowser")) {
 				ContentBrowserOpened = true;
+				TabName = "Content";
 				ImGui::EndTabItem();
 			}
 			if (ImGui::BeginTabItem("Log")) {
 				LogOpened = true;
+				TabName = "Logged Events";
 				ImGui::EndTabItem();
 			}
 
@@ -639,12 +668,28 @@ void Editor::RenderContentBrowser() {
 	}
 	
 
-
 	ImGui::SetNextWindowSize(ImVec2(m_ContentBrowserWindowSize.x, m_ContentBrowserWindowSize.y));
-	ImGui::SetNextWindowPos(ImVec2(WindowPosition.x, WindowPosition.y));
+	ImGui::SetNextWindowPos(ImVec2(m_ContentBrowserWindowPosition.x, m_ContentBrowserWindowPosition.y));
 	bool Open = true;
-	if (ImGui::Begin("##ContentBrowserWindow", &Open, ContentWindowFlags)) {
+	if (ImGui::Begin(TabName.data(), &Open, ContentWindowFlags)) {
 		CheckForHoveredWindows();
+
+
+		//NOTE: For moving the tabs window with the content window
+		//The acual window size changes in real time while pulling
+		//So make a system to compare size between frames or at least against the "Set Size" to toggle a flag for Dragging
+		//Use it to move the <
+
+		std::cout << m_ContentBrowserWindowPosition.x << " Mine " << m_ContentBrowserWindowPosition.y << std::endl;
+		std::cout << ImGui::GetWindowSize().x << " Theirs " << ImGui::GetWindowSize().y << std::endl;
+
+		//This works. It makes it look like they fall down or rise up slower. Like its animated
+		PositionY = 1080 - (ImGui::GetWindowSize().y + 45); //45 is manually adjusted
+
+		std::cout << "Y is " << PositionY << std::endl;
+		std::cout << "Y without is " << 1080 - ImGui::GetWindowSize().y << std::endl;
+
+		//std::cout << PositionX << " Mine " << PositionY << std::endl;
 
 		if (ContentBrowserOpened) {
 

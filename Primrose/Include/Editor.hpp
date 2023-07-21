@@ -104,6 +104,10 @@ private: //Most of these are relative to each other. Calculate them in runtime a
 
 	ImVec2 m_DirectoryExplorerWindowSize{ 350.0f, 300.0f };
 
+	ImVec2 m_ContentBrowserWindowPosition;
+
+	bool AddGameObjectMenuOpened = true;
+
 private:
 	Camera* m_ViewportCameraReference{ nullptr };
 
