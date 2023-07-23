@@ -1,2 +1,2 @@
 # Primrose
-A 3D game engine made to further study OpenGL and GLSL. 
+A game engine I am working on for educational purposes :)
