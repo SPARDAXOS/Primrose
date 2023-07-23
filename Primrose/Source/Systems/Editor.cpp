@@ -771,9 +771,9 @@ void Editor::RenderContentBrowser() {
 					TextureID = (void*)(intptr_t)(m_ErrorTexture->GetID());
 				}
 
-				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-				ImGui::ImageButton("##Debug", TextureID, ImVec2(15.0f, 15.0f), ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), IconColor);
-				ImGui::PopStyleColor();
+				//ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+				//ImGui::ImageButton("##Debug", TextureID, ImVec2(15.0f, 15.0f), ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), IconColor);
+				//ImGui::PopStyleColor();
 				//Color
 				if (!m_Logger.GetShowErrorMessages())
 					IconColor = ImVec4(0.3f, 0.3f, 0.3f, 1.0f);
