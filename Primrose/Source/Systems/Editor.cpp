@@ -24,6 +24,20 @@ Editor::Editor(Core& core)
 	m_GUIContext = ImGui::CreateContext();
 	m_GUIViewport = ImGui::GetMainViewport();
 
+
+	//CalculateWindowsSizes()
+
+	m_Logger.SetTimeReference(*m_TimeReference); //Since it will have nullptr on this class' construction
+
+
+	for (uint32 count = 0; count < 40; count++) {
+		m_Logger.LogDebug("Debug Message!");
+		m_Logger.LogWarning("Warning Message!");
+		m_Logger.LogError("Error Message!");
+	}
+
+	
+
 	m_IO = &ImGui::GetIO();
 	m_IO->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 	m_IO->ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
@@ -66,15 +80,21 @@ void Editor::Render() {//TODO: REturn const to this after getting rid of the tex
 
 	StartFrame();
 	m_IsAnyWindowHovered = false;
+	m_Logger.NewFrame();
 
 	SetupEditorStyle();
 
+	//IMPORTANT NOTE: Make the size of each element in relation to the size of the viewport so they would scale with it
 	//TODO: All the menus sizes and positions are relative to each other. Make sure to make the values used relative to each other instead of relying on literals
 	RenderDetailsMenu();
 	RenderHeirarchyMenu();
 	RenderAddGameObjectButton();
 	RenderDirectoryExplorer();
 	RenderContentBrowser();
+	RenderMainMenuBar();
+
+
+
 	//ImGui::ShowMetricsWindow(); Good for debugging
 
 	ClearEditorStyle();
@@ -98,20 +118,22 @@ void Editor::RenderFrame() const {
 
 void Editor::RenderDetailsMenu() { //TODO: REturn const to this after getting rid of the text transform
 
+	if (!m_DetailsWindowOpened)
+		return;
+
 	//Notes:
 	//This could be abstracted away since DRY
 
 
 	//TODO: Add the ability to reorder these one day
-	//TODO: Move viewport related code to this class
 
 
 	//Render GUI
-	//Note: Will also lock position and size
-	ImGui::SetNextWindowSize(ImVec2(400.0f, m_GUIViewport->Size.y));
-	ImGui::SetNextWindowPos(ImVec2(m_GUIViewport->Size.x - 400.0f, 0.0f));
+	//Note: Will also lock position and size - Use any func without the next to free it
+	ImGui::SetNextWindowSize(ImVec2(400.0f, m_GUIViewport->Size.y - m_MainMenuBarSize.y));
+	ImGui::SetNextWindowPos(ImVec2(m_GUIViewport->Size.x - 400.0f, m_MainMenuBarSize.y));
 
-	ImGui::Begin("Details");
+	ImGui::Begin("Details", &m_DetailsWindowOpened);
 	CheckForHoveredWindows();
 
 	if (m_SelectedGameObject != nullptr) {
@@ -516,13 +538,13 @@ void Editor::RenderDetailsMenu() { //TODO: REturn const to this after getting ri
 }
 void Editor::RenderHeirarchyMenu() {
 
-	ImGui::SetNextWindowSize(ImVec2(200.0f, m_GUIViewport->Size.y - 300.0f)); // 50.0f Size of Add Menu
-	ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f)); // 200 Size of Add Menu
-	bool Open = true;
-	if (ImGui::Begin("Heirarchy", &Open, ImGuiWindowFlags_NoBringToFrontOnFocus))
-		AddGameObjectMenuOpened = true;
-	else
-		AddGameObjectMenuOpened = false;
+	if (!m_HeirarchyWindowOpened)
+		return;
+
+	ImGui::SetNextWindowSize(ImVec2(200.0f, m_GUIViewport->Size.y - 300.0f - m_MainMenuBarSize.y)); // 50.0f Size of Add Menu
+	ImGui::SetNextWindowPos(ImVec2(0.0f, m_MainMenuBarSize.y)); // 200 Size of Add Menu
+
+	ImGui::Begin("Heirarchy", &m_HeirarchyWindowOpened, ImGuiWindowFlags_NoBringToFrontOnFocus);
 
 	CheckForHoveredWindows();
 
@@ -538,8 +560,7 @@ void Editor::RenderHeirarchyMenu() {
 }
 void Editor::RenderAddGameObjectButton() {
 
-
-	if (!AddGameObjectMenuOpened)
+	if (!m_HeirarchyWindowOpened)
 		return;
 
 	ImGuiWindowFlags Flags = 0;
@@ -553,11 +574,11 @@ void Editor::RenderAddGameObjectButton() {
 
 	//NOTE: put this at the edge of the hierarchy bar!
 	ImGui::SetNextWindowSize(ImVec2(100.0f, 0.0f)); //As big as the button
-	ImGui::SetNextWindowPos(ImVec2(121.0f, -9.0f));
-	ImGui::Begin("##AddGameObjectMenu", &AddGameObjectMenuOpened, Flags);
+	ImGui::SetNextWindowPos(ImVec2(122.0f, -7.5f + m_MainMenuBarSize.y)); //BUG: Even after all this hardcoding this is still slightly off. It is visible
+	ImGui::Begin("##AddGameObjectMenu", &m_HeirarchyWindowOpened, Flags);
 	CheckForHoveredWindows();
 
-	if (ImGui::Button("##AddButton", ImVec2(70.0f, 20.0f))) {
+	if (ImGui::Button("##AddButton", ImVec2(70.0f, 19.0f))) {
 		const ImVec2 PopupPosition = { ImGui::GetMousePos().x - 75, ImGui::GetMousePos().y }; //75 - Half box width
 		ImGui::SetNextWindowPos(PopupPosition);
 		ImGui::OpenPopup("AddGameObjectMenu");
@@ -592,15 +613,17 @@ void Editor::RenderAddGameObjectButton() {
 }
 void Editor::RenderDirectoryExplorer() {
 
+	if (!m_DirectoryExplorerWindowOpened)
+		return;
+
 	ImGui::SetNextWindowSize(m_DirectoryExplorerWindowSize);
 	ImGui::SetNextWindowPos(ImVec2(0.0f, m_GUIViewport->Size.y - m_DirectoryExplorerWindowSize.y));
 
-	bool Open = true;
 	ImGuiWindowFlags Flags = 0;
 	Flags |= ImGuiWindowFlags_NoCollapse;
 	Flags |= ImGuiWindowFlags_AlwaysVerticalScrollbar;
 
-	ImGui::Begin("Directory Explorer", &Open, Flags);
+	ImGui::Begin("Directory Explorer", &m_DirectoryExplorerWindowOpened, Flags);
 	CheckForHoveredWindows();
 
 	auto Root = m_AssetManagerReference->GetRoot();
@@ -613,10 +636,8 @@ void Editor::RenderDirectoryExplorer() {
 }
 void Editor::RenderContentBrowser() {
 
-
-	float static PositionX;
-	float static PositionY;
-
+	if (!m_ContentBrowserWindowOpened)
+		return;
 
 	ImGuiWindowFlags ContentWindowFlags = 0;
 	ContentWindowFlags |= ImGuiWindowFlags_NoCollapse;
@@ -628,25 +649,22 @@ void Editor::RenderContentBrowser() {
 	TabsWindowFlags |= ImGuiWindowFlags_NoCollapse;
 	TabsWindowFlags |= ImGuiWindowFlags_NoTitleBar;
 	TabsWindowFlags |= ImGuiWindowFlags_NoScrollbar;
-	TabsWindowFlags |= ImGuiWindowFlags_NoResize;
+	//TabsWindowFlags |= ImGuiWindowFlags_NoResize;
 	TabsWindowFlags |= ImGuiWindowFlags_NoBackground;
 	TabsWindowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
 
-	//ImVec2 WindowPosition = ImVec2(m_DirectoryExplorerWindowSize.x, m_GUIViewport->Size.y - m_ContentBrowserWindowSize.y);
+
 	m_ContentBrowserWindowPosition = ImVec2(m_DirectoryExplorerWindowSize.x, m_GUIViewport->Size.y - m_ContentBrowserWindowSize.y);
+	m_ContentBrowserTabsPosition.x = m_ContentBrowserWindowPosition.x;
 
 	bool ContentBrowserOpened = false;
 	bool LogOpened = false;
 	std::string TabName = "";
 
-	ImGui::SetNextWindowSize(ImVec2(m_ContentBrowserWindowSize.x, 30.0f));
-	//ImGui::SetNextWindowPos(ImVec2(m_ContentBrowserWindowPosition.x, m_ContentBrowserWindowPosition.y - 26.0f)); //I found 26 to be the closest to hiding the bar
-	
-	
-	ImGui::SetNextWindowPos(ImVec2(m_DirectoryExplorerWindowSize.x, PositionY));
-	
-	bool Opened2 = true;
-	if (ImGui::Begin("##TabsWindow", &Opened2, TabsWindowFlags)) {
+	ImGui::SetNextWindowSize(m_ContentBrowserTabsSize);
+	ImGui::SetNextWindowPos(m_ContentBrowserTabsPosition);
+	if (ImGui::Begin("##TabsWindow", &m_ContentBrowserWindowOpened, TabsWindowFlags)) {
+		CheckForHoveredWindows();
 
 		if (ImGui::BeginTabBar("Tabs", ImGuiTabBarFlags_::ImGuiTabBarFlags_Reorderable)) {
 
@@ -668,28 +686,16 @@ void Editor::RenderContentBrowser() {
 	}
 	
 
-	ImGui::SetNextWindowSize(ImVec2(m_ContentBrowserWindowSize.x, m_ContentBrowserWindowSize.y));
-	ImGui::SetNextWindowPos(ImVec2(m_ContentBrowserWindowPosition.x, m_ContentBrowserWindowPosition.y));
-	bool Open = true;
-	if (ImGui::Begin(TabName.data(), &Open, ContentWindowFlags)) {
+	if (LogOpened)
+		ContentWindowFlags |= ImGuiWindowFlags_MenuBar;
+
+	ImGui::SetNextWindowSize(m_ContentBrowserWindowSize);
+	ImGui::SetNextWindowPos(m_ContentBrowserWindowPosition);
+	if (ImGui::Begin(TabName.data(), &m_ContentBrowserWindowOpened, ContentWindowFlags)) {
 		CheckForHoveredWindows();
 
-
-		//NOTE: For moving the tabs window with the content window
-		//The acual window size changes in real time while pulling
-		//So make a system to compare size between frames or at least against the "Set Size" to toggle a flag for Dragging
-		//Use it to move the <
-
-		std::cout << m_ContentBrowserWindowPosition.x << " Mine " << m_ContentBrowserWindowPosition.y << std::endl;
-		std::cout << ImGui::GetWindowSize().x << " Theirs " << ImGui::GetWindowSize().y << std::endl;
-
-		//This works. It makes it look like they fall down or rise up slower. Like its animated
-		PositionY = 1080 - (ImGui::GetWindowSize().y + 45); //45 is manually adjusted
-
-		std::cout << "Y is " << PositionY << std::endl;
-		std::cout << "Y without is " << 1080 - ImGui::GetWindowSize().y << std::endl;
-
-		//std::cout << PositionX << " Mine " << PositionY << std::endl;
+		//Its one frame behind so it looks like its animated (Lagging behind)
+		m_ContentBrowserTabsPosition.y = m_GUIViewport->Size.y - (ImGui::GetWindowSize().y + m_ContentBrowserTabsSize.y);
 
 		if (ContentBrowserOpened) {
 
@@ -709,23 +715,214 @@ void Editor::RenderContentBrowser() {
 		}
 		else if (LogOpened) {
 
+			if (ImGui::BeginMenuBar()) {
+
+				//I guess it makes sense why they use static so much
+				bool FilterSelected = false;
+				bool ClearSelected = false;
+				const ImVec2 ClearSize = ImGui::CalcTextSize("Clear");
+				const ImVec2 FilterSize = ImGui::CalcTextSize("Filter");
+				if (ImGui::Selectable("Clear", &ClearSelected, 0, ClearSize)) {
+					m_Logger.Clear();
+				}
+				if (ImGui::Selectable("Filter", &FilterSelected, 0, FilterSize)) {
+					ImGui::OpenPopup("LoggerFilter");
+					ImGui::SetNextWindowPos(ImGui::GetMousePos());
+				}
+				if (ImGui::BeginPopup("LoggerFilter")) {
+					ImGui::Checkbox("Debug", &m_Logger.GetShowDebugMessagesRef());
+					ImGui::Checkbox("Warning", &m_Logger.GetShowWarningMessagesRef());
+					ImGui::Checkbox("Error", &m_Logger.GetShowErrorMessagesRef());
+
+					ImGui::EndPopup();
+				}
+
+				ImGui::EndMenuBar();
+			}
+
+			if (m_Logger.GetAllMessagesCount() > 0) {
+
+				while (!m_Logger.IsBufferLooped()) {
+
+					const Message* NewMessage = m_Logger.GetNextMessage();
+					if (NewMessage == nullptr)
+						continue;
+
+					const MessageType Type = NewMessage->GetType();
+					if (Type == MessageType::DEBUG && !m_Logger.GetShowDebugMessages())
+						continue;
+					if (Type == MessageType::WARNING && !m_Logger.GetShowWarningMessages())
+						continue;
+					if (Type == MessageType::ERROR && !m_Logger.GetShowErrorMessages())
+						continue;
+
+
+					if (Type == MessageType::DEBUG)
+						ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+					else if (Type == MessageType::WARNING)
+						ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.1f, 1.0f));
+					else if (Type == MessageType::ERROR)
+						ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+
+					//TODO: Add icons and numbers to show count of each message type
+					//TODO: Add visibility of each icon that indicates if the filter is active or not
+					//TODO: Add more info to messages like running time - Check what Unity does
+
+
+					ImGui::Text("%s\nTick: %lu", NewMessage->GetData(), NewMessage->GetTick());
+
+					ImGui::PopStyleColor();
+					AddSeparators(1);
+				}
+			}
 
 		}
-
 
 		ImGui::End();
 	}
 
-
-
-
-
-
-
-	//NOTE: Ideally, you would calculate the position and sizes depending on multiple factors such as name size and window size.
-	//NOTE: It should be calculated depending on the resizing of the window
 }
+void Editor::RenderMainMenuBar() {
 
+	if (ImGui::BeginMainMenuBar()) {
+
+
+
+		//NOTE: Test BeginMenu and MenuItem for this!
+
+
+		constexpr float BarPadding = 4.0f; //I did a bunch of calculations and used Photoshop to confirm this
+		constexpr float ElementsPadding = 10.0f;
+		float CurrentElementWidth = 0.0f;
+		ImVec2 OpenedPopupPosition{0.0f, 0.0f};
+
+		//Need to query height
+		if (m_MainMenuBarSize.x == 0.0f && m_MainMenuBarSize.y == 0.0f)
+			m_MainMenuBarSize = ImGui::GetWindowSize();
+
+		OpenedPopupPosition.y = m_MainMenuBarSize.y;
+
+		//File
+		ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.0f));
+		CurrentElementWidth = ImGui::CalcTextSize("File").x + ElementsPadding;
+		if (ImGui::Selectable("File", false, 0, ImVec2(CurrentElementWidth, m_MainMenuBarSize.y)))
+			ImGui::OpenPopup("FileMenu");
+
+		PopStyleVars(1);
+		if (ImGui::BeginPopup("FileMenu")) {
+
+			ImGui::SetWindowPos(OpenedPopupPosition);
+
+			bool Test1Selected = false;
+			if (ImGui::Selectable("Test1Selected", &Test1Selected, 0, ImVec2(300.0f, 20.0f))) {
+
+			}
+			bool Test2Selected = false;
+			if (ImGui::Selectable("Test2Selected", &Test2Selected, 0, ImVec2(300.0f, 20.0f))) {
+
+			}
+			bool Test3Selected = false;
+			if (ImGui::Selectable("Test3Selected", &Test3Selected, 0, ImVec2(300.0f, 20.0f))) {
+
+			}
+
+			ImGui::EndPopup();
+		}
+		OpenedPopupPosition.x = ImGui::GetCursorPos().x - BarPadding;
+
+
+		//Window
+		ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.0f));
+		CurrentElementWidth = ImGui::CalcTextSize("Window").x + ElementsPadding;
+		if (ImGui::Selectable("Window", false, 0, ImVec2(CurrentElementWidth, m_MainMenuBarSize.y)))
+			ImGui::OpenPopup("WindowMenu");
+		
+		PopStyleVars(1);
+		if (ImGui::BeginPopup("WindowMenu")) {
+
+			ImGui::SetWindowPos(OpenedPopupPosition);
+			ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.0f, 0.2f));
+
+			bool DetailesSelected = false;
+			if (ImGui::Selectable("Details", &DetailesSelected, 0, ImVec2(300.0f, 20.0f))) {
+				m_DetailsWindowOpened = true;
+			}
+			bool HierarchySelected = false;
+			if (ImGui::Selectable("Heirarchy", &HierarchySelected, 0, ImVec2(300.0f, 20.0f))) {
+				m_HeirarchyWindowOpened = true;
+			}
+			bool ContentBrowserSelected = false;
+			if (ImGui::Selectable("Content Browser", &ContentBrowserSelected, 0, ImVec2(300.0f, 20.0f))) {
+				m_ContentBrowserWindowOpened = true;
+			}
+			bool DirectoryExplorerSelected = false;
+			if (ImGui::Selectable("Directory Explorer", &DirectoryExplorerSelected, 0, ImVec2(300.0f, 20.0f))) {
+				m_DirectoryExplorerWindowOpened = true;
+			}
+
+			ImGui::PopStyleVar();
+			ImGui::EndPopup();
+		}
+		OpenedPopupPosition.x = ImGui::GetCursorPos().x - BarPadding;
+
+
+
+
+
+
+
+
+		//About - Should be at the very end always!
+		ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.0f)); //Middle - Top
+		CurrentElementWidth = ImGui::CalcTextSize("About").x + ElementsPadding;
+		if (ImGui::Selectable("About", false, 0, ImVec2(CurrentElementWidth, m_MainMenuBarSize.y)))
+			ImGui::OpenPopup("AboutMenu");
+
+		PopStyleVars(1);
+
+		ImGuiWindowFlags Flags = 0;
+		Flags |= ImGuiWindowFlags_NoTitleBar;
+		Flags |= ImGuiWindowFlags_NoResize;
+		Flags |= ImGuiWindowFlags_NoMove;
+		Flags |= ImGuiWindowFlags_NoScrollbar;
+		if (ImGui::BeginPopupModal("AboutMenu", 0, Flags)) {
+			
+			ImGui::SetWindowPos(ImVec2((m_GUIViewport->Size.x / 2) - 200.0f, (m_GUIViewport->Size.y / 2) - 100.0f));
+			ImGui::SetWindowSize(ImVec2(400.0f, 200.0f));
+
+			AddSpacings(5);
+			ImGui::SameLine(200.0f - ImGui::CalcTextSize("Primrose").x / 2);
+			ImGui::Text("Primrose");
+			AddSpacings(5);
+			AddSeparators(1);
+
+			AddSpacings(5);
+			ImGui::SameLine(200.0f - ImGui::CalcTextSize("This engine is made by Mohammed Tamim.").x / 2);
+			ImGui::Text("This engine is made by Mohammed Tamim.");
+
+			ImGui::SetCursorPos(ImVec2((ImGui::GetWindowSize().x / 2) - 50.0f, ImGui::GetWindowSize().y - 50.0f)); // x - 50 is button width
+			if (ImGui::Button("##CloseAboutMenu", ImVec2(100.0f, 20.0f)))
+				ImGui::CloseCurrentPopup();
+
+
+			ImVec2 TextPosition = { ImGui::GetWindowSize().x / 2 - 50.0f, ImGui::GetWindowSize().y - 50.0f };
+
+			// -2 is a hardcoded number - Its fine since it scales with other elements
+			TextPosition.x += ImGui::CalcTextSize("Close").x - 2;
+			TextPosition.y += (ImGui::CalcTextSize("Close").y / 2) - 2; 
+
+			ImGui::SetCursorPos(TextPosition); 
+			ImGui::Text("Close");
+
+			ImGui::EndPopup();
+		}
+		OpenedPopupPosition.x = ImGui::GetCursorPos().x;
+
+		ImGui::EndMainMenuBar();
+	}
+	
+
+}
 
 void Editor::CheckInput() {
 
@@ -1181,6 +1378,14 @@ void Editor::AddSpacings(uint32 count) {
 	for (uint32 index = 0; index < count; index++)
 		ImGui::Spacing();
 }
+void Editor::AddSeparators(uint32 count) {
+	for (uint32 index = 0; index < count; index++)
+		ImGui::Separator();
+}
+void Editor::PopStyleVars(uint32 count) {
+	for (uint32 index = 0; index < count; index++)
+		ImGui::PopStyleVar();
+}
 void Editor::SetSelectedGameObject(GameObject* object) noexcept {
 
 	m_SelectedGameObject = object;
@@ -1243,13 +1448,6 @@ void Editor::SetupEditorStyle() {
 	ImGui::PushStyleColor(ImGuiCol_Tab, ImVec4(0.2f, 0.0f, 0.0f, 1.0f));
 	ImGui::PushStyleColor(ImGuiCol_TabHovered, ImVec4(0.5f, 0.0f, 0.0f, 1.0f));
 	ImGui::PushStyleColor(ImGuiCol_TabActive, ImVec4(0.6f, 0.0f, 0.0f, 1.0f));
-
-	//ImGuiCol_Tab,                   // TabItem in a TabBar
-	//	ImGuiCol_TabHovered,
-	//	ImGuiCol_TabActive,
-	//	ImGuiCol_TabUnfocused,
-	//	ImGuiCol_TabUnfocusedActive,
-
 }
 void Editor::ClearEditorStyle() {
 

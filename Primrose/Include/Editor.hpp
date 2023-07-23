@@ -3,6 +3,7 @@
 #include "ImGUI/imgui_impl_glfw.h"
 #include "ImGUI/imgui_impl_opengl3.h"
 
+#include "Logger.hpp"
 #include "Utility.hpp"
 
 class Core;
@@ -55,6 +56,7 @@ private:
 	void RenderAddGameObjectButton();
 	void RenderDirectoryExplorer();
 	void RenderContentBrowser();
+	void RenderMainMenuBar();
 
 private:
 	void CheckInput();
@@ -79,6 +81,8 @@ private:
 
 private:
 	void AddSpacings(uint32 count);
+	void AddSeparators(uint32 count);
+	void PopStyleVars(uint32 count);
 	void SetSelectedGameObject(GameObject* object) noexcept;
 	void SetSelectedDirectory(Directory* directory) noexcept;
 	void CheckForHoveredWindows();
@@ -99,14 +103,23 @@ private:
 
 private: //Most of these are relative to each other. Calculate them in runtime and maybe once at the start. Think about this.
 	ImVec2 m_ContentBrowserWindowSize { 1170.0f, 300.0f };
+	ImVec2 m_CurrentContentBrowserWindowSize{ m_ContentBrowserWindowSize };
 	ImVec2 m_ContentBrowserElementSize{ 100.0f, 100.0f };
 	float m_ContentBrowserElementPadding = 50.0f;
 
 	ImVec2 m_DirectoryExplorerWindowSize{ 350.0f, 300.0f };
+	ImVec2 m_MainMenuBarSize;
 
+	ImVec2 m_ContentBrowserTabsSize{ m_ContentBrowserWindowSize.x, 27.0f }; //27 manually adjusted
+	ImVec2 m_ContentBrowserTabsPosition{ m_ContentBrowserWindowPosition.x, 0.0f };
+
+	
 	ImVec2 m_ContentBrowserWindowPosition;
 
-	bool AddGameObjectMenuOpened = true;
+	bool m_DetailsWindowOpened = true;
+	bool m_HeirarchyWindowOpened = true;
+	bool m_ContentBrowserWindowOpened = true;
+	bool m_DirectoryExplorerWindowOpened = true;
 
 private:
 	Camera* m_ViewportCameraReference{ nullptr };
@@ -130,6 +143,9 @@ private:
 
 	void* m_SelectedContentElement	{ nullptr };
 	bool m_FolderEntryOpened		{ false };
+
+private:
+	Logger m_Logger{ *m_TimeReference };
 
 private:
 	Core* m_EngineCore							{ nullptr };

@@ -9,9 +9,11 @@ public:
 
 		//Looks weird - Maybe ditch glfw and use chrono?
 		m_LastFrameTime = CurrentFrameTime;
-		m_RunningTime = CurrentFrameTime;
+		m_RunningTime = static_cast<uint64>(CurrentFrameTime);
 		m_Buffer[m_BufferIndex] = m_DeltaTime;
 		m_BufferIndex = (m_BufferIndex + 1) % 50;
+
+		m_Tick++;
 	}
 
 public:
@@ -27,7 +29,8 @@ public:
 		const double DeltaTime = GetDeltaTime();
 		return static_cast<unsigned int>(1 / DeltaTime);
 	}
-	inline double GetRunningTime() const noexcept { return m_RunningTime; }
+	inline uint64 GetRunningTime() const noexcept { return m_RunningTime; }
+	inline uint64 GetTick() const noexcept { return m_Tick; }
 
 private:
 	double m_Buffer[50];
@@ -35,6 +38,7 @@ private:
 	double m_LastFrameTime;
 
 private:
-	double m_DeltaTime;
-	double m_RunningTime;
+	double m_DeltaTime = 0.0;
+	uint64 m_RunningTime = 0;
+	uint64 m_Tick = 0;
 };
