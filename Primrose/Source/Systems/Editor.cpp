@@ -1,6 +1,8 @@
 #include "Editor.hpp"
 #include "Core.hpp"
 
+
+
 #include <iostream>
 
 
@@ -32,9 +34,14 @@ Editor::Editor(Core& core)
 
 	for (uint32 count = 0; count < 40; count++) {
 		m_Logger.LogDebug("Debug Message!");
+	}
+	for (uint32 count = 0; count < 56; count++) {
 		m_Logger.LogWarning("Warning Message!");
+	}
+	for (uint32 count = 0; count < 23; count++) {
 		m_Logger.LogError("Error Message!");
 	}
+
 
 	
 
@@ -72,6 +79,15 @@ void Editor::SaveEngineTexturesReferences() {
 
 	if (!m_TextureStorageReference->GetTexture2D("Folder", m_FolderTexture))
 		PrintMessage("Failed to save reference to engine texture [Folder]");
+
+	if (!m_TextureStorageReference->GetTexture2D("Debug", m_DebugTexture))
+		PrintMessage("Failed to save reference to engine texture [Debug]");
+
+	if (!m_TextureStorageReference->GetTexture2D("Warning", m_WarningTexture))
+		PrintMessage("Failed to save reference to engine texture [Warning]");
+
+	if (!m_TextureStorageReference->GetTexture2D("Error", m_ErrorTexture))
+		PrintMessage("Failed to save reference to engine texture [Error]");
 
 }
 
@@ -736,6 +752,86 @@ void Editor::RenderContentBrowser() {
 
 					ImGui::EndPopup();
 				}
+
+
+
+
+
+				//TODO: Implement a function that checks for an engine texture. 
+				//-If not found then it returns an error texture so then i can be sure im getting something each time
+
+				//TODO: DRY, This down here could be abstarcted away into a resusable function
+
+				ImVec4 IconColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+
+				//Texture
+				void* TextureID = nullptr;
+				if (m_ErrorTexture) {
+					m_ErrorTexture->Bind();
+					TextureID = (void*)(intptr_t)(m_ErrorTexture->GetID());
+				}
+
+				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+				ImGui::ImageButton("##Debug", TextureID, ImVec2(15.0f, 15.0f), ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), IconColor);
+				ImGui::PopStyleColor();
+				//Color
+				if (!m_Logger.GetShowErrorMessages())
+					IconColor = ImVec4(0.3f, 0.3f, 0.3f, 1.0f);
+
+
+				ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 30.0f, ImGui::GetCursorPosY() + 2)); //Manual offset by +2
+				ImGui::Image(TextureID, ImVec2(15.0f, 15.0f), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), IconColor);
+				if (m_ErrorTexture != nullptr)
+					m_ErrorTexture->Unbind();
+
+				ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 10.0f, ImGui::GetCursorPosY()));
+				ImGui::Text("%d", m_Logger.GetErrorMessagesCount());
+				IconColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+
+
+				//Texture
+				if (m_WarningTexture) {
+					m_WarningTexture->Bind();
+					TextureID = (void*)(intptr_t)(m_WarningTexture->GetID());
+				}
+
+				//Color
+				if (!m_Logger.GetShowWarningMessages())
+					IconColor = ImVec4(0.3f, 0.3f, 0.3f, 1.0f);
+
+				ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 80.0f, ImGui::GetCursorPosY() + 2)); //Manual offset by +2
+				ImGui::Image(TextureID, ImVec2(15.0f, 15.0f), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), IconColor);
+				if (m_WarningTexture != nullptr)
+					m_WarningTexture->Unbind();
+
+				ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 60.0f, ImGui::GetCursorPosY()));
+				ImGui::Text("%d", m_Logger.GetWarningMessagesCount());
+				IconColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+
+
+				//Texture
+				if (m_DebugTexture) {
+					m_DebugTexture->Bind();
+					TextureID = (void*)(intptr_t)(m_DebugTexture->GetID());
+				}
+
+				//Color
+				if (!m_Logger.GetShowDebugMessages())
+					IconColor = ImVec4(0.3f, 0.3f, 0.3f, 1.0f);
+
+				ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 130.0f, ImGui::GetCursorPosY() + 2)); //Manual offset by +2
+				ImGui::Image(TextureID, ImVec2(15.0f, 15.0f), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), IconColor);
+				if (m_DebugTexture != nullptr)
+					m_DebugTexture->Unbind();
+
+				ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 110.0f, ImGui::GetCursorPosY()));
+				ImGui::Text("%d", m_Logger.GetDebugMessagesCount());
+				IconColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+
+
+
+
+
 
 				ImGui::EndMenuBar();
 			}

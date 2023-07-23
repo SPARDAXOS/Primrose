@@ -136,7 +136,12 @@ private:
 	bool m_ViewportNavigationMode = false;
 
 private:
-	Texture2D* m_FolderTexture	{ nullptr };
+	Texture2D* m_FolderTexture	 { nullptr };
+	Texture2D* m_DebugTexture    { nullptr };
+	Texture2D* m_WarningTexture  { nullptr };
+	Texture2D* m_ErrorTexture    { nullptr };
+
+
 	float m_ContentElementCursor = 0.0f;
 	uint32 m_ContentLineElementsCount = 0;
 	std::vector<std::string> m_QueuedContentTexts;
