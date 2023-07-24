@@ -16,10 +16,6 @@ Editor::Editor(Core& core)
 	m_InputReference = m_EngineCore->GetInput();
 	m_TimeReference = m_EngineCore->GetTime();
 
-	m_ViewportCameraReference = &m_ECSReference->GetViewportCamera();
-	if (m_ViewportCameraReference == nullptr)
-		PrintMessage("Failed to save viewport camera reference");
-
 	//Get folder texture?
 
 	IMGUI_CHECKVERSION();
@@ -30,20 +26,11 @@ Editor::Editor(Core& core)
 	//CalculateWindowsSizes()
 
 	m_Logger.SetTimeReference(*m_TimeReference); //Since it will have nullptr on this class' construction
+	LogSystem(ImGui::GetVersion());
 
-
-	for (uint32 count = 0; count < 40; count++) {
-		m_Logger.LogDebug("Debug Message!");
-	}
-	for (uint32 count = 0; count < 56; count++) {
-		m_Logger.LogWarning("Warning Message!");
-	}
-	for (uint32 count = 0; count < 23; count++) {
-		m_Logger.LogError("Error Message!");
-	}
-
-
-	
+	m_ViewportCameraReference = &m_ECSReference->GetViewportCamera();
+	if (m_ViewportCameraReference == nullptr)
+		LogSystem("Failed to save viewport camera reference");
 
 	m_IO = &ImGui::GetIO();
 	m_IO->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
@@ -53,7 +40,7 @@ Editor::Editor(Core& core)
 
 
 
-	ImGui_ImplGlfw_InitForOpenGL(m_WindowReference->GetWindowResource().m_ptr, true);
+	ImGui_ImplGlfw_InitForOpenGL(m_WindowReference->GetWindowResource().m_Handle, true);
 	ImGui_ImplOpenGL3_Init();
 
 	//logger!
@@ -78,19 +65,30 @@ Editor::~Editor() {
 void Editor::SaveEngineTexturesReferences() {
 
 	if (!m_TextureStorageReference->GetTexture2D("Folder", m_FolderTexture))
-		PrintMessage("Failed to save reference to engine texture [Folder]");
+		LogSystem("Failed to save reference to engine texture [Folder]");
 
 	if (!m_TextureStorageReference->GetTexture2D("Debug", m_DebugTexture))
-		PrintMessage("Failed to save reference to engine texture [Debug]");
+		LogSystem("Failed to save reference to engine texture [Debug]");
 
 	if (!m_TextureStorageReference->GetTexture2D("Warning", m_WarningTexture))
-		PrintMessage("Failed to save reference to engine texture [Warning]");
+		LogSystem("Failed to save reference to engine texture [Warning]");
 
 	if (!m_TextureStorageReference->GetTexture2D("Error", m_ErrorTexture))
-		PrintMessage("Failed to save reference to engine texture [Error]");
+		LogSystem("Failed to save reference to engine texture [Error]");
 
 }
-
+void Editor::DebugLog(std::string message) noexcept {
+	m_Logger.LogDebug(message);
+}
+void Editor::LogWarning(std::string message) noexcept {
+	m_Logger.LogWarning(message);
+}
+void Editor::LogError(std::string message) noexcept {
+	m_Logger.LogError(message);
+}
+void Editor::LogSystem(std::string message) noexcept {
+	m_Logger.LogSystem(message);
+}
 
 void Editor::Render() {//TODO: REturn const to this after getting rid of the text transform
 
@@ -100,6 +98,19 @@ void Editor::Render() {//TODO: REturn const to this after getting rid of the tex
 
 	SetupEditorStyle();
 
+
+	ImGuiWindowFlags ViewportFlags;
+	//ViewportFlags |= ImGuiWindowFlags_::ImGuiWindowFlags_NoBackground;
+	ViewportFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus; //Important that nothing calls this but this window to put it behind everything
+	ViewportFlags |= ImGuiWindowFlags_NoCollapse;
+	ViewportFlags |= ImGuiWindowFlags_NoMove;
+	//ViewportFlags |= ImGuiWindowFlags_NoTitleBar;
+	ViewportFlags |= ImGuiWindowFlags_NoDocking;
+	
+	
+	//ImGui::ShowDemoWindow();
+
+
 	//IMPORTANT NOTE: Make the size of each element in relation to the size of the viewport so they would scale with it
 	//TODO: All the menus sizes and positions are relative to each other. Make sure to make the values used relative to each other instead of relying on literals
 	RenderDetailsMenu();
@@ -107,11 +118,92 @@ void Editor::Render() {//TODO: REturn const to this after getting rid of the tex
 	RenderAddGameObjectButton();
 	RenderDirectoryExplorer();
 	RenderContentBrowser();
+	//bool Open = true;
+	//if (ImGui::Begin("##ViewportWindow", &Open, ViewportFlags)) {
+	//	ImGui::SetWindowSize(m_GUIViewport->Size);
+	//	ImGui::SetWindowPos(ImVec2(0, 0));
+
+	//	if (ImGui::BeginDragDropTarget()) {
+
+	//		std::cout << "I have caught the drop!" << std::endl;
+	//		//Need transparent window in the middle as target for the drop off for this to work
+	//		ImGui::EndDragDropTarget();
+	//	}
+	//}
+	//ImGui::End();
+
 	RenderMainMenuBar();
 
 
 
+
+
+	ImGuiWindowFlags Flags = 0;
+	Flags |= ImGuiWindowFlags_NoTitleBar;
+	Flags |= ImGuiWindowFlags_NoCollapse;
+	Flags |= ImGuiWindowFlags_AlwaysVerticalScrollbar;
+	Flags |= ImGuiWindowFlags_AlwaysHorizontalScrollbar;
+	//Flags |= ImGuiWindowFlags_NoBackground;
+	//Flags |= ImGuiWindowFlags_MenuBar;
+
+	
+
+	//ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 0.5f));
+	//ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+	//ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+	//if (ImGui::Begin("TestBarMenu", nullptr, Flags)) {
+	//	//ImGui::SetWindowPos(m_ContentBrowserWindowPosition);
+
+	//	ImGui::PopStyleColor();
+	//	ImGui::PopStyleColor();
+	//	ImGui::PopStyleColor();
+
+	//	ImGui::SetCursorPos(ImVec2(0, 0));
+	//	ImGui::PushStyleColor(ImGuiCol_TitleBgCollapsed, ImVec4(0.4f, 0.0f, 0.0f, 1.0f));
+	//	if (ImGui::BeginTabBar("Tabs", ImGuiTabBarFlags_::ImGuiTabBarFlags_Reorderable)) {
+
+	//		if (ImGui::BeginTabItem("ContentBrowserTest")) {
+
+	//			ImGui::EndTabItem();
+	//		}
+	//		if (ImGui::BeginTabItem("ContentBrowserTest2")) {
+
+	//			ImGui::EndTabItem();
+	//		}
+	//		if (ImGui::BeginTabItem("ContentBrowserTest3")) {
+
+	//			ImGui::EndTabItem();
+	//		}
+
+	//		ImGui::EndTabBar();
+	//	}
+
+	//	ImGui::SetCursorPos(ImVec2(0, 20));
+
+	//	ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.0f, 0.0f, 0.0f, 0.7f));
+	//	ImGui::SetNextWindowSize(ImVec2(m_ContentBrowserWindowSize.x, m_ContentBrowserWindowSize.y));
+	//	if (ImGui::BeginChild("Child", ImGui::GetContentRegionMax(), false, 0)) {
+
+
+	//		ImGui::EndChild();
+	//	}
+
+	//	ImGui::PopStyleColor();
+	//	ImGui::PopStyleColor();
+	//}
+	//	
+	//ImGui::End();
+
 	//ImGui::ShowMetricsWindow(); Good for debugging
+
+	//if (ImGui::Begin("TestWindow", 0, ImGuiWindowFlags_NoDocking)) {
+
+	//	m_TestPosition = ImGui::GetWindowPos();
+	//	ImGui::SetWindowPos(m_TestPosition);
+
+	//}
+
+	//ImGui::End();
 
 	ClearEditorStyle();
 
@@ -123,7 +215,6 @@ void Editor::StartFrame() const {
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
-	//ImGui::ShowDemoWindow();
 }
 void Editor::RenderFrame() const {
 	//Render GUI to screen
@@ -559,8 +650,8 @@ void Editor::RenderHeirarchyMenu() {
 
 	ImGui::SetNextWindowSize(ImVec2(200.0f, m_GUIViewport->Size.y - 300.0f - m_MainMenuBarSize.y)); // 50.0f Size of Add Menu
 	ImGui::SetNextWindowPos(ImVec2(0.0f, m_MainMenuBarSize.y)); // 200 Size of Add Menu
-
-	ImGui::Begin("Heirarchy", &m_HeirarchyWindowOpened, ImGuiWindowFlags_NoBringToFrontOnFocus);
+	//ImGuiWindowFlags_NoBringToFrontOnFocus
+	ImGui::Begin("Heirarchy", &m_HeirarchyWindowOpened);
 
 	CheckForHoveredWindows();
 
@@ -652,14 +743,23 @@ void Editor::RenderDirectoryExplorer() {
 }
 void Editor::RenderContentBrowser() {
 
-	if (!m_ContentBrowserWindowOpened)
+
+	//Might be unnecessary to use this member variable but i can guarantee that the window will not appear then.
+	m_ContentWindowOpened = false;
+	m_ContentWindowOpened |= m_ContentBrowserOpened;
+	m_ContentWindowOpened |= m_DebugLogOpened;
+	m_ContentWindowOpened |= m_SystemLogOpened;
+	if (!m_ContentWindowOpened)
 		return;
 
-	ImGuiWindowFlags ContentWindowFlags = 0;
-	ContentWindowFlags |= ImGuiWindowFlags_NoCollapse;
-	ContentWindowFlags |= ImGuiWindowFlags_AlwaysVerticalScrollbar;
-	ContentWindowFlags |= ImGuiWindowFlags_AlwaysHorizontalScrollbar;
-	//ContentWindowFlags |= ImGuiWindowFlags_NoResize;
+	//Reset focus
+	m_ContentBrowserFocused = false;
+	m_DebugLogFocused = false;
+	m_SystemLogFocused = false;
+
+
+
+
 
 	ImGuiWindowFlags TabsWindowFlags = 0;
 	TabsWindowFlags |= ImGuiWindowFlags_NoCollapse;
@@ -667,31 +767,63 @@ void Editor::RenderContentBrowser() {
 	TabsWindowFlags |= ImGuiWindowFlags_NoScrollbar;
 	//TabsWindowFlags |= ImGuiWindowFlags_NoResize;
 	TabsWindowFlags |= ImGuiWindowFlags_NoBackground;
-	TabsWindowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
+	//TabsWindowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
+	TabsWindowFlags |= ImGuiWindowFlags_AlwaysAutoResize;
 
 
-	m_ContentBrowserWindowPosition = ImVec2(m_DirectoryExplorerWindowSize.x, m_GUIViewport->Size.y - m_ContentBrowserWindowSize.y);
-	m_ContentBrowserTabsPosition.x = m_ContentBrowserWindowPosition.x;
+	//Should be cleaned in new size and pos calculation
+	m_ContentWindowPosition = ImVec2(m_DirectoryExplorerWindowSize.x, m_GUIViewport->Size.y - m_ContentWindowSize.y);
+	m_ContentWindowTabsPosition.x = m_ContentWindowPosition.x;
 
-	bool ContentBrowserOpened = false;
-	bool LogOpened = false;
-	std::string TabName = "";
+	std::string TabName = "Error";
 
-	ImGui::SetNextWindowSize(m_ContentBrowserTabsSize);
-	ImGui::SetNextWindowPos(m_ContentBrowserTabsPosition);
-	if (ImGui::Begin("##TabsWindow", &m_ContentBrowserWindowOpened, TabsWindowFlags)) {
+	ImGui::SetNextWindowSize(m_ContentWindowTabsSize);
+	ImGui::SetNextWindowPos(m_ContentWindowTabsPosition);
+	if (ImGui::Begin("##TabsWindow", &m_ContentBrowserOpened, TabsWindowFlags)) {
 		CheckForHoveredWindows();
 
 		if (ImGui::BeginTabBar("Tabs", ImGuiTabBarFlags_::ImGuiTabBarFlags_Reorderable)) {
 
-			if (ImGui::BeginTabItem("ContentBrowser")) {
-				ContentBrowserOpened = true;
+			if (ImGui::BeginTabItem("ContentBrowser", &m_ContentBrowserOpened)) {
+				m_ContentBrowserFocused = true;
+
+				if (ImGui::BeginDragDropSource()) {
+					char buffer[50];
+					ImGui::SetDragDropPayload("Test", &buffer, 50);
+					//It works if you click it then drag in the next click!
+					ImGui::EndDragDropSource();
+				}
+
 				TabName = "Content";
 				ImGui::EndTabItem();
 			}
-			if (ImGui::BeginTabItem("Log")) {
-				LogOpened = true;
-				TabName = "Logged Events";
+			if (ImGui::BeginTabItem("DebugLog", &m_DebugLogOpened)) {
+				m_DebugLogFocused = true;
+
+				if (ImGui::BeginDragDropSource()) {
+					char buffer[50];
+					ImGui::SetDragDropPayload("Test", &buffer, 50);
+
+					//It works if you click it then drag in the next click!
+					ImGui::EndDragDropSource();
+				}
+
+				TabName = "Debug";
+				ImGui::EndTabItem();
+			}
+			if (ImGui::BeginTabItem("SystemLog", &m_SystemLogOpened)) {
+				m_SystemLogFocused = true;
+
+				if (ImGui::BeginDragDropSource()) {
+					char buffer[50];
+					ImGui::SetDragDropPayload("Test", &buffer, 50);
+
+
+					//It works if you click it then drag in the next click!
+					ImGui::EndDragDropSource();
+				}
+
+				TabName = "System";
 				ImGui::EndTabItem();
 			}
 
@@ -700,20 +832,31 @@ void Editor::RenderContentBrowser() {
 
 		ImGui::End();
 	}
-	
 
-	if (LogOpened)
+
+	ImGuiWindowFlags ContentWindowFlags = 0;
+	ContentWindowFlags |= ImGuiWindowFlags_NoCollapse;
+	ContentWindowFlags |= ImGuiWindowFlags_AlwaysVerticalScrollbar;
+	ContentWindowFlags |= ImGuiWindowFlags_AlwaysHorizontalScrollbar;
+	//ContentWindowFlags |= ImGuiWindowFlags_AlwaysAutoResize;
+	//ContentWindowFlags |= ImGuiWindowFlags_NoResize;
+	if (m_DebugLogFocused || m_SystemLogFocused)
 		ContentWindowFlags |= ImGuiWindowFlags_MenuBar;
 
-	ImGui::SetNextWindowSize(m_ContentBrowserWindowSize);
-	ImGui::SetNextWindowPos(m_ContentBrowserWindowPosition);
-	if (ImGui::Begin(TabName.data(), &m_ContentBrowserWindowOpened, ContentWindowFlags)) {
+	ImGui::SetNextWindowSize(m_ContentWindowSize);
+	ImGui::SetNextWindowPos(m_ContentWindowPosition);
+	if (ImGui::Begin(TabName.data(), &m_ContentWindowOpened, ContentWindowFlags)) {
 		CheckForHoveredWindows();
 
-		//Its one frame behind so it looks like its animated (Lagging behind)
-		m_ContentBrowserTabsPosition.y = m_GUIViewport->Size.y - (ImGui::GetWindowSize().y + m_ContentBrowserTabsSize.y);
 
-		if (ContentBrowserOpened) {
+		//Should probably do another check if any window is in focus, otherwise its a crash!
+
+		//std::cout << ImGui::GetWindowContentRegionMax().x << " Y " << ImGui::GetWindowContentRegionMax().y << std::endl;
+		//Its one frame behind so it looks like its animated (Lagging behind)
+		m_ContentWindowTabsPosition.y = m_GUIViewport->Size.y - (ImGui::GetWindowSize().y + m_ContentWindowTabsSize.y);
+		//m_ContentWindowTabsPosition.y = ImGui::GetWindowContentRegionMax().y;
+		//Put these into functions! This function is far too big
+		if (m_ContentBrowserFocused) {
 
 			AddSpacings(5);
 			if (m_SelectedDirectory != nullptr) {
@@ -729,39 +872,30 @@ void Editor::RenderContentBrowser() {
 			}
 
 		}
-		else if (LogOpened) {
+		else if (m_DebugLogFocused) {
 
 			if (ImGui::BeginMenuBar()) {
 
 				//I guess it makes sense why they use static so much
-				bool FilterSelected = false;
 				bool ClearSelected = false;
 				const ImVec2 ClearSize = ImGui::CalcTextSize("Clear");
-				const ImVec2 FilterSize = ImGui::CalcTextSize("Filter");
+				const ImVec2 AutoScrollSize = ImGui::CalcTextSize("AutoScroll");
 				if (ImGui::Selectable("Clear", &ClearSelected, 0, ClearSize)) {
-					m_Logger.Clear();
+					m_Logger.ClearMessageLog();
 				}
-				if (ImGui::Selectable("Filter", &FilterSelected, 0, FilterSize)) {
-					ImGui::OpenPopup("LoggerFilter");
-					ImGui::SetNextWindowPos(ImGui::GetMousePos());
+				if (ImGui::Selectable("AutoScroll", m_Logger.GetAutoScrollDebugLog(), 0, AutoScrollSize)) {
+					m_Logger.ToggleAutoScrollDebugLog();
 				}
-				if (ImGui::BeginPopup("LoggerFilter")) {
-					ImGui::Checkbox("Debug", &m_Logger.GetShowDebugMessagesRef());
-					ImGui::Checkbox("Warning", &m_Logger.GetShowWarningMessagesRef());
-					ImGui::Checkbox("Error", &m_Logger.GetShowErrorMessagesRef());
-
-					ImGui::EndPopup();
-				}
-
-
-
-
 
 				//TODO: Implement a function that checks for an engine texture. 
 				//-If not found then it returns an error texture so then i can be sure im getting something each time
 
 				//TODO: DRY, This down here could be abstarcted away into a resusable function
 
+
+				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.4f, 0.4f, 0.4f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.3f, 0.3f, 0.3f, 0.3f));
 				ImVec4 IconColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 
 				//Texture
@@ -771,20 +905,18 @@ void Editor::RenderContentBrowser() {
 					TextureID = (void*)(intptr_t)(m_ErrorTexture->GetID());
 				}
 
-				//ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-				//ImGui::ImageButton("##Debug", TextureID, ImVec2(15.0f, 15.0f), ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), IconColor);
-				//ImGui::PopStyleColor();
 				//Color
 				if (!m_Logger.GetShowErrorMessages())
 					IconColor = ImVec4(0.3f, 0.3f, 0.3f, 1.0f);
 
 
-				ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 30.0f, ImGui::GetCursorPosY() + 2)); //Manual offset by +2
-				ImGui::Image(TextureID, ImVec2(15.0f, 15.0f), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), IconColor);
+				ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 30.0f, ImGui::GetCursorPosY())); //Manual offset by +2
+				if (ImGui::ImageButton("##ErrorLog", TextureID, ImVec2(15.0f, 15.0f), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0.0f, 0.0f, 0.0f, 0.0f), IconColor))
+					m_Logger.ToggleShowErrorMessages();
 				if (m_ErrorTexture != nullptr)
 					m_ErrorTexture->Unbind();
 
-				ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 10.0f, ImGui::GetCursorPosY()));
+				ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 5.0f, ImGui::GetCursorPosY()));
 				ImGui::Text("%d", m_Logger.GetErrorMessagesCount());
 				IconColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -799,12 +931,13 @@ void Editor::RenderContentBrowser() {
 				if (!m_Logger.GetShowWarningMessages())
 					IconColor = ImVec4(0.3f, 0.3f, 0.3f, 1.0f);
 
-				ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 80.0f, ImGui::GetCursorPosY() + 2)); //Manual offset by +2
-				ImGui::Image(TextureID, ImVec2(15.0f, 15.0f), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), IconColor);
+				ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 80.0f, ImGui::GetCursorPosY())); //Manual offset by +2
+				if (ImGui::ImageButton("##WarningLog", TextureID, ImVec2(15.0f, 15.0f), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0.0f, 0.0f, 0.0f, 0.0f), IconColor))
+					m_Logger.ToggleShowWarningMessages();
 				if (m_WarningTexture != nullptr)
 					m_WarningTexture->Unbind();
 
-				ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 60.0f, ImGui::GetCursorPosY()));
+				ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 55.0f, ImGui::GetCursorPosY()));
 				ImGui::Text("%d", m_Logger.GetWarningMessagesCount());
 				IconColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -819,28 +952,30 @@ void Editor::RenderContentBrowser() {
 				if (!m_Logger.GetShowDebugMessages())
 					IconColor = ImVec4(0.3f, 0.3f, 0.3f, 1.0f);
 
-				ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 130.0f, ImGui::GetCursorPosY() + 2)); //Manual offset by +2
-				ImGui::Image(TextureID, ImVec2(15.0f, 15.0f), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), IconColor);
+				ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 130.0f, ImGui::GetCursorPosY())); //Manual offset by +2
+				if (ImGui::ImageButton("##DebugLog", TextureID, ImVec2(15.0f, 15.0f), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0.0f, 0.0f, 0.0f, 0.0f), IconColor))
+					m_Logger.ToggleShowDebugMessages();
 				if (m_DebugTexture != nullptr)
 					m_DebugTexture->Unbind();
 
-				ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 110.0f, ImGui::GetCursorPosY()));
+				ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 105.0f, ImGui::GetCursorPosY()));
 				ImGui::Text("%d", m_Logger.GetDebugMessagesCount());
 				IconColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 
 
-
-
+				ImGui::PopStyleColor();
+				ImGui::PopStyleColor();
+				ImGui::PopStyleColor();
 
 
 				ImGui::EndMenuBar();
 			}
 
-			if (m_Logger.GetAllMessagesCount() > 0) {
+			if (m_Logger.GetLoggedMessagesCount() > 0) {
 
-				while (!m_Logger.IsBufferLooped()) {
+				while (!m_Logger.IsLoggedBufferLooped()) {
 
-					const Message* NewMessage = m_Logger.GetNextMessage();
+					const Message* NewMessage = m_Logger.GetNextLoggedMessage();
 					if (NewMessage == nullptr)
 						continue;
 
@@ -851,6 +986,10 @@ void Editor::RenderContentBrowser() {
 						continue;
 					if (Type == MessageType::ERROR && !m_Logger.GetShowErrorMessages())
 						continue;
+					if (Type == MessageType::SYSTEM) {
+						m_Logger.LogError("System type message was saved in the logged messages buffer");
+						continue;
+					}
 
 
 					if (Type == MessageType::DEBUG)
@@ -859,129 +998,95 @@ void Editor::RenderContentBrowser() {
 						ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.1f, 1.0f));
 					else if (Type == MessageType::ERROR)
 						ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+					else if (Type == MessageType::SYSTEM)
+						ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
 
 					//TODO: Add icons and numbers to show count of each message type
 					//TODO: Add visibility of each icon that indicates if the filter is active or not
 					//TODO: Add more info to messages like running time - Check what Unity does
 
-
-					ImGui::Text("%s\nTick: %lu", NewMessage->GetData(), NewMessage->GetTick());
+					//NOTE: Separate window and buffer for system messages?
+					//TODO: Switch all log functions back to const char* and simply construct 1 string at the func definition in logger to minimize copies. Emplace it even
+					
+					ImGui::Text("[%s] [%llu] %s", m_TimeReference->FormatTime(NewMessage->GetTimestamp()).data(), NewMessage->GetTick(), NewMessage->GetData().data());
 
 					ImGui::PopStyleColor();
 					AddSeparators(1);
 				}
 			}
 
+
+			//AutoScroll debug log
+			if (ImGui::GetScrollY() <= ImGui::GetScrollMaxY() && m_Logger.GetAutoScrollDebugLog())
+				ImGui::SetScrollHereY(1.0f);
+		}
+		else if (m_SystemLogFocused) {
+
 		}
 
 		ImGui::End();
 	}
 
+
+	//Check if content window was closed by clicking the X and close all tabs then
+	//TODO: Make functions CloseAllContentTabs() to more easily  keep track of new tabs
+	if (!m_ContentWindowOpened) {
+		m_ContentBrowserOpened = false;
+		m_DebugLogOpened = false;
+		m_SystemLogOpened = false;
+	}
 }
 void Editor::RenderMainMenuBar() {
 
 	if (ImGui::BeginMainMenuBar()) {
 
-
-
-		//NOTE: Test BeginMenu and MenuItem for this!
-
-
-		constexpr float BarPadding = 4.0f; //I did a bunch of calculations and used Photoshop to confirm this
-		constexpr float ElementsPadding = 10.0f;
-		float CurrentElementWidth = 0.0f;
-		ImVec2 OpenedPopupPosition{0.0f, 0.0f};
-
 		//Need to query height
 		if (m_MainMenuBarSize.x == 0.0f && m_MainMenuBarSize.y == 0.0f)
 			m_MainMenuBarSize = ImGui::GetWindowSize();
 
-		OpenedPopupPosition.y = m_MainMenuBarSize.y;
-
 		//File
-		ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.0f));
-		CurrentElementWidth = ImGui::CalcTextSize("File").x + ElementsPadding;
-		if (ImGui::Selectable("File", false, 0, ImVec2(CurrentElementWidth, m_MainMenuBarSize.y)))
-			ImGui::OpenPopup("FileMenu");
+		if (ImGui::BeginMenu("File")) {
 
-		PopStyleVars(1);
-		if (ImGui::BeginPopup("FileMenu")) {
+			ImGui::MenuItem("Test1", "CTRL + D");
+			ImGui::MenuItem("Test2", "CTRL + D");
+			ImGui::MenuItem("Test3", "CTRL + D");
+			ImGui::MenuItem("Test4", "CTRL + D");
 
-			ImGui::SetWindowPos(OpenedPopupPosition);
 
-			bool Test1Selected = false;
-			if (ImGui::Selectable("Test1Selected", &Test1Selected, 0, ImVec2(300.0f, 20.0f))) {
-
-			}
-			bool Test2Selected = false;
-			if (ImGui::Selectable("Test2Selected", &Test2Selected, 0, ImVec2(300.0f, 20.0f))) {
-
-			}
-			bool Test3Selected = false;
-			if (ImGui::Selectable("Test3Selected", &Test3Selected, 0, ImVec2(300.0f, 20.0f))) {
-
-			}
-
-			ImGui::EndPopup();
+			ImGui::EndMenu();
 		}
-		OpenedPopupPosition.x = ImGui::GetCursorPos().x - BarPadding;
-
 
 		//Window
-		ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.0f));
-		CurrentElementWidth = ImGui::CalcTextSize("Window").x + ElementsPadding;
-		if (ImGui::Selectable("Window", false, 0, ImVec2(CurrentElementWidth, m_MainMenuBarSize.y)))
-			ImGui::OpenPopup("WindowMenu");
-		
-		PopStyleVars(1);
-		if (ImGui::BeginPopup("WindowMenu")) {
+		if (ImGui::BeginMenu("Window")) {
 
-			ImGui::SetWindowPos(OpenedPopupPosition);
-			ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.0f, 0.2f));
+			ImGui::MenuItem("Details", "CTRL + D", &m_DetailsWindowOpened);
+			ImGui::MenuItem("Heirarchy", "CTRL + D", &m_HeirarchyWindowOpened);
+			ImGui::MenuItem("Content Browser", "CTRL + D", &m_ContentBrowserOpened);
+			ImGui::MenuItem("Directory Explorer", "CTRL + D", &m_DirectoryExplorerWindowOpened);
 
-			bool DetailesSelected = false;
-			if (ImGui::Selectable("Details", &DetailesSelected, 0, ImVec2(300.0f, 20.0f))) {
-				m_DetailsWindowOpened = true;
-			}
-			bool HierarchySelected = false;
-			if (ImGui::Selectable("Heirarchy", &HierarchySelected, 0, ImVec2(300.0f, 20.0f))) {
-				m_HeirarchyWindowOpened = true;
-			}
-			bool ContentBrowserSelected = false;
-			if (ImGui::Selectable("Content Browser", &ContentBrowserSelected, 0, ImVec2(300.0f, 20.0f))) {
-				m_ContentBrowserWindowOpened = true;
-			}
-			bool DirectoryExplorerSelected = false;
-			if (ImGui::Selectable("Directory Explorer", &DirectoryExplorerSelected, 0, ImVec2(300.0f, 20.0f))) {
-				m_DirectoryExplorerWindowOpened = true;
+			if (ImGui::BeginMenu("Logs")) {
+
+				ImGui::MenuItem("Debug Log", "CTRL + D", &m_DebugLogOpened);
+				ImGui::MenuItem("System Log", "CTRL + D", &m_SystemLogOpened);
+
+				ImGui::EndMenu();
 			}
 
-			ImGui::PopStyleVar();
-			ImGui::EndPopup();
+
+			ImGui::EndMenu();
 		}
-		OpenedPopupPosition.x = ImGui::GetCursorPos().x - BarPadding;
-
-
-
-
-
-
 
 
 		//About - Should be at the very end always!
-		ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.0f)); //Middle - Top
-		CurrentElementWidth = ImGui::CalcTextSize("About").x + ElementsPadding;
-		if (ImGui::Selectable("About", false, 0, ImVec2(CurrentElementWidth, m_MainMenuBarSize.y)))
+		ImGuiWindowFlags AboutMenuFlags = 0;
+		if (ImGui::MenuItem("About")) {
 			ImGui::OpenPopup("AboutMenu");
-
-		PopStyleVars(1);
-
-		ImGuiWindowFlags Flags = 0;
-		Flags |= ImGuiWindowFlags_NoTitleBar;
-		Flags |= ImGuiWindowFlags_NoResize;
-		Flags |= ImGuiWindowFlags_NoMove;
-		Flags |= ImGuiWindowFlags_NoScrollbar;
-		if (ImGui::BeginPopupModal("AboutMenu", 0, Flags)) {
+			AboutMenuFlags |= ImGuiWindowFlags_NoTitleBar;
+			AboutMenuFlags |= ImGuiWindowFlags_NoResize;
+			AboutMenuFlags |= ImGuiWindowFlags_NoMove;
+			AboutMenuFlags |= ImGuiWindowFlags_NoScrollbar;
+		}
+		if (ImGui::BeginPopupModal("AboutMenu", nullptr, AboutMenuFlags)) {
 			
 			ImGui::SetWindowPos(ImVec2((m_GUIViewport->Size.x / 2) - 200.0f, (m_GUIViewport->Size.y / 2) - 100.0f));
 			ImGui::SetWindowSize(ImVec2(400.0f, 200.0f));
@@ -1012,7 +1117,6 @@ void Editor::RenderMainMenuBar() {
 
 			ImGui::EndPopup();
 		}
-		OpenedPopupPosition.x = ImGui::GetCursorPos().x;
 
 		ImGui::EndMainMenuBar();
 	}
@@ -1306,7 +1410,7 @@ void Editor::UpdateContentBrowserFolderEntries() {
 
 		//Calculate position and check if new line is necessary
 		m_ContentElementCursor = (m_ContentBrowserElementPadding * (m_ContentLineElementsCount + 1)) + m_ContentBrowserElementSize.x * m_ContentLineElementsCount;
-		if (m_ContentElementCursor + m_ContentBrowserElementSize.x >= m_ContentBrowserWindowSize.x) {
+		if (m_ContentElementCursor + m_ContentBrowserElementSize.x >= m_ContentWindowSize.x) {
 			FlushContentTexts();
 			m_ContentElementCursor = m_ContentBrowserElementPadding;
 			m_ContentLineElementsCount = 0; //This means its a new line!
@@ -1366,7 +1470,7 @@ void Editor::UpdateContentBrowserAssetEntries() {
 
 		//Calculate position and check if new line is necessary
 		m_ContentElementCursor = (m_ContentBrowserElementPadding * (m_ContentLineElementsCount + 1)) + m_ContentBrowserElementSize.x * m_ContentLineElementsCount;
-		if (m_ContentElementCursor + m_ContentBrowserElementSize.x >= m_ContentBrowserWindowSize.x) {
+		if (m_ContentElementCursor + m_ContentBrowserElementSize.x >= m_ContentWindowSize.x) {
 
 			FlushContentTexts();
 			m_ContentElementCursor = m_ContentBrowserElementPadding;

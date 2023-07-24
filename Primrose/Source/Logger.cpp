@@ -8,37 +8,52 @@ Logger::Logger(Time& time) noexcept
 }
 
 
-void Logger::LogDebug(const char* message) noexcept {
+//TODO: Implement circular c style buffers with fixed sizes for improved performance
+
+void Logger::LogDebug(std::string message) noexcept {
 
 	if (m_TimeReference == nullptr)
 		return;
 
 	if (m_DebugCounter == m_DebugLimit)
-		m_LoggedMessages.erase(std::begin(m_LoggedMessages));
-
-	m_DebugCounter++;
-	m_LoggedMessages.push_back({ MessageType::DEBUG, m_TimeReference->GetTick(), message });
+		m_DebugLog.erase(std::begin(m_DebugLog));
+	else
+		m_DebugCounter++;
+	m_DebugLog.push_back({ MessageType::DEBUG, m_TimeReference->GetTick(), m_TimeReference->GetRunningTime(), message });
 }
-void Logger::LogWarning(const char* message) noexcept {
+void Logger::LogWarning(std::string message) noexcept {
 
 	if (m_TimeReference == nullptr)
 		return;
 
 	if (m_WarningCounter == m_WarningLimit)
-		m_LoggedMessages.erase(std::begin(m_LoggedMessages));
+		m_DebugLog.erase(std::begin(m_DebugLog));
+	else
+		m_WarningCounter++;
 
-	m_WarningCounter++;
-	m_LoggedMessages.push_back({ MessageType::WARNING, m_TimeReference->GetTick(), message });
+	m_DebugLog.push_back({ MessageType::WARNING, m_TimeReference->GetTick(), m_TimeReference->GetRunningTime(), message });
 }
-void Logger::LogError(const char* message) noexcept {
+void Logger::LogError(std::string message) noexcept {
 
 	if (m_TimeReference == nullptr)
 		return;
 
 	if (m_ErrorCounter == m_ErrorLimit)
-		m_LoggedMessages.erase(std::begin(m_LoggedMessages));
+		m_DebugLog.erase(std::begin(m_DebugLog));
+	else
+		m_ErrorCounter++;
 
-	m_ErrorCounter++;
-	m_LoggedMessages.push_back({ MessageType::ERROR, m_TimeReference->GetTick(), message });
+	m_DebugLog.push_back({ MessageType::ERROR, m_TimeReference->GetTick(), m_TimeReference->GetRunningTime(), message });
 }
+void Logger::LogSystem(std::string message) noexcept {
 
+	if (m_TimeReference == nullptr)
+		return;
+
+	if (m_SystemCounter == m_SystemLimit)
+		m_SystemLog.erase(std::begin(m_SystemLog));
+	else
+		m_SystemCounter++;
+
+	m_SystemLog.push_back({ MessageType::SYSTEM, m_TimeReference->GetTick(), m_TimeReference->GetRunningTime(), message});
+}

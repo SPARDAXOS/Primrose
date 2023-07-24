@@ -9,6 +9,12 @@
 #include <GraphicsResources.hpp>
 
 
+enum WindowMode {
+	WINDOWED,
+	FULLSCREEN,
+	BORDERLESS_FULLSCREEN
+};
+
 
 class Window final {
 public:
@@ -30,14 +36,19 @@ public:
 private:
 	struct WindowResource {
 		explicit WindowResource(int width, int height, const char* title, GLFWmonitor* monitor, GLFWwindow* share) {
-			m_ptr = glfwCreateWindow(width, height, title, monitor, share);
-			if (m_ptr == nullptr) {
+
+			m_Handle = glfwCreateWindow(width, height, title, monitor, share);
+			if (m_Handle == nullptr)
 				throw std::runtime_error(std::string("Failed to create window " + glfwGetError(nullptr)));
-			}
-			//TODO: check if window was created corrected and throw exception if not
+
+			m_Monitor = monitor;
+
+			m_VideoMode = glfwGetVideoMode(m_Monitor);
+			if (m_VideoMode == nullptr)
+				throw std::runtime_error(std::string("Failed to get video mode " + glfwGetError(nullptr)));
 		}
 		~WindowResource() {
-			glfwDestroyWindow(m_ptr);
+			glfwDestroyWindow(m_Handle);
 		}
 
 		WindowResource() = delete;
@@ -47,7 +58,9 @@ private:
 		WindowResource& operator=(WindowResource&&) = delete;
 
 
-		GLFWwindow* m_ptr = nullptr;
+		GLFWwindow* m_Handle = nullptr;
+		GLFWmonitor* m_Monitor = nullptr;
+		const GLFWvidmode* m_VideoMode = nullptr;
 	};
 	struct GLFWResource {
 		explicit GLFWResource() {
@@ -79,7 +92,7 @@ public:
 
 	inline int32 GetWidth() const noexcept { return m_Width; }
 	inline int32 GetHeight() const noexcept { return m_Height; }
-	[[nodiscard]] inline const GLFWwindow& GetWindowResource() const noexcept { return *m_Window.get()->m_ptr; }
+	[[nodiscard]] inline const GLFWwindow& GetWindowResource() const noexcept { return *m_Window.get()->m_Handle; }
 
 
 public:
@@ -87,6 +100,8 @@ public:
 	inline WindowResource& GetWindowResource() noexcept { return *m_Window.get(); }
 	
 
+public:
+	void SetWindowMode(WindowMode mode) noexcept;
 	void ClearBuffer() const noexcept;
 	void SwapBuffer() const noexcept;
 	void BindOpenGLContext() const noexcept;
@@ -110,9 +125,7 @@ private:
 	int32 m_Width;
 	int32 m_Height;
 	uint8 m_VSync = 1;
-
-private:
-	GLuint m_DefaultShaderProgram;
+	int32 m_RefreshRate = 144;
 
 private:
 	std::string m_LastExitMessage;

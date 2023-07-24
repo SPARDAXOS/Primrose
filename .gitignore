@@ -4,3 +4,6 @@
 
 #Ignore visual studio user specific settings
 *.user
+
+#Ignore build files
+Build/

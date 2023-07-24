@@ -4,16 +4,15 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
+
+
 #include "Utility.hpp"
-#include "Profiler.hpp"
 
 
 enum class AssetType {
 	INVALID = 0,
 	TEXTURE
 };
-
-//Maybe make some asset hierarchy? texture2D ineheriting from AssetBase
 class Asset {
 public:
 	Asset() = default;
@@ -42,10 +41,10 @@ public:
 		}
 	}
 
-	Asset(Asset&& other) {
+	Asset(Asset&& other) noexcept {
 		*this = std::move(other);
 	}
-	Asset& operator=(Asset&& other) {
+	Asset& operator=(Asset&& other) noexcept {
 		if (*this == other) {
 			return *this;
 		}
@@ -75,7 +74,6 @@ public:
 	std::filesystem::path m_Path;
 	AssetType m_Type{ AssetType::INVALID };
 };
-
 class Directory final {//Maybe change name to directory?
 public:
 	Directory() = delete;
@@ -101,15 +99,13 @@ public:
 
 
 class TextureStorage;
+class Core;
 
 class AssetManager final {
 public:
 
 	AssetManager() = delete;
-	AssetManager(TextureStorage& textureStorage) 
-		:	m_TextureStorageReference(&textureStorage)
-	{
-	}
+	AssetManager(Core& core) noexcept;
 	~AssetManager() {
 
 	}
@@ -204,12 +200,13 @@ private:
 	Profiler LoadingProfiler;
 
 	std::vector<Directory*> m_Directories;
-	Directory* m_Root;
+	Directory* m_Root = nullptr;
 
 	//Since they will be cleaned up from here
 	//Copies on the stack might be better 
 	std::vector<Asset*> m_TexturesAssets;
 
+	Core* m_CoreReference;
 	TextureStorage* m_TextureStorageReference;
 };
 

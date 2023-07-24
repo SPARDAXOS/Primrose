@@ -1,5 +1,5 @@
 #include "AssetManager.hpp"
-#include "TextureStorage.hpp"
+#include "Core.hpp"
 
 
 
@@ -8,6 +8,12 @@
 //This class needs a ref to TextureStorage for loading the assets and needs the class Asset
 //Asset should be in its own header! Maybe along with others like texture 2d and such
 
+
+AssetManager::AssetManager(Core& core) noexcept
+	: m_CoreReference(&core)
+{
+	m_TextureStorageReference = m_CoreReference->GetTextureStorage();
+}
 
 bool AssetManager::LoadProjectFiles() {
 
@@ -34,7 +40,7 @@ bool AssetManager::CheckForContentDirectory() {
 
 	if (std::filesystem::exists("Content")) {
 		//TODO: Implement proper error handling for this class
-		PrintMessage("Content folder was successfully located");
+		m_CoreReference->LogSystem("Content folder was located!");
 		return true;
 	}
 
@@ -42,7 +48,7 @@ bool AssetManager::CheckForContentDirectory() {
 }
 bool AssetManager::ScanForContent() {
 
-	std::cout << "Started scanning for assets to load..." << std::endl;
+	m_CoreReference->LogSystem("Started scanning for assets to load...");
 	for (auto& DirectoryPath : std::filesystem::directory_iterator(std::filesystem::current_path())) {
 		if (DirectoryPath.path().filename() == "Content") {
 			Directory* NewDirectory = new Directory(DirectoryPath.path());
@@ -90,23 +96,21 @@ void AssetManager::CheckAssetType(Asset& asset) {
 }
 bool AssetManager::LoadAssets() {
 
-	//Performs calls to different systems to construct and load assets based on directories and saved asset objects in vector
-
 	//IMPORTANT NOTE: Some images will be flipped when loaded. The problem is that i cant know which will be. So at some point i should implement the option to flip 
 	//-them in engine. Maybe texture editor? Tick the option and the image will be reloaded!
 
 	//IMPORTANT NOTE: String_view is meant to keep track of one block of memory. So assigning to it a copy will be invalid since it will keep track of the copies data
-	std::cout << "Started loading assets..." << std::endl;
+	m_CoreReference->LogSystem("Started loading assets...");
 	for (auto& TextureAsset : m_TexturesAssets) {
-		//NOTE: Flipping or not is going to be a problem to figure out
 		std::string FileName = TextureAsset->m_Path.filename().replace_extension().string();
 		if (!m_TextureStorageReference->LoadTexture2D(*TextureAsset)) {
-			std::cout << "Asset failed to load [Texture] [" << FileName << "] " << TextureAsset->m_Path << std::endl;
+			m_CoreReference->LogSystem("Asset failed to load [Texture] [" + FileName + "] " + TextureAsset->m_Path.string());
 		}
-		else
-			std::cout << "Asset loaded successfully [Texture] [" << FileName << "] " << TextureAsset->m_Path << std::endl;
+		else {
+			m_CoreReference->LogSystem("Asset loaded successfully [Texture] [" + FileName + "] " + TextureAsset->m_Path.string());
+		}
 	}
 
-	std::cout << "Finished loading assets successfully!" << std::endl;
+	m_CoreReference->LogSystem("Finished loading assets successfully!");
 	return true;
 }

@@ -45,6 +45,11 @@ public:
 public:
 	void SaveEngineTexturesReferences();
 
+	void DebugLog(std::string message) noexcept;
+	void LogWarning(std::string message) noexcept;
+	void LogError(std::string message) noexcept;
+	void LogSystem(std::string message) noexcept;
+
 private:
 	void Render();
 	void StartFrame() const;
@@ -102,24 +107,36 @@ private:
 	char m_TagInputBuffer[33];
 
 private: //Most of these are relative to each other. Calculate them in runtime and maybe once at the start. Think about this.
-	ImVec2 m_ContentBrowserWindowSize { 1170.0f, 300.0f };
-	ImVec2 m_CurrentContentBrowserWindowSize{ m_ContentBrowserWindowSize };
+	ImVec2 m_ContentWindowSize { 1170.0f, 300.0f };
+	ImVec2 m_CurrentContentBrowserWindowSize{ m_ContentWindowSize };
 	ImVec2 m_ContentBrowserElementSize{ 100.0f, 100.0f };
 	float m_ContentBrowserElementPadding = 50.0f;
 
 	ImVec2 m_DirectoryExplorerWindowSize{ 350.0f, 300.0f };
 	ImVec2 m_MainMenuBarSize;
 
-	ImVec2 m_ContentBrowserTabsSize{ m_ContentBrowserWindowSize.x, 27.0f }; //27 manually adjusted
-	ImVec2 m_ContentBrowserTabsPosition{ m_ContentBrowserWindowPosition.x, 0.0f };
+	ImVec2 m_TestPosition;
+
+	ImVec2 m_ContentWindowTabsSize{ m_ContentWindowSize.x, 27.0f }; //27 manually adjusted
+	ImVec2 m_ContentWindowTabsPosition{ m_ContentWindowPosition.x, 0.0f };
 
 	
-	ImVec2 m_ContentBrowserWindowPosition;
+	ImVec2 m_ContentWindowPosition;
 
 	bool m_DetailsWindowOpened = true;
 	bool m_HeirarchyWindowOpened = true;
-	bool m_ContentBrowserWindowOpened = true;
+	bool m_ContentBrowserOpened = true;
 	bool m_DirectoryExplorerWindowOpened = true;
+
+	bool m_DebugLogOpened = true;
+	bool m_SystemLogOpened = true;
+
+	bool m_ContentWindowOpened = false;
+
+
+	bool m_ContentBrowserFocused = true;
+	bool m_DebugLogFocused = false;
+	bool m_SystemLogFocused = false;
 
 private:
 	Camera* m_ViewportCameraReference{ nullptr };

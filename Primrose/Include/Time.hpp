@@ -1,6 +1,8 @@
 #pragma once
 
 #include "GLFW/glfw3.h"
+#include <chrono>
+#include <iostream>
 
 class Time final {
 public:
@@ -31,6 +33,33 @@ public:
 		return static_cast<unsigned int>(1 / DeltaTime);
 	}
 	inline uint64 GetRunningTime() const noexcept { return m_RunningTime; }
+	std::string GetRunningTimeFormatted() const {
+
+		const std::chrono::hh_mm_ss TimeFormatted{std::chrono::seconds(m_RunningTime)};
+		std::string Results;
+
+		Results.append(std::to_string(TimeFormatted.hours().count()));
+		Results.append(":");
+		Results.append(std::to_string(TimeFormatted.minutes().count()));
+		Results.append(":");
+		Results.append(std::to_string(TimeFormatted.seconds().count()));
+		
+		return Results;
+	}
+	std::string FormatTime(uint64 seconds) {
+
+		const std::chrono::hh_mm_ss TimeFormatted{std::chrono::seconds(seconds)};
+		std::string Results;
+
+		Results.append(std::to_string(TimeFormatted.hours().count()));
+		Results.append(":");
+		Results.append(std::to_string(TimeFormatted.minutes().count()));
+		Results.append(":");
+		Results.append(std::to_string(TimeFormatted.seconds().count()));
+
+		return Results;
+	}
+
 	inline uint64 GetTick() const noexcept { return m_Tick; }
 
 private:

@@ -5,10 +5,11 @@
 
 Core::Core() noexcept {
 
+	//Order matters
 	m_Window = std::make_unique<Window>(m_ViewportWidth, m_ViewportHeight);
 	m_TextureStorage = std::make_unique<TextureStorage>();
 	m_ECS = std::make_unique<EntityComponentSystem>();
-	m_AssetManager = std::make_unique<AssetManager>(*m_TextureStorage);
+	m_AssetManager = std::make_unique<AssetManager>(*this);
 	m_Time = std::make_unique<Time>();
 	m_Input = std::make_unique<Input>(*m_Window);
 	m_Renderer = std::make_unique<Renderer>(*m_ECS, *m_Window);
@@ -28,17 +29,14 @@ void Core::Run() {
 	//TODO: Implement own image loader! for bitmaps at least own decoder
 
 
-
+	m_Window->SetWindowMode(WindowMode::WINDOWED);
 	m_AssetManager->LoadProjectFiles();
 	m_Editor->SaveEngineTexturesReferences();
 
-	//TODO: Maybe switch this up so it returns a texture pointer. The actual texture is stored in the storage so if you attempt to load it again, it will return the 
-	//one from the storage. It checks by path and not name! or?
-	const std::string_view TexturePath = "Resources/Textures/Crate.jpg";
-	const std::string_view TextureName = "Crate";
-	Texture2D* CrateTexture = nullptr; 
 
-	if (!m_TextureStorage->GetTexture2D(TextureName, CrateTexture))
+
+	Texture2D* CrateTexture = nullptr; 
+	if (!m_TextureStorage->GetTexture2D("Crate", CrateTexture))
 		PrintMessage("It failed to load the texture!");
 
 	
@@ -53,16 +51,6 @@ void Core::Run() {
 	//It will save it so next time something wants a shader with these params, it will look if they are saved and return that same shader
 	
 	//Renderer takes a material
-
-
-
-	//For magnifying and minifying textures - When texture is smaller than object or bigger than object!
-	//GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)); // For mipmaps. Cuase gets smaller while the magnifying doesnt use mipmaps so dont use it!
-	//GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-	
-	//GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, CreateTexture->GetWidth(), CreateTexture->GetHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, CreateTexture->GetData()));
-	//Image data might not be needed after this!
-	//GLCall(glGenerateMipmap(GL_TEXTURE_2D));
 
 	
 	//ECS
@@ -180,6 +168,20 @@ void Core::UpdateSystems() {
 	m_Window->SwapBuffer();
 
 	//glfwPollEvents(); //Needs to be outside of the worker thread calls
+}
+
+
+void Core::LogDebug(std::string message) noexcept {
+	m_Editor->DebugLog(message);
+}
+void Core::LogWarning(std::string message) noexcept {
+	m_Editor->LogWarning(message);
+}
+void Core::LogError(std::string message) noexcept {
+	m_Editor->LogError(message);
+}
+void Core::LogSystem(std::string message) noexcept {
+	m_Editor->LogSystem(message);
 }
 
 void Core::RegisterExitMessage(std::string message) noexcept {

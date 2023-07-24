@@ -42,6 +42,12 @@ public:
 	[[nodiscard]] inline Input* GetInput() const noexcept { return m_Input.get(); }
 	[[nodiscard]] inline Editor* GetEditor() const noexcept { return m_Editor.get(); }
 
+public:
+	void LogDebug(std::string message) noexcept;
+	void LogWarning(std::string message) noexcept;
+	void LogError(std::string message) noexcept;
+	void LogSystem(std::string message) noexcept;
+
 private:
 	void SetupCore();
 
