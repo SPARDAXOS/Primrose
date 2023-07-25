@@ -10,7 +10,7 @@ Logger::Logger(Time& time) noexcept
 
 //TODO: Implement circular c style buffers with fixed sizes for improved performance
 
-void Logger::LogDebug(std::string message) noexcept {
+void Logger::DebugLog(std::string message) noexcept {
 
 	if (m_TimeReference == nullptr)
 		return;
@@ -21,7 +21,7 @@ void Logger::LogDebug(std::string message) noexcept {
 		m_DebugCounter++;
 	m_DebugLog.push_back({ MessageType::DEBUG, m_TimeReference->GetTick(), m_TimeReference->GetRunningTime(), message });
 }
-void Logger::LogWarning(std::string message) noexcept {
+void Logger::WarningLog(std::string message) noexcept {
 
 	if (m_TimeReference == nullptr)
 		return;
@@ -33,7 +33,7 @@ void Logger::LogWarning(std::string message) noexcept {
 
 	m_DebugLog.push_back({ MessageType::WARNING, m_TimeReference->GetTick(), m_TimeReference->GetRunningTime(), message });
 }
-void Logger::LogError(std::string message) noexcept {
+void Logger::ErrorLog(std::string message) noexcept {
 
 	if (m_TimeReference == nullptr)
 		return;
@@ -45,7 +45,7 @@ void Logger::LogError(std::string message) noexcept {
 
 	m_DebugLog.push_back({ MessageType::ERROR, m_TimeReference->GetTick(), m_TimeReference->GetRunningTime(), message });
 }
-void Logger::LogSystem(std::string message) noexcept {
+void Logger::SystemLog(std::string message) noexcept {
 
 	if (m_TimeReference == nullptr)
 		return;

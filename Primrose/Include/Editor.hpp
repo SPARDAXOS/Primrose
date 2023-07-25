@@ -46,9 +46,9 @@ public:
 	void SaveEngineTexturesReferences();
 
 	void DebugLog(std::string message) noexcept;
-	void LogWarning(std::string message) noexcept;
-	void LogError(std::string message) noexcept;
-	void LogSystem(std::string message) noexcept;
+	void WarningLog(std::string message) noexcept;
+	void ErrorLog(std::string message) noexcept;
+	void SystemLog(std::string message) noexcept;
 
 private:
 	void Render();

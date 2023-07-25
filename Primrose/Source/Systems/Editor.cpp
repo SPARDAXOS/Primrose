@@ -26,11 +26,11 @@ Editor::Editor(Core& core)
 	//CalculateWindowsSizes()
 
 	m_Logger.SetTimeReference(*m_TimeReference); //Since it will have nullptr on this class' construction
-	LogSystem(ImGui::GetVersion());
+	SystemLog(ImGui::GetVersion());
 
 	m_ViewportCameraReference = &m_ECSReference->GetViewportCamera();
 	if (m_ViewportCameraReference == nullptr)
-		LogSystem("Failed to save viewport camera reference");
+		SystemLog("Failed to save viewport camera reference");
 
 	m_IO = &ImGui::GetIO();
 	m_IO->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
@@ -65,29 +65,29 @@ Editor::~Editor() {
 void Editor::SaveEngineTexturesReferences() {
 
 	if (!m_TextureStorageReference->GetTexture2D("Folder", m_FolderTexture))
-		LogSystem("Failed to save reference to engine texture [Folder]");
+		SystemLog("Failed to save reference to engine texture [Folder]");
 
 	if (!m_TextureStorageReference->GetTexture2D("Debug", m_DebugTexture))
-		LogSystem("Failed to save reference to engine texture [Debug]");
+		SystemLog("Failed to save reference to engine texture [Debug]");
 
 	if (!m_TextureStorageReference->GetTexture2D("Warning", m_WarningTexture))
-		LogSystem("Failed to save reference to engine texture [Warning]");
+		SystemLog("Failed to save reference to engine texture [Warning]");
 
 	if (!m_TextureStorageReference->GetTexture2D("Error", m_ErrorTexture))
-		LogSystem("Failed to save reference to engine texture [Error]");
+		SystemLog("Failed to save reference to engine texture [Error]");
 
 }
 void Editor::DebugLog(std::string message) noexcept {
-	m_Logger.LogDebug(message);
+	m_Logger.DebugLog(message);
 }
-void Editor::LogWarning(std::string message) noexcept {
-	m_Logger.LogWarning(message);
+void Editor::WarningLog(std::string message) noexcept {
+	m_Logger.WarningLog(message);
 }
-void Editor::LogError(std::string message) noexcept {
-	m_Logger.LogError(message);
+void Editor::ErrorLog(std::string message) noexcept {
+	m_Logger.ErrorLog(message);
 }
-void Editor::LogSystem(std::string message) noexcept {
-	m_Logger.LogSystem(message);
+void Editor::SystemLog(std::string message) noexcept {
+	m_Logger.SystemLog(message);
 }
 
 void Editor::Render() {//TODO: REturn const to this after getting rid of the text transform
@@ -987,7 +987,7 @@ void Editor::RenderContentBrowser() {
 					if (Type == MessageType::ERROR && !m_Logger.GetShowErrorMessages())
 						continue;
 					if (Type == MessageType::SYSTEM) {
-						m_Logger.LogError("System type message was saved in the logged messages buffer");
+						m_Logger.ErrorLog("System type message was saved in the logged messages buffer");
 						continue;
 					}
 

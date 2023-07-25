@@ -40,7 +40,7 @@ bool AssetManager::CheckForContentDirectory() {
 
 	if (std::filesystem::exists("Content")) {
 		//TODO: Implement proper error handling for this class
-		m_CoreReference->LogSystem("Content folder was located!");
+		m_CoreReference->SystemLog("Content folder was located!");
 		return true;
 	}
 
@@ -48,7 +48,7 @@ bool AssetManager::CheckForContentDirectory() {
 }
 bool AssetManager::ScanForContent() {
 
-	m_CoreReference->LogSystem("Started scanning for assets to load...");
+	m_CoreReference->SystemLog("Started scanning for assets to load...");
 	for (auto& DirectoryPath : std::filesystem::directory_iterator(std::filesystem::current_path())) {
 		if (DirectoryPath.path().filename() == "Content") {
 			Directory* NewDirectory = new Directory(DirectoryPath.path());
@@ -100,17 +100,17 @@ bool AssetManager::LoadAssets() {
 	//-them in engine. Maybe texture editor? Tick the option and the image will be reloaded!
 
 	//IMPORTANT NOTE: String_view is meant to keep track of one block of memory. So assigning to it a copy will be invalid since it will keep track of the copies data
-	m_CoreReference->LogSystem("Started loading assets...");
+	m_CoreReference->SystemLog("Started loading assets...");
 	for (auto& TextureAsset : m_TexturesAssets) {
 		std::string FileName = TextureAsset->m_Path.filename().replace_extension().string();
 		if (!m_TextureStorageReference->LoadTexture2D(*TextureAsset)) {
-			m_CoreReference->LogSystem("Asset failed to load [Texture] [" + FileName + "] " + TextureAsset->m_Path.string());
+			m_CoreReference->SystemLog("Asset failed to load [Texture] [" + FileName + "] " + TextureAsset->m_Path.string());
 		}
 		else {
-			m_CoreReference->LogSystem("Asset loaded successfully [Texture] [" + FileName + "] " + TextureAsset->m_Path.string());
+			m_CoreReference->SystemLog("Asset loaded successfully [Texture] [" + FileName + "] " + TextureAsset->m_Path.string());
 		}
 	}
 
-	m_CoreReference->LogSystem("Finished loading assets successfully!");
+	m_CoreReference->SystemLog("Finished loading assets successfully!");
 	return true;
 }

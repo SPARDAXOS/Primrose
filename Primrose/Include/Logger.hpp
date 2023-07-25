@@ -104,10 +104,10 @@ public:
 	Logger& operator=(Logger&&) = delete;
 
 public:
-	void LogDebug(std::string message) noexcept;
-	void LogWarning(std::string message) noexcept;
-	void LogError(std::string message) noexcept;
-	void LogSystem(std::string message) noexcept;
+	void DebugLog(std::string message) noexcept;
+	void WarningLog(std::string message) noexcept;
+	void ErrorLog(std::string message) noexcept;
+	void SystemLog(std::string message) noexcept;
 
 public:
 	inline Message* GetNextLoggedMessage() noexcept { 

@@ -171,17 +171,17 @@ void Core::UpdateSystems() {
 }
 
 
-void Core::LogDebug(std::string message) noexcept {
+void Core::DebugLog(std::string message) noexcept {
 	m_Editor->DebugLog(message);
 }
-void Core::LogWarning(std::string message) noexcept {
-	m_Editor->LogWarning(message);
+void Core::WarningLog(std::string message) noexcept {
+	m_Editor->WarningLog(message);
 }
-void Core::LogError(std::string message) noexcept {
-	m_Editor->LogError(message);
+void Core::ErrorLog(std::string message) noexcept {
+	m_Editor->ErrorLog(message);
 }
-void Core::LogSystem(std::string message) noexcept {
-	m_Editor->LogSystem(message);
+void Core::SystemLog(std::string message) noexcept {
+	m_Editor->SystemLog(message);
 }
 
 void Core::RegisterExitMessage(std::string message) noexcept {
