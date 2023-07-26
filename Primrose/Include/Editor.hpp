@@ -60,8 +60,14 @@ private:
 	void RenderHeirarchyMenu();
 	void RenderAddGameObjectButton();
 	void RenderDirectoryExplorer();
-	void RenderContentBrowser();
+	void RenderContentWindow();
 	void RenderMainMenuBar();
+	void RenderViewportWindow();
+	void RenderStandaloneWindows();
+
+	void RenderContentBrowser();
+	void RenderDebugLog();
+	void RenderSystemLog();
 
 private:
 	void CheckInput();
@@ -109,6 +115,7 @@ private:
 private: //Most of these are relative to each other. Calculate them in runtime and maybe once at the start. Think about this.
 	ImVec2 m_ContentWindowSize { 1170.0f, 300.0f };
 	ImVec2 m_CurrentContentBrowserWindowSize{ m_ContentWindowSize };
+
 	ImVec2 m_ContentBrowserElementSize{ 100.0f, 100.0f };
 	float m_ContentBrowserElementPadding = 50.0f;
 
@@ -121,22 +128,26 @@ private: //Most of these are relative to each other. Calculate them in runtime a
 	ImVec2 m_ContentWindowTabsPosition{ m_ContentWindowPosition.x, 0.0f };
 
 	
-	ImVec2 m_ContentWindowPosition;
+	ImVec2 m_ContentWindowPosition{ -999.0f, -999.0f };
+	ImVec2 m_ContentBrowserWindowPosition;
 
 	bool m_DetailsWindowOpened = true;
 	bool m_HeirarchyWindowOpened = true;
 	bool m_ContentBrowserOpened = true;
 	bool m_DirectoryExplorerWindowOpened = true;
 
+
+	bool m_ContentWindowOpened = false;
 	bool m_DebugLogOpened = true;
 	bool m_SystemLogOpened = true;
 
-	bool m_ContentWindowOpened = false;
+	bool m_ContentBrowserFocusedInTab = true;
+	bool m_DebugLogFocusedInTab = false;
+	bool m_SystemLogFocusedInTab = false;
 
-
-	bool m_ContentBrowserFocused = true;
-	bool m_DebugLogFocused = false;
-	bool m_SystemLogFocused = false;
+	bool m_ContentBrowserOpenedStandalone = false;
+	bool m_DebugLogOpenedStandalone = false;
+	bool m_SystemLogOpenedStandalone = false;
 
 private:
 	Camera* m_ViewportCameraReference{ nullptr };
