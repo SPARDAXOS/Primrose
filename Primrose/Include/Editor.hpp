@@ -105,6 +105,8 @@ private:
 	void SetupContentBrowserStyle();
 	void ClearContentBrowserStyle();
 
+	bool IsPointInBoundingBox(ImVec2 point, ImVec2 position, ImVec2 size) const noexcept;
+
 private:
 	GameObject* m_SelectedGameObject	{ nullptr };
 	Directory* m_SelectedDirectory		{ nullptr };

@@ -776,7 +776,8 @@ void Editor::RenderContentWindow() {
 
 				//std::cout << "Any Window Hovered! " << ImGui::IsItemHovered() << std::endl;
 
-				//It doesnt work
+				//It doesnt work - Get mouse pos as im holding down the button
+				// -Check if i simply pass out the tabs and bounds
 				//Do it manually
 				static ImVec2 NewPos;
 				static ImVec2 LastPos;
@@ -786,7 +787,14 @@ void Editor::RenderContentWindow() {
 				DeltaPos = ImVec2(NewPos.x - LastPos.x, NewPos.y - LastPos.y);
 				LastPos = NewPos;
 				//This could work but it depends on where on the tab i click cause the distance to outside of it is different then
-				std::cout << "X " << DeltaPos.x << " Y " << DeltaPos.y << std::endl;
+				m_ContentWindowTabsPosition.y = m_GUIViewport->Size.y - (m_ContentWindowSize.y + m_ContentWindowTabsSize.y);
+				bool CheckResults = IsPointInBoundingBox(ImGui::GetMousePos(), m_ContentWindowTabsPosition, m_ContentWindowTabsSize);
+				//std::cout << "X " << DeltaPos.x << " Y " << DeltaPos.y << std::endl;
+				std::cout << "Results: " << CheckResults << std::endl;
+
+
+				//Final note: It works. I did not test it extensively but it worked!. Although getting the y for the pos is a problem
+				//This function needs a lot of cleaning and refactoring
 
 				//NOTE: Worst case i do a manual collision check where i send the position and bounding box size of this window and-
 				// calculate whether the mouse cursor is in it or not!
@@ -804,7 +812,7 @@ void Editor::RenderContentWindow() {
 				//If the mouse drag delta exceeds the size.y of the tab then im dragging outside of it.
 				//-Otherwise im reordering
 
-				if (!ImGui::IsItemHovered() && ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceNoDisableHover)) {
+				if (!CheckResults && ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceNoDisableHover)) {
 					const auto Data = &m_ContentBrowserOpenedStandalone;
 					ImGui::SetDragDropPayload("Tab", &Data, sizeof(Data));
 					ImGui::EndDragDropSource();
@@ -1779,4 +1787,17 @@ void Editor::ClearContentBrowserStyle() {
 	ImGui::PopStyleColor();
 	ImGui::PopStyleColor();
 	ImGui::PopStyleColor();
+}
+
+bool Editor::IsPointInBoundingBox(ImVec2 point, ImVec2 position, ImVec2 size) const noexcept {
+
+	bool XWithin = false;
+	bool YWithin = false;
+
+	if (point.x >= position.x && point.x <= position.x + size.x)
+		XWithin = true;
+	if (point.y >= position.y && point.y <= position.y + size.y)
+		YWithin = true;
+
+	return XWithin &= YWithin;
 }
