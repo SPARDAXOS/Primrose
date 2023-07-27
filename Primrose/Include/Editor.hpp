@@ -60,9 +60,13 @@ private:
 	void RenderHeirarchyMenu();
 	void RenderAddGameObjectButton();
 	void RenderDirectoryExplorer();
+	void RenderContentWindows();
+
 	void RenderContentWindow();
+
 	void RenderMainMenuBar();
 	void RenderViewportWindow();
+
 	void RenderStandaloneWindows();
 
 	void RenderContentBrowser();
@@ -104,8 +108,10 @@ private:
 	void ClearEditorStyle();
 	void SetupContentBrowserStyle();
 	void ClearContentBrowserStyle();
+	void UpdateWindowPositions();
 
 	bool IsPointInBoundingBox(ImVec2 point, ImVec2 position, ImVec2 size) const noexcept;
+	ImVec2 GetContentWindowStartPosition(ImVec2 windowSize) const noexcept;
 
 private:
 	GameObject* m_SelectedGameObject	{ nullptr };
@@ -115,33 +121,39 @@ private:
 	char m_TagInputBuffer[33];
 
 private: //Most of these are relative to each other. Calculate them in runtime and maybe once at the start. Think about this.
-	ImVec2 m_ContentWindowSize { 1170.0f, 300.0f };
-	ImVec2 m_CurrentContentBrowserWindowSize{ m_ContentWindowSize };
-
+	ImVec2 m_ContentBrowserWindowSize { 1170.0f, 300.0f };
+	ImVec2 m_DetailsWindowSize{ 400.0f, 0.0f };
+	//ImVec2 m_CurrentContentBrowserWindowSize{ m_ContentWindowSize };
+		
 	ImVec2 m_ContentBrowserElementSize{ 100.0f, 100.0f };
 	float m_ContentBrowserElementPadding = 50.0f;
 
 	ImVec2 m_DirectoryExplorerWindowSize{ 350.0f, 300.0f };
 	ImVec2 m_MainMenuBarSize;
 
-	ImVec2 m_TestPosition;
-
-	ImVec2 m_ContentWindowTabsSize{ m_ContentWindowSize.x, 27.0f }; //27 manually adjusted
-	ImVec2 m_ContentWindowTabsPosition{ m_ContentWindowPosition.x, 0.0f };
-
-	
-	ImVec2 m_ContentWindowPosition{ -999.0f, -999.0f };
 	ImVec2 m_ContentBrowserWindowPosition;
+
+	//Not needed
+	ImVec2 m_ContentWindowTabsSize{ m_ContentBrowserWindowSize.x, 27.0f }; //27 manually adjusted
+	ImVec2 m_ContentWindowTabsPosition{ m_ContentBrowserWindowPosition.x, 0.0f };
+
+
+	ImVec2 m_NewContentWindowSize;
+	
 
 	bool m_DetailsWindowOpened = true;
 	bool m_HeirarchyWindowOpened = true;
-	bool m_ContentBrowserOpened = true;
 	bool m_DirectoryExplorerWindowOpened = true;
 
 
 	bool m_ContentWindowOpened = false;
-	bool m_DebugLogOpened = true;
-	bool m_SystemLogOpened = true;
+	bool m_ContentBrowserOpened = true;
+	bool m_DebugLogOpened = false;
+	bool m_SystemLogOpened = false;
+
+	bool m_ContentBrowserWindowReset = true;
+	bool m_DebugLogWindowReset = true;
+	bool m_SystemLogWindowReset = true;
 
 	bool m_ContentBrowserFocusedInTab = true;
 	bool m_DebugLogFocusedInTab = false;

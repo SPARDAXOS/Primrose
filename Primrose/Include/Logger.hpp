@@ -145,7 +145,7 @@ public:
 		m_LoggedMessageCursor = 0;
 		m_SystemMessageCursor = 0;
 	}
-	inline void ClearMessageLog() noexcept {
+	inline void ClearDebugLog() noexcept {
 
 		m_DebugCounter = 0;
 		m_WarningCounter = 0;
@@ -175,16 +175,16 @@ public:
 	inline bool GetShowErrorMessages() const noexcept { return m_ShowErrorMessages; }
 	inline bool GetShowSystemMessages() const noexcept { return m_ShowErrorMessages; }
 
-	inline bool GetAutoScrollDebugLog() const noexcept { return m_AutoScrollDebugLog; }
-	inline bool GetAutoScrollSystemLog() const noexcept { return m_AutoScrollSystemLog; }
+	inline bool GetDebugLogAutoScroll() const noexcept { return m_AutoScrollDebugLog; }
+	inline bool GetSystemLogAutoScroll() const noexcept { return m_AutoScrollSystemLog; }
 
 	inline void ToggleShowDebugMessages() noexcept { m_ShowDebugMessages ^= 1; }
 	inline void ToggleShowWarningMessages() noexcept { m_ShowWarningMessages ^= 1; }
 	inline void ToggleShowErrorMessages() noexcept { m_ShowErrorMessages ^= 1; }
 	inline void ToggleShowSystemMessages() noexcept { m_ShowErrorMessages ^= 1; }
 
-	inline void ToggleAutoScrollDebugLog() noexcept { m_AutoScrollDebugLog ^= 1; }
-	inline void ToggleAutoScrollSystemLog() noexcept { m_AutoScrollSystemLog ^= 1; }
+	inline void ToggleDebugLogAutoScroll() noexcept { m_AutoScrollDebugLog ^= 1; }
+	inline void ToggleSystemLogAutoScroll() noexcept { m_AutoScrollSystemLog ^= 1; }
 
 	inline void SetTimeReference(Time& time) noexcept { m_TimeReference = &time; }
 
