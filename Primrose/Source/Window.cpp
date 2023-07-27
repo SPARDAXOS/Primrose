@@ -1,5 +1,28 @@
 #include <Window.hpp>
+#include "Core.hpp"
 #include <iostream>
+
+
+
+
+Window::Window(Core& core)
+    : m_EngineCore(&core)
+{
+
+    m_Width = m_EngineCore->GetViewportWidth();
+    m_Height = m_EngineCore->GetViewportHeight();
+
+    SetupGLFW();
+    SetupOpenGLFlags();
+    CreateWindow();
+    BindOpenGLContext();
+    SetupGLAD();
+    SetupViewport();
+
+
+    glfwSwapInterval(m_VSync); //Vsync? Shouldnt even be a bool
+}
+
 
 bool Window::Update() noexcept {
 

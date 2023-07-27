@@ -5,6 +5,7 @@
 
 #include "Logger.hpp"
 #include "Utility.hpp"
+#include "Math.hpp" //For color only
 
 class Core;
 class Window;
@@ -97,6 +98,7 @@ private:
 private:
 	void AddSpacings(uint32 count);
 	void AddSeparators(uint32 count);
+	void PopStyleColors(uint32 count);
 	void PopStyleVars(uint32 count);
 	void SetSelectedGameObject(GameObject* object) noexcept;
 	void SetSelectedDirectory(Directory* directory) noexcept;
@@ -132,6 +134,7 @@ private: //Most of these are relative to each other. Calculate them in runtime a
 	ImVec2 m_MainMenuBarSize;
 
 	ImVec2 m_ContentBrowserWindowPosition;
+	ImVec2 m_DetailsWindowPosition;
 
 	//Not needed
 	ImVec2 m_ContentWindowTabsSize{ m_ContentBrowserWindowSize.x, 27.0f }; //27 manually adjusted
@@ -162,6 +165,9 @@ private: //Most of these are relative to each other. Calculate them in runtime a
 	bool m_ContentBrowserOpenedStandalone = false;
 	bool m_DebugLogOpenedStandalone = false;
 	bool m_SystemLogOpenedStandalone = false;
+
+
+	Color m_EditorStyleColor = Color(0.2f, 0.4f, 0.7f, 1.0f);
 
 private:
 	Camera* m_ViewportCameraReference{ nullptr };

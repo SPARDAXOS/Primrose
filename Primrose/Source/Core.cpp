@@ -6,17 +6,27 @@
 Core::Core() noexcept {
 
 	//Order matters
-	m_Window = std::make_unique<Window>(m_ViewportWidth, m_ViewportHeight);
+	m_Time = std::make_unique<Time>();
+	m_Window = std::make_unique<Window>(*this);
 	m_TextureStorage = std::make_unique<TextureStorage>();
 	m_ECS = std::make_unique<EntityComponentSystem>();
 	m_AssetManager = std::make_unique<AssetManager>(*this);
-	m_Time = std::make_unique<Time>();
 	m_Input = std::make_unique<Input>(*m_Window);
-	m_Renderer = std::make_unique<Renderer>(*m_ECS, *m_Window);
 	m_Editor = std::make_unique<Editor>(*this);
+	m_Renderer = std::make_unique<Renderer>(*this);
 }
 void Core::SetupCore() { // Sounds like 2 step initialization.
 
+	m_Window->SetWindowMode(WindowMode::WINDOWED);
+	m_Renderer->CheckRendererAPIVersion();
+	m_AssetManager->LoadProjectFiles();
+	m_Editor->SaveEngineTexturesReferences();
+
+	m_TextureStorage->ActivateTextureUnit(GL_TEXTURE0);
+
+
+
+	SystemLog("Primrose initialized successfully.");
 }
 
 
@@ -25,13 +35,10 @@ void Core::Run() {
 	m_Running = true;
 
 
+	SetupCore();
 	//Textures
 	//TODO: Implement own image loader! for bitmaps at least own decoder
 
-
-	m_Window->SetWindowMode(WindowMode::WINDOWED);
-	m_AssetManager->LoadProjectFiles();
-	m_Editor->SaveEngineTexturesReferences();
 
 
 
@@ -41,7 +48,6 @@ void Core::Run() {
 
 	
 	//CreateTexture->Bind();
-	m_TextureStorage->ActivateTextureUnit(GL_TEXTURE0);
 	
 	//New Planned Features
 	//Materials - Some default ones like lit, unlit
@@ -113,7 +119,6 @@ void Core::Run() {
 	//NewSpriteRenderer->SetSprite(CreateTexture);
 	
 	//InstansiatedGameObject->GetTransform().m_Position.m_X *= -1;
-	SetupCore();
 	
 	while (m_Running) {
 

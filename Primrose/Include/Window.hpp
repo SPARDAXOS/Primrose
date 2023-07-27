@@ -5,11 +5,17 @@
 #include <string>
 #include <stdexcept>
 #include <memory>
-#include "Utility.hpp"
 #include <GraphicsResources.hpp>
 
+#include "Utility.hpp"
 
-enum WindowMode {
+
+
+class Core;
+
+
+
+enum class WindowMode {
 	WINDOWED,
 	FULLSCREEN,
 	BORDERLESS_FULLSCREEN
@@ -19,19 +25,7 @@ enum WindowMode {
 class Window final {
 public:
 	Window() = delete;
-	Window(int32 width, int32 height)
-		:	m_Width(width), m_Height(height)
-	{
-		SetupGLFW();
-		SetupOpenGLFlags();
-		CreateWindow();
-		BindOpenGLContext();
-		SetupGLAD();
-		SetupViewport();
-		PrintMessage(glGetString(GL_VERSION));
-
-		glfwSwapInterval(m_VSync); //Vsync? Shouldnt even be a bool
-	}
+	Window(Core& core);
 
 private:
 	struct WindowResource {
@@ -131,6 +125,7 @@ private:
 	std::string m_LastExitMessage;
 
 private:
+	Core* m_EngineCore	{ nullptr };
 	std::unique_ptr<GLFWResource> m_GLFW;
 	std::unique_ptr<GLADResource> m_GLAD;
 	std::unique_ptr<WindowResource> m_Window;

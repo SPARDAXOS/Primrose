@@ -4,24 +4,22 @@
 #include "ShaderProgram.hpp"
 
 
-
+class Core;
 class Window;
 class EntityComponentSystem;
-class GameObject;
+
 
 class Renderer final {
 public:
 	Renderer() = delete;
-	Renderer(EntityComponentSystem& ecs, Window& window) noexcept
-		: m_WindowReference(&window), m_ECSReference(&ecs)
-	{
-	};
+	Renderer(Core& core) noexcept;
 
 public:
 	[[nodiscard]] bool Update() const;
 	void TestRender(const VAO& vao) const;
 
 public:
+	void CheckRendererAPIVersion();
 	inline std::string GetLastExitMessage() noexcept { return m_LastExitMessage; };
 
 private:
@@ -36,6 +34,7 @@ private:
 	std::string m_LastExitMessage;
 
 private:
-	Window* m_WindowReference;
-	EntityComponentSystem* m_ECSReference;
+	Core* m_EngineCore						{ nullptr };
+	Window* m_WindowReference				{ nullptr };
+	EntityComponentSystem* m_ECSReference	{ nullptr };
 };

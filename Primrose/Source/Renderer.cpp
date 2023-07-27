@@ -1,11 +1,14 @@
 #include <Renderer.hpp>
-#include "Window.hpp"
-#include "EntityComponentSystem.hpp"
-#include "GameObject.hpp"
+#include "Core.hpp"
 
 
 
-
+Renderer::Renderer(Core& core) noexcept
+    : m_EngineCore(&core)
+{
+    m_WindowReference = m_EngineCore->GetWindow();
+    m_ECSReference = m_EngineCore->GetECS();
+};
 
 
 bool Renderer::Update() const {
@@ -151,4 +154,13 @@ bool Renderer::Render2D() const {
 bool Renderer::Render3D() const {
 
     return true;
+}
+
+
+void Renderer::CheckRendererAPIVersion() {
+    const unsigned char* convert = static_cast<const unsigned char*>(glGetString(GL_VERSION));
+    //TODO: Change depending on renderer API and make a function for all systems that need to be called at the start. 2 step init?
+    std::string Version("OpenGL ");
+    Version.append(reinterpret_cast<const char*>(convert));
+    m_EngineCore->SystemLog(Version);
 }

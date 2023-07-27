@@ -48,6 +48,10 @@ public:
 	void ErrorLog(std::string message) noexcept;
 	void SystemLog(std::string message) noexcept;
 
+public:
+	inline uint32 GetViewportWidth() const noexcept { return m_ViewportWidth; }
+	inline uint32 GetViewportHeight() const noexcept { return m_ViewportHeight; }
+
 private:
 	void SetupCore();
 

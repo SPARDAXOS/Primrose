@@ -23,9 +23,6 @@ Editor::Editor(Core& core)
 	m_GUIViewport = ImGui::GetMainViewport();
 	//TODO: Throw if any of these dont work!
 
-
-	//CalculateWindowsSizes()
-
 	m_Logger.SetTimeReference(*m_TimeReference); //Since it will have nullptr on this class' construction
 	SystemLog("Dear IMGUI initialized.");
 	std::string VersionMessage("Version: ");
@@ -104,8 +101,6 @@ void Editor::Render() {
 	SetupEditorStyle();
 	
 	//ImGui::ShowDemoWindow();
-
-	DebugLog("Love!");
 	//IMPORTANT NOTE: Make the size of each element in relation to the size of the viewport so they would scale with it
 	//TODO: All the menus sizes and positions are relative to each other. Make sure to make the values used relative to each other instead of relying on literals
 	RenderDetailsMenu();
@@ -148,8 +143,8 @@ void Editor::RenderDetailsMenu() { //TODO: REturn const to this after getting ri
 
 	//Render GUI
 	//Note: Will also lock position and size - Use any func without the next to free it
-	ImGui::SetNextWindowSize(ImVec2(400.0f, m_GUIViewport->Size.y - m_MainMenuBarSize.y));
-	ImGui::SetNextWindowPos(ImVec2(m_GUIViewport->Size.x - 400.0f, m_MainMenuBarSize.y));
+	ImGui::SetNextWindowSize(m_DetailsWindowSize);
+	ImGui::SetNextWindowPos(m_DetailsWindowPosition);
 
 	ImGui::Begin("Details", &m_DetailsWindowOpened);
 	CheckForHoveredWindows();
@@ -1008,6 +1003,9 @@ void Editor::RenderContentBrowser() {
 	Flags |= ImGuiWindowFlags_NoCollapse;
 	Flags |= ImGuiWindowFlags_NoSavedSettings;
 
+
+	//IMPORTANT NOTE: When it comes to the text offeset bug, check the alignment on the text by PushStyleVar()
+
 	if (m_ContentBrowserWindowReset) {
 		m_ContentBrowserWindowReset = false;
 
@@ -1249,6 +1247,8 @@ void Editor::RenderSystemLog() {
 			//-Debug should be the catagory and maybe just message or something instead of it
 			//System is also far too general
 
+			std::cout << ImGui::IsWindowDocked() << std::endl;
+
 			if (ImGui::BeginMenuBar()) {
 
 				bool ClearSelected = false;
@@ -1276,6 +1276,7 @@ void Editor::RenderSystemLog() {
 					ImGui::PopStyleColor();
 					AddSeparators(1);
 
+					//TODO: Moving the scroll manually disables auto scroll
 					//AutoScroll debug log
 					if (ImGui::GetScrollY() <= ImGui::GetScrollMaxY() && m_Logger.GetSystemLogAutoScroll())
 						ImGui::SetScrollHereY(1.0f);
@@ -1750,6 +1751,10 @@ void Editor::PopStyleVars(uint32 count) {
 	for (uint32 index = 0; index < count; index++)
 		ImGui::PopStyleVar();
 }
+void Editor::PopStyleColors(uint32 count) {
+	for (uint32 index = 0; index < count; index++)
+		ImGui::PopStyleColor();
+}
 void Editor::SetSelectedGameObject(GameObject* object) noexcept {
 
 	m_SelectedGameObject = object;
@@ -1792,64 +1797,47 @@ Texture2D* Editor::GetIconTexture(const Asset& asset) {
 
 void Editor::SetupEditorStyle() {
 
-	ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(0.4f, 0.0f, 0.0f, 1.0f));
-	ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.4f, 0.0f, 0.0f, 1.0f));
+	ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(m_EditorStyleColor.m_R * 0.4f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
+	ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(m_EditorStyleColor.m_R * 0.4f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
 
-	ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.4f, 0.0f, 0.0f, 1.0f));
-	ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.6f, 0.0f, 0.0f, 1.0f));
-	ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.3f, 0.0f, 0.0f, 1.0f));
+	ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(m_EditorStyleColor.m_R * 0.4f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
+	ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(m_EditorStyleColor.m_R * 0.6f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
+	ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(m_EditorStyleColor.m_R * 0.3f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
 
-	ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.1f, 0.0f, 0.0f, 1.0f));
-	ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.3f, 0.0f, 0.0f, 1.0f));
-	ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.05f, 0.0f, 0.0f, 1.0f));
+	ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(m_EditorStyleColor.m_R * 0.1f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
+	ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(m_EditorStyleColor.m_R * 0.3f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
+	ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(m_EditorStyleColor.m_R * 0.05f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
 
-	ImGui::PushStyleColor(ImGuiCol_CheckMark, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ImGui::PushStyleColor(ImGuiCol_CheckMark, ImVec4(1.0f, 1.0f, 1.0f, m_EditorStyleColor.m_A));
 
-	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.4f, 0.0f, 0.0f, 1.0f));
-	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.6f, 0.0f, 0.0f, 1.0f));
-	ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.0f, 0.0f, 1.0f));
+	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(m_EditorStyleColor.m_R * 0.4f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
+	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(m_EditorStyleColor.m_R * 0.6f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
+	ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(m_EditorStyleColor.m_R * 0.2f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
 
-	ImGui::PushStyleColor(ImGuiCol_Tab, ImVec4(0.2f, 0.0f, 0.0f, 1.0f));
-	ImGui::PushStyleColor(ImGuiCol_TabHovered, ImVec4(0.5f, 0.0f, 0.0f, 1.0f));
-	ImGui::PushStyleColor(ImGuiCol_TabActive, ImVec4(0.6f, 0.0f, 0.0f, 1.0f));
+	ImGui::PushStyleColor(ImGuiCol_Tab, ImVec4(m_EditorStyleColor.m_R * 0.2f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
+	ImGui::PushStyleColor(ImGuiCol_TabHovered, ImVec4(m_EditorStyleColor.m_R * 0.5f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
+	ImGui::PushStyleColor(ImGuiCol_TabActive, ImVec4(m_EditorStyleColor.m_R * 0.6f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
 
-	ImGui::PushStyleColor(ImGuiCol_Separator, ImVec4(0.4f, 0.0f, 0.0f, 1.0f));
-	ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.2f, 0.0f, 0.0f, 1.0f));
+	ImGui::PushStyleColor(ImGuiCol_Separator, ImVec4(m_EditorStyleColor.m_R * 0.4f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
+	ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(m_EditorStyleColor.m_R * 0.2f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
 
-	//ImGui::PushStyleColor(ImGuiCol_Tab, ImVec4(0.2f, 0.0f, 0.0f, 1.0f));
-	//ImGui::PushStyleColor(ImGuiCol_TabHovered, ImVec4(0.2f, 0.0f, 0.0f, 1.0f));
-	//ImGui::PushStyleColor(ImGuiCol_TabActive, ImVec4(0.2f, 0.0f, 0.0f, 1.0f));
-	ImGui::PushStyleColor(ImGuiCol_TabUnfocused, ImVec4(0.2f, 0.0f, 0.0f, 1.0f));
-	ImGui::PushStyleColor(ImGuiCol_TabUnfocusedActive, ImVec4(0.2f, 0.0f, 0.0f, 1.0f));
+	ImGui::PushStyleColor(ImGuiCol_TabUnfocused, ImVec4(m_EditorStyleColor.m_R * 0.2f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
+	ImGui::PushStyleColor(ImGuiCol_TabUnfocusedActive, ImVec4(m_EditorStyleColor.m_R * 0.6f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
+
+	ImGui::PushStyleColor(ImGuiCol_DockingPreview, ImVec4(m_EditorStyleColor.m_R * 0.3f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
+	ImGui::PushStyleColor(ImGuiCol_DockingEmptyBg, ImVec4(m_EditorStyleColor.m_R * 0.2f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
+
+
+	ImGui::PushStyleVar(ImGuiStyleVar_TabRounding, 5.0f);
+	ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10.0f);
+
 	
 }
 void Editor::ClearEditorStyle() {
 
-	//15 - Make sure its the same amount of PushStyleColor() calls in SetupEditorStyle();
-	ImGui::PopStyleColor();
-	ImGui::PopStyleColor();
-	ImGui::PopStyleColor();
-
-	ImGui::PopStyleColor();
-	ImGui::PopStyleColor();
-	ImGui::PopStyleColor();
-
-	ImGui::PopStyleColor();
-	ImGui::PopStyleColor();
-	ImGui::PopStyleColor();
-
-	ImGui::PopStyleColor();
-	ImGui::PopStyleColor();
-	ImGui::PopStyleColor();
-
-	ImGui::PopStyleColor();
-	ImGui::PopStyleColor();
-	ImGui::PopStyleColor();
-	ImGui::PopStyleColor();
-
-	ImGui::PopStyleColor();
-	ImGui::PopStyleColor();
-	ImGui::PopStyleColor();
+	//Make sure its the same amount of PushStyleColor() calls in SetupEditorStyle();
+	PopStyleVars(2);
+	PopStyleColors(21);
 }
 void Editor::SetupContentBrowserStyle() {
 
@@ -1859,10 +1847,8 @@ void Editor::SetupContentBrowserStyle() {
 }
 void Editor::ClearContentBrowserStyle() {
 
-	//3 - Make sure its the same amount of PushStyleColor() calls in SetupContentBrowserStyle();
-	ImGui::PopStyleColor();
-	ImGui::PopStyleColor();
-	ImGui::PopStyleColor();
+	//Make sure its the same amount of PushStyleColor() calls in SetupContentBrowserStyle();
+	PopStyleColors(3);
 }
 
 bool Editor::IsPointInBoundingBox(ImVec2 point, ImVec2 position, ImVec2 size) const noexcept {
@@ -1879,15 +1865,17 @@ bool Editor::IsPointInBoundingBox(ImVec2 point, ImVec2 position, ImVec2 size) co
 }
 ImVec2 Editor::GetContentWindowStartPosition(ImVec2 windowSize) const noexcept {
 
-	//TODO: Could be inlined
+	//TODO: Could be inlined - Is this even needed anymore?
 	return ImVec2(m_GUIViewport->Size.x / 2 - windowSize.x / 2, m_GUIViewport->Size.y / 2 - windowSize.y / 2);
 }
 void Editor::UpdateWindowPositions() {
 	//NOTE: Seems like size then position cause a lot of positions depend on sizes
 	//NOTE: Any hardcoded values here such as 100 200 etc means the value has not been implemented in code yet. (percentage values are fine)
-	m_DetailsWindowSize = ImVec2(400.0f, m_GUIViewport->Size.y - m_MainMenuBarSize.y);
+	//NOTE: The percentage values can be changed safely and should be exposed later on
+	m_DetailsWindowSize = ImVec2(m_GUIViewport->Size.x * 0.2f, m_GUIViewport->Size.y - m_MainMenuBarSize.y);
 	m_ContentBrowserWindowSize = ImVec2(m_GUIViewport->Size.x - m_DetailsWindowSize.x - m_DirectoryExplorerWindowSize.x, m_DirectoryExplorerWindowSize.y);
 	m_NewContentWindowSize = ImVec2(m_GUIViewport->Size.x * 0.3f, m_GUIViewport->Size.y * 0.3f);
 
 	m_ContentBrowserWindowPosition = ImVec2(m_DirectoryExplorerWindowSize.x, m_GUIViewport->Size.y - m_ContentBrowserWindowSize.y);
+	m_DetailsWindowPosition = ImVec2(m_GUIViewport->Size.x - m_DetailsWindowSize.x, m_MainMenuBarSize.y);
 }
