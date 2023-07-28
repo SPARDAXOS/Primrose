@@ -1,7 +1,7 @@
 #pragma once
 #include "Component.hpp"
 #include "GraphicsResources.hpp"
-#include "TextureStorage.hpp"
+#include "Systems/TextureStorage.hpp"
 
 class GameObject;
 

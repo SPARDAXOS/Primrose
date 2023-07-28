@@ -156,14 +156,14 @@ public:
 
 	GameObject* FindGameObject(uint64 ObjectID) const noexcept;
 
+	bool IsReserved(uint64 objectID) const noexcept;
+
 private:
 	void CalculateTransformations(GameObject& object);
 
 private:
 	int32 FindSpriteRenderer(uint64 objectID) const noexcept;
 	int32 FindCamera(uint64 objectID) const noexcept;
-
-	bool IsObjectIDAllowed(uint64 objectID) const noexcept;
 
 private:
 	inline void RegisterExitMessage(std::string message) noexcept { m_LastExitMessage = message; }

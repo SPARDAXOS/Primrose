@@ -160,19 +160,19 @@
     <ClCompile Include="Dependencies\Includes\IMGUI\imgui_tables.cpp" />
     <ClCompile Include="Dependencies\Includes\IMGUI\imgui_widgets.cpp" />
     <ClCompile Include="Source\Components\CameraComponent.cpp" />
-    <ClCompile Include="Source\EntityComponentSystem.cpp" />
-    <ClCompile Include="Source\AssetManager.cpp" />
+    <ClCompile Include="Source\Systems\EntityComponentSystem.cpp" />
+    <ClCompile Include="Source\Systems\AssetManager.cpp" />
     <ClCompile Include="Source\GameObject.cpp" />
     <ClCompile Include="Source\Components\SpriteRendererComponent.cpp" />
-    <ClCompile Include="Source\Logger.cpp" />
+    <ClCompile Include="Source\Tools\Logger.cpp" />
     <ClCompile Include="Source\STB_Image.cpp" />
-    <ClCompile Include="Source\Core.cpp" />
+    <ClCompile Include="Source\Systems\Core.cpp" />
     <ClCompile Include="Source\Main.cpp" />
-    <ClCompile Include="Source\Profiler.cpp" />
-    <ClCompile Include="Source\Renderer.cpp" />
-    <ClCompile Include="Source\ShaderCompiler.cpp" />
+    <ClCompile Include="Source\Tools\Profiler.cpp" />
+    <ClCompile Include="Source\Systems\Renderer.cpp" />
+    <ClCompile Include="Source\Systems\ShaderCompiler.cpp" />
     <ClCompile Include="Source\Systems\Editor.cpp" />
-    <ClCompile Include="Source\Window.cpp" />
+    <ClCompile Include="Source\Systems\Window.cpp" />
     <ClCompile Include="Dependencies\Includes\GLAD\glad.c" />
   </ItemGroup>
   <ItemGroup>
@@ -189,27 +189,27 @@
     <ClInclude Include="Dependencies\Includes\STB_Image\STB_Image.h" />
     <ClInclude Include="Include\Components\CameraComponent.hpp" />
     <ClInclude Include="Include\Components\Component.hpp" />
-    <ClInclude Include="Include\Editor.hpp" />
-    <ClInclude Include="Include\EntityComponentSystem.hpp" />
-    <ClInclude Include="Include\AssetManager.hpp" />
+    <ClInclude Include="Include\Systems\Editor.hpp" />
+    <ClInclude Include="Include\Systems\EntityComponentSystem.hpp" />
+    <ClInclude Include="Include\Systems\AssetManager.hpp" />
     <ClInclude Include="Include\GameObject.hpp" />
     <ClInclude Include="Include\GraphicsResources.hpp" />
     <ClInclude Include="Include\GLErrorHandling.hpp" />
-    <ClInclude Include="Include\Input.hpp" />
-    <ClInclude Include="Include\Logger.hpp" />
+    <ClInclude Include="Include\Systems\Input.hpp" />
+    <ClInclude Include="Include\Tools\Logger.hpp" />
     <ClInclude Include="Include\Math.hpp" />
-    <ClInclude Include="Include\Profiler.hpp" />
-    <ClInclude Include="Include\Core.hpp" />
-    <ClInclude Include="Include\Renderer.hpp" />
+    <ClInclude Include="Include\Tools\Profiler.hpp" />
+    <ClInclude Include="Include\Systems\Core.hpp" />
+    <ClInclude Include="Include\Systems\Renderer.hpp" />
     <ClInclude Include="Include\Shader.hpp" />
-    <ClInclude Include="Include\ShaderCompiler.hpp" />
+    <ClInclude Include="Include\Systems\ShaderCompiler.hpp" />
     <ClInclude Include="Include\ShaderProgram.hpp" />
     <ClInclude Include="Include\Components\SpriteRendererComponent.hpp" />
-    <ClInclude Include="Include\TextureStorage.hpp" />
-    <ClInclude Include="Include\Time.hpp" />
+    <ClInclude Include="Include\Systems\TextureStorage.hpp" />
+    <ClInclude Include="Include\Systems\Time.hpp" />
     <ClInclude Include="Include\Transform.hpp" />
     <ClInclude Include="Include\Utility.hpp" />
-    <ClInclude Include="Include\Window.hpp" />
+    <ClInclude Include="Include\Systems\Window.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Shaders\Fragment.glsl" />

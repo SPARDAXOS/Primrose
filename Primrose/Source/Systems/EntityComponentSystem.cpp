@@ -1,4 +1,4 @@
-#include "EntityComponentSystem.hpp"
+#include "Systems/EntityComponentSystem.hpp"
 #include "GameObject.hpp"
 
 
@@ -72,7 +72,7 @@ void EntityComponentSystem::CalculateTransformations(GameObject& object) {
 
 GameObject& EntityComponentSystem::CreateGameObject() {
 	//Creats one simply
-	while (!IsObjectIDAllowed(m_CurrentObjectIDIndex)) {
+	while (IsReserved(m_CurrentObjectIDIndex)) {
 		m_CurrentObjectIDIndex++;
 	}
 
@@ -87,7 +87,7 @@ GameObject& EntityComponentSystem::CreateGameObject() {
 }
 GameObject& EntityComponentSystem::CreateGameObject(const std::string& name) {
 	//Sets name as well
-	while (!IsObjectIDAllowed(m_CurrentObjectIDIndex)) {
+	while (IsReserved(m_CurrentObjectIDIndex)) {
 		m_CurrentObjectIDIndex++;
 	}
 
@@ -103,7 +103,7 @@ GameObject& EntityComponentSystem::CreateGameObject(const std::string& name) {
 }
 GameObject& EntityComponentSystem::Instantiate(const GameObject& object) {
 	//Compies
-	while (!IsObjectIDAllowed(m_CurrentObjectIDIndex)) {
+	while (IsReserved(m_CurrentObjectIDIndex)) {
 		m_CurrentObjectIDIndex++;
 	}
 
@@ -152,12 +152,11 @@ int32 EntityComponentSystem::FindCamera(uint64 objectID) const noexcept {
 	return -1;
 }
 
-//Maybe change this to IsIDReserved and make it accessable somewhere else maybe
-bool EntityComponentSystem::IsObjectIDAllowed(uint64 objectID) const noexcept {
+bool EntityComponentSystem::IsReserved(uint64 objectID) const noexcept {
 	if (objectID == MAIN_SCENE_OBJECT_ID)
-		return false;
+		return true;
 	else if (objectID == VIEWPORT_CAMERA_OBJECT_ID)
-		return false;
+		return true;
 
-	return true;
+	return false;
 }

@@ -1,5 +1,5 @@
-#include <Renderer.hpp>
-#include "Core.hpp"
+#include "Systems/Renderer.hpp"
+#include "Systems/Core.hpp"
 
 
 
@@ -80,11 +80,7 @@ bool Renderer::Render2D() const {
 
         const Texture2D* Sprite = TargetComponent->GetSprite();
         if (Sprite != nullptr)
-            Sprite->Bind(); //WTF Check why this doesnt matter whether its called or not to render!
-        //if (Sprite != nullptr) { // I think this is the binding
-        //    GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Sprite->GetWidth(), Sprite->GetHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, Sprite->GetData())); //THIS SHOULD BE BINDING
-        //    GLCall(glGenerateMipmap(GL_TEXTURE_2D));
-        //}
+            Sprite->Bind();
 
         ShaderProgramTest.SetUniform("uDiffuse", TextureUnit::DIFFUSE);
         ShaderProgramTest.SetUniform("uTint", TargetComponent->GetTint());
@@ -147,6 +143,9 @@ bool Renderer::Render2D() const {
 
         TargetComponent->GetVAO()->Bind();
         GLCall(glDrawElements(GL_TRIANGLES, TargetComponent->GetEBO()->GetCount(), GL_UNSIGNED_INT, nullptr));
+
+        if (Sprite != nullptr)
+            Sprite->Unbind();
     }
 
     return true;

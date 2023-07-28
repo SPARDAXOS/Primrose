@@ -5,7 +5,7 @@
 #include <fstream>
 #include <exception>
 
-#include "Profiler.hpp" //For testing
+#include "Tools/Profiler.hpp" //For testing
 
 
 #define PrintMessage(message) printf("%s \n", message);

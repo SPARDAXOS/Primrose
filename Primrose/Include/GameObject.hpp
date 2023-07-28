@@ -1,6 +1,6 @@
 #pragma once
 #include "Utility.hpp"
-#include "EntityComponentSystem.hpp"
+#include "Systems/EntityComponentSystem.hpp"
 
 class GameObject {
 public:

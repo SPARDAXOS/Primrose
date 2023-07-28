@@ -1,5 +1,5 @@
-#include "Logger.hpp"
-#include "Time.hpp"
+#include "Tools/Logger.hpp"
+#include "Systems/Time.hpp"
 
 
 Logger::Logger(Time& time) noexcept

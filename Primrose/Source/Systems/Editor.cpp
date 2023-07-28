@@ -1,5 +1,5 @@
-#include "Editor.hpp"
-#include "Core.hpp"
+#include "Systems/Editor.hpp"
+#include "Systems/Core.hpp"
 
 
 
@@ -34,6 +34,7 @@ Editor::Editor(Core& core)
 	if (m_ViewportCameraReference == nullptr)
 		SystemLog("Failed to save viewport camera reference");
 
+
 	m_IO = &ImGui::GetIO();
 	m_IO->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 	m_IO->ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
@@ -47,6 +48,7 @@ Editor::Editor(Core& core)
 	//logger!
 }
 Editor::~Editor() {
+
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
@@ -65,16 +67,16 @@ Editor::~Editor() {
 
 void Editor::SaveEngineTexturesReferences() {
 
-	if (!m_TextureStorageReference->GetTexture2D("Folder", m_FolderTexture))
+	if (!m_TextureStorageReference->GetTexture2DByName("Folder", m_FolderTexture))
 		SystemLog("Failed to save reference to engine texture [Folder]");
 
-	if (!m_TextureStorageReference->GetTexture2D("Debug", m_DebugTexture))
+	if (!m_TextureStorageReference->GetTexture2DByName("Debug", m_DebugTexture))
 		SystemLog("Failed to save reference to engine texture [Debug]");
 
-	if (!m_TextureStorageReference->GetTexture2D("Warning", m_WarningTexture))
+	if (!m_TextureStorageReference->GetTexture2DByName("Warning", m_WarningTexture))
 		SystemLog("Failed to save reference to engine texture [Warning]");
 
-	if (!m_TextureStorageReference->GetTexture2D("Error", m_ErrorTexture))
+	if (!m_TextureStorageReference->GetTexture2DByName("Error", m_ErrorTexture))
 		SystemLog("Failed to save reference to engine texture [Error]");
 
 }
@@ -98,20 +100,20 @@ void Editor::Render() {
 	m_Logger.NewFrame();
 
 	UpdateWindowPositions(); //NOTE: Currently updates sizes and positions
-	SetupEditorStyle();
+	m_EditorStyle.Apply();
 	
 	//ImGui::ShowDemoWindow();
 	//IMPORTANT NOTE: Make the size of each element in relation to the size of the viewport so they would scale with it
 	//TODO: All the menus sizes and positions are relative to each other. Make sure to make the values used relative to each other instead of relying on literals
 	RenderDetailsMenu();
 	RenderHeirarchyMenu();
-	RenderAddGameObjectButton();
+	RenderAddGameObjectMenu();
 	RenderDirectoryExplorer();
 	RenderViewportWindow();
 	RenderMainMenuBar();
 	RenderContentWindows();
 
-	ClearEditorStyle();
+	m_EditorStyle.Clear();
 
 	RenderFrame();
 }
@@ -129,13 +131,10 @@ void Editor::RenderFrame() const {
 }
 
 
-void Editor::RenderDetailsMenu() { //TODO: REturn const to this after getting rid of the text transform
+void Editor::RenderDetailsMenu() { 
 
 	if (!m_DetailsWindowOpened)
 		return;
-
-	//Notes:
-	//This could be abstracted away since DRY
 
 
 	//TODO: Add the ability to reorder these one day
@@ -151,400 +150,14 @@ void Editor::RenderDetailsMenu() { //TODO: REturn const to this after getting ri
 
 	if (m_SelectedGameObject != nullptr) {
 
-		//TODO: Abstract these into separate functions for clarity
-
-		////////////
-		//Info
-		////////////
-		ImGui::Text("Name");
-		ImGui::SameLine(50.0f);
-		ImGui::SetNextItemWidth(100.0f);
-		if (ImGui::InputText("##ObjectName", m_NameInputBuffer, 32, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
-			m_SelectedGameObject->SetName(m_NameInputBuffer);
-		}
-
-		ImGui::SameLine(175.0f);
-		bool Enabled = m_SelectedGameObject->GetEnabled();
-		if (ImGui::Checkbox("Enabled", &Enabled)) {
-			m_SelectedGameObject->SetEnabled(Enabled);
-		}
-
-		ImGui::SameLine(300.0f);
-		bool Static = m_SelectedGameObject->GetStatic();
-		if (ImGui::Checkbox("Static", &Static)) {
-			m_SelectedGameObject->SetStatic(Static);
-		}
-
-		ImGui::Text("Tag");
-		ImGui::SameLine(50.0f);
-		ImGui::SetNextItemWidth(100.0f);
-		if (ImGui::InputText("##ObjectTag", m_TagInputBuffer, 32, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
-			m_SelectedGameObject->SetTag(m_TagInputBuffer);
-		}
+		//TODO: Most of the elements positions in these functions need to be redone. They are hardcoded. 
+		RenderInfoDetails();
+		RenderTransformDetails();
+		RenderSpriteRendererDetails();
 
 
-
-		////////////
-		//Transform
-		////////////
-		Transform* SelectedTransform = &m_SelectedGameObject->GetTransform();
-		if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen)) {
-
-			ImGui::Text("Position");
-
-			ImGui::SameLine(100.0f);
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
-			ImGui::Text("X");
-			ImGui::PopStyleColor();
-
-			ImGui::SameLine(120.0f);
-			ImGui::PushItemWidth(50.0F);
-			ImGui::InputFloat("##PX", &SelectedTransform->m_Position.m_X);
-
-			ImGui::SameLine(200.0f);
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
-			ImGui::Text("Y");
-			ImGui::PopStyleColor();
-
-			ImGui::SameLine(220.0f);
-			ImGui::PushItemWidth(50.0F);
-			ImGui::InputFloat("##PY", &SelectedTransform->m_Position.m_Y);
-
-			ImGui::SameLine(300.0f);
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 1.0f, 1.0f));
-			ImGui::Text("Z");
-			ImGui::PopStyleColor();
-
-			ImGui::SameLine(320.0f);
-			ImGui::PushItemWidth(50.0F);
-			ImGui::InputFloat("##PZ", &SelectedTransform->m_Position.m_Z);
-
-
-			ImGui::Text("Rotation");
-
-			ImGui::SameLine(100.0f);
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
-			ImGui::Text("X");
-			ImGui::PopStyleColor();
-
-			ImGui::SameLine(120.0f);
-			ImGui::PushItemWidth(50.0F);
-			ImGui::InputFloat("##RX", &SelectedTransform->m_Rotation.m_X);
-
-			ImGui::SameLine(200.0f);
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
-			ImGui::Text("Y");
-			ImGui::PopStyleColor();
-
-			ImGui::SameLine(220.0f);
-			ImGui::PushItemWidth(50.0F);
-			ImGui::InputFloat("##RY", &SelectedTransform->m_Rotation.m_Y);
-
-			ImGui::SameLine(300.0f);
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 1.0f, 1.0f));
-			ImGui::Text("Z");
-			ImGui::PopStyleColor();
-
-			ImGui::SameLine(320.0f);
-			ImGui::PushItemWidth(50.0F);
-			ImGui::InputFloat("##RZ", &SelectedTransform->m_Rotation.m_Z);
-
-
-			ImGui::Text("Scale");
-
-			ImGui::SameLine(100.0f);
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
-			ImGui::Text("X");
-			ImGui::PopStyleColor();
-
-			ImGui::SameLine(120.0f);
-			ImGui::PushItemWidth(50.0F);
-			ImGui::InputFloat("##SX", &SelectedTransform->m_Scale.m_X);
-
-			ImGui::SameLine(200.0f);
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
-			ImGui::Text("Y");
-			ImGui::PopStyleColor();
-
-			ImGui::SameLine(220.0f);
-			ImGui::PushItemWidth(50.0F);
-			ImGui::InputFloat("##SY", &SelectedTransform->m_Scale.m_Y);
-
-			ImGui::SameLine(300.0f);
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 1.0f, 1.0f));
-			ImGui::Text("Z");
-			ImGui::PopStyleColor();
-
-			ImGui::SameLine(320.0f);
-			ImGui::PushItemWidth(50.0F);
-			ImGui::InputFloat("##SZ", &SelectedTransform->m_Scale.m_Z);
-
-		}
-
-
-		////////////
-		//SpriteRenderer
-		////////////
-		if (m_SelectedGameObject->HasComponent<SpriteRenderer>()) {
-			SpriteRenderer* SelectedSpriteRenderer = m_SelectedGameObject->GetComponent<SpriteRenderer>();
-			if (ImGui::CollapsingHeader("SpriteRenderer", ImGuiTreeNodeFlags_DefaultOpen)) {
-
-				//TINT
-				Color CurrentColor = SelectedSpriteRenderer->GetTint();
-				if (ImGui::ColorEdit4("Tint", &CurrentColor.m_R, ImGuiColorEditFlags_NoInputs)) {
-					SelectedSpriteRenderer->SetTint(CurrentColor);
-				}
-
-				ImGui::Spacing();
-				ImGui::Spacing();
-
-				//NOTE: this is getting weird with the sets and gets - Might be fine for the sake of using the setters to track changes to values
-				//FLIP
-				bool FlipX = SelectedSpriteRenderer->GetFlipX();
-				bool FlipY = SelectedSpriteRenderer->GetFlipY();
-				if (ImGui::Checkbox("FlipX", &FlipX)) {
-					SelectedSpriteRenderer->SetFlipX(FlipX);
-				}
-				ImGui::SameLine(100);
-				if (ImGui::Checkbox("FlipY", &FlipY)) {
-					SelectedSpriteRenderer->SetFlipY(FlipY);
-				}
-
-
-				ImGui::Spacing();
-				ImGui::Spacing();
-				//BLEND EQUATION
-				ImGui::PushItemWidth(200.0f);
-				if (ImGui::BeginCombo("Blend Equation", EnumToText::ToText(SelectedSpriteRenderer->GetBlendEquation()))) {
-
-					if (ImGui::Selectable("Additive", false)) {
-						SelectedSpriteRenderer->SetBlendEquation(BlendEquation::ADDITIVE);
-					}
-					if (ImGui::Selectable("Subtractive", false)) {
-						SelectedSpriteRenderer->SetBlendEquation(BlendEquation::SUBTRACTIVE);
-					}
-					if (ImGui::Selectable("Reverse Subtractive", false)) {
-						SelectedSpriteRenderer->SetBlendEquation(BlendEquation::REVERSE_SUBTRACTIVE);
-					}
-
-					ImGui::EndCombo();
-				}
-
-				//SOURCE BLEND MODE
-				ImGui::PushItemWidth(200.0f);
-				if (ImGui::BeginCombo("Source Blend Mode", EnumToText::ToText(SelectedSpriteRenderer->GetSourceBlendMode()))) {
-
-					if (AddBlendModeSelectable(SourceBlendMode::ZERO)) {
-						SelectedSpriteRenderer->SetSourceBlendMode(SourceBlendMode::ZERO);
-					}
-					else if (AddBlendModeSelectable(SourceBlendMode::ONE)) {
-						SelectedSpriteRenderer->SetSourceBlendMode(SourceBlendMode::ONE);
-					}
-					else if (AddBlendModeSelectable(SourceBlendMode::SOURCE_COLOR)) {
-						SelectedSpriteRenderer->SetSourceBlendMode(SourceBlendMode::SOURCE_COLOR);
-					}
-					else if (AddBlendModeSelectable(SourceBlendMode::ONE_MINUS_SOURCE_COLOR)) {
-						SelectedSpriteRenderer->SetSourceBlendMode(SourceBlendMode::ONE_MINUS_SOURCE_COLOR);
-					}
-					else if (AddBlendModeSelectable(SourceBlendMode::DESTINATION_COLOR)) {
-						SelectedSpriteRenderer->SetSourceBlendMode(SourceBlendMode::DESTINATION_COLOR);
-					}
-					else if (AddBlendModeSelectable(SourceBlendMode::ONE_MINUS_DESTINATION_COLOR)) {
-						SelectedSpriteRenderer->SetSourceBlendMode(SourceBlendMode::ONE_MINUS_DESTINATION_COLOR);
-					}
-					else if (AddBlendModeSelectable(SourceBlendMode::SOURCE_ALPHA)) {
-						SelectedSpriteRenderer->SetSourceBlendMode(SourceBlendMode::SOURCE_ALPHA);
-					}
-					else if (AddBlendModeSelectable(SourceBlendMode::ONE_MINUS_SOURCE_ALPHA)) {
-						SelectedSpriteRenderer->SetSourceBlendMode(SourceBlendMode::ONE_MINUS_SOURCE_ALPHA);
-					}
-					else if (AddBlendModeSelectable(SourceBlendMode::DESTINATION_ALPHA)) {
-						SelectedSpriteRenderer->SetSourceBlendMode(SourceBlendMode::DESTINATION_ALPHA);
-					}
-					else if (AddBlendModeSelectable(SourceBlendMode::ONE_MINUS_DESTINATION_ALPHA)) {
-						SelectedSpriteRenderer->SetSourceBlendMode(SourceBlendMode::ONE_MINUS_DESTINATION_ALPHA);
-					}
-					else if (AddBlendModeSelectable(SourceBlendMode::CONSTANT_COLOR)) {
-						SelectedSpriteRenderer->SetSourceBlendMode(SourceBlendMode::CONSTANT_COLOR);
-					}
-					else if (AddBlendModeSelectable(SourceBlendMode::ONE_MINUS_CONSTANT_COLOR)) {
-						SelectedSpriteRenderer->SetSourceBlendMode(SourceBlendMode::ONE_MINUS_CONSTANT_COLOR);
-					}
-					else if (AddBlendModeSelectable(SourceBlendMode::CONSTANT_ALPHA)) {
-						SelectedSpriteRenderer->SetSourceBlendMode(SourceBlendMode::CONSTANT_ALPHA);
-					}
-					else if (AddBlendModeSelectable(SourceBlendMode::ONE_MINUS_CONSTANT_ALPHA)) {
-						SelectedSpriteRenderer->SetSourceBlendMode(SourceBlendMode::ONE_MINUS_CONSTANT_ALPHA);
-					}
-					else if (AddBlendModeSelectable(SourceBlendMode::SOURCE_ALPHA_SATURATE)) {
-						SelectedSpriteRenderer->SetSourceBlendMode(SourceBlendMode::SOURCE_ALPHA_SATURATE);
-					}
-
-					ImGui::EndCombo();
-				}
-
-				//DESTINATION BLEND MODE
-				ImGui::PushItemWidth(200.0f);
-				if (ImGui::BeginCombo("Destination Blend Mode", EnumToText::ToText(SelectedSpriteRenderer->GetDestinationBlendMode()))) {
-
-					if (AddBlendModeSelectable(DestinationBlendMode::ZERO)) {
-						SelectedSpriteRenderer->SetDestinationBlendMode(DestinationBlendMode::ZERO);
-					}
-					else if (AddBlendModeSelectable(DestinationBlendMode::ONE)) {
-						SelectedSpriteRenderer->SetDestinationBlendMode(DestinationBlendMode::ONE);
-					}
-					else if (AddBlendModeSelectable(DestinationBlendMode::SOURCE_COLOR)) {
-						SelectedSpriteRenderer->SetDestinationBlendMode(DestinationBlendMode::SOURCE_COLOR);
-					}
-					else if (AddBlendModeSelectable(DestinationBlendMode::ONE_MINUS_SOURCE_COLOR)) {
-						SelectedSpriteRenderer->SetDestinationBlendMode(DestinationBlendMode::ONE_MINUS_SOURCE_COLOR);
-					}
-					else if (AddBlendModeSelectable(DestinationBlendMode::DESTINATION_COLOR)) {
-						SelectedSpriteRenderer->SetDestinationBlendMode(DestinationBlendMode::DESTINATION_COLOR);
-					}
-					else if (AddBlendModeSelectable(DestinationBlendMode::ONE_MINUS_DESTINATION_COLOR)) {
-						SelectedSpriteRenderer->SetDestinationBlendMode(DestinationBlendMode::ONE_MINUS_DESTINATION_COLOR);
-					}
-					else if (AddBlendModeSelectable(DestinationBlendMode::SOURCE_ALPHA)) {
-						SelectedSpriteRenderer->SetDestinationBlendMode(DestinationBlendMode::SOURCE_ALPHA);
-					}
-					else if (AddBlendModeSelectable(DestinationBlendMode::ONE_MINUS_SOURCE_ALPHA)) {
-						SelectedSpriteRenderer->SetDestinationBlendMode(DestinationBlendMode::ONE_MINUS_SOURCE_ALPHA);
-					}
-					else if (AddBlendModeSelectable(DestinationBlendMode::DESTINATION_ALPHA)) {
-						SelectedSpriteRenderer->SetDestinationBlendMode(DestinationBlendMode::DESTINATION_ALPHA);
-					}
-					else if (AddBlendModeSelectable(DestinationBlendMode::ONE_MINUS_DESTINATION_ALPHA)) {
-						SelectedSpriteRenderer->SetDestinationBlendMode(DestinationBlendMode::ONE_MINUS_DESTINATION_ALPHA);
-					}
-					else if (AddBlendModeSelectable(DestinationBlendMode::CONSTANT_COLOR)) {
-						SelectedSpriteRenderer->SetDestinationBlendMode(DestinationBlendMode::CONSTANT_COLOR);
-					}
-					else if (AddBlendModeSelectable(DestinationBlendMode::ONE_MINUS_CONSTANT_COLOR)) {
-						SelectedSpriteRenderer->SetDestinationBlendMode(DestinationBlendMode::ONE_MINUS_CONSTANT_COLOR);
-					}
-					else if (AddBlendModeSelectable(DestinationBlendMode::CONSTANT_ALPHA)) {
-						SelectedSpriteRenderer->SetDestinationBlendMode(DestinationBlendMode::CONSTANT_ALPHA);
-					}
-					else if (AddBlendModeSelectable(DestinationBlendMode::ONE_MINUS_CONSTANT_ALPHA)) {
-						SelectedSpriteRenderer->SetDestinationBlendMode(DestinationBlendMode::ONE_MINUS_CONSTANT_ALPHA);
-					}
-
-					ImGui::EndCombo();
-				}
-
-
-				ImGui::Spacing();
-				ImGui::Spacing();
-				//ADDRESSING MODE
-				ImGui::PushItemWidth(100.0f);
-				if (ImGui::BeginCombo("Addressing Mode S", EnumToText::ToText(SelectedSpriteRenderer->GetAddressingModeS()))) {
-
-					if (AddAddressingModeSelectable(AddressingMode::CLAMPED_TO_BORDER)) {
-						SelectedSpriteRenderer->SetAddressingModeS(AddressingMode::CLAMPED_TO_BORDER);
-					}
-					else if (AddAddressingModeSelectable(AddressingMode::CLAMPED_TO_EDGE)) {
-						SelectedSpriteRenderer->SetAddressingModeS(AddressingMode::CLAMPED_TO_EDGE);
-					}
-					else if (AddAddressingModeSelectable(AddressingMode::MIRRORED)) {
-						SelectedSpriteRenderer->SetAddressingModeS(AddressingMode::MIRRORED);
-					}
-					else if (AddAddressingModeSelectable(AddressingMode::REPEAT)) {
-						SelectedSpriteRenderer->SetAddressingModeS(AddressingMode::REPEAT);
-					}
-
-					ImGui::EndCombo();
-				}
-				ImGui::PushItemWidth(100.0f);
-				if (ImGui::BeginCombo("Addressing Mode T", EnumToText::ToText(SelectedSpriteRenderer->GetAddressingModeT()))) {
-
-					if (AddAddressingModeSelectable(AddressingMode::CLAMPED_TO_BORDER)) {
-						SelectedSpriteRenderer->SetAddressingModeT(AddressingMode::CLAMPED_TO_BORDER);
-					}
-					else if (AddAddressingModeSelectable(AddressingMode::CLAMPED_TO_EDGE)) {
-						SelectedSpriteRenderer->SetAddressingModeT(AddressingMode::CLAMPED_TO_EDGE);
-					}
-					else if (AddAddressingModeSelectable(AddressingMode::MIRRORED)) {
-						SelectedSpriteRenderer->SetAddressingModeT(AddressingMode::MIRRORED);
-					}
-					else if (AddAddressingModeSelectable(AddressingMode::REPEAT)) {
-						SelectedSpriteRenderer->SetAddressingModeT(AddressingMode::REPEAT);
-					}
-
-					ImGui::EndCombo();
-				}
-
-
-				ImGui::Spacing();
-				ImGui::Spacing();
-				//FILTERING MODE
-				ImGui::PushItemWidth(170.0f);
-				if (ImGui::BeginCombo("Filtering Mode Min", EnumToText::ToText(SelectedSpriteRenderer->GetFilteringModeMin()))) {
-
-					if (AddFilteringModeMinSelectable(FilteringModeMin::LINEAR)) {
-						SelectedSpriteRenderer->SetFilteringModeMin(FilteringModeMin::LINEAR);
-					}
-					else if (AddFilteringModeMinSelectable(FilteringModeMin::LINEAR_MIPMAP_LINEAR)) {
-						SelectedSpriteRenderer->SetFilteringModeMin(FilteringModeMin::LINEAR_MIPMAP_LINEAR);
-					}
-					else if (AddFilteringModeMinSelectable(FilteringModeMin::LINEAR_MIPMAP_NEAREST)) {
-						SelectedSpriteRenderer->SetFilteringModeMin(FilteringModeMin::LINEAR_MIPMAP_NEAREST);
-					}
-					else if (AddFilteringModeMinSelectable(FilteringModeMin::NEAREST)) {
-						SelectedSpriteRenderer->SetFilteringModeMin(FilteringModeMin::NEAREST);
-					}
-					else if (AddFilteringModeMinSelectable(FilteringModeMin::NEAREST_MIPMAP_LINEAR)) {
-						SelectedSpriteRenderer->SetFilteringModeMin(FilteringModeMin::NEAREST_MIPMAP_LINEAR);
-					}
-					else if (AddFilteringModeMinSelectable(FilteringModeMin::NEAREST_MIPMAP_NEAREST)) {
-						SelectedSpriteRenderer->SetFilteringModeMin(FilteringModeMin::NEAREST_MIPMAP_NEAREST);
-					}
-
-					ImGui::EndCombo();
-				}
-				ImGui::PushItemWidth(170.0f);
-				if (ImGui::BeginCombo("Filtering Mode Mag", EnumToText::ToText(SelectedSpriteRenderer->GetFilteringModeMag()))) {
-
-					if (AddFilteringModeMagSelectable(FilteringModeMag::LINEAR)) {
-						SelectedSpriteRenderer->SetFilteringModeMag(FilteringModeMag::LINEAR);
-					}
-					else if (AddFilteringModeMagSelectable(FilteringModeMag::NEAREST)) {
-						SelectedSpriteRenderer->SetFilteringModeMag(FilteringModeMag::NEAREST);
-					}
-
-					ImGui::EndCombo();
-				}
-
-
-			}
-		}
-
-
-		////////////
-		//AddComponent
-		////////////
 		//Always at the bottom
-		ImGui::Separator();
-		AddSpacings(6);
-		ImGui::SameLine(150);
-		if (ImGui::Button("Add Component", ImVec2(100.0f, 20.0f))) {
-			ImVec2 PopupPosition = { ImGui::GetMousePos().x - 75, ImGui::GetMousePos().y }; //75 - Half box width
-			ImGui::SetNextWindowPos(PopupPosition);
-			ImGui::OpenPopup("AddComponentMenu");
-		}
-
-		if (ImGui::BeginPopup("AddComponentMenu")) {
-
-			if (ImGui::Selectable("SpriteRenderer", false, 0, ImVec2(150, 20))) {
-				m_SelectedGameObject->AddComponent<SpriteRenderer>();
-			}
-			else if (ImGui::Selectable("Camera", false, 0, ImVec2(150, 20))) {
-				m_SelectedGameObject->AddComponent<Camera>();
-			}
-
-			ImGui::EndPopup();
-		}
-		//Popup with options
+		RenderAddComponentMenu();
 	}
 
 	ImGui::End();
@@ -554,8 +167,9 @@ void Editor::RenderHeirarchyMenu() {
 	if (!m_HeirarchyWindowOpened)
 		return;
 
-	ImGui::SetNextWindowSize(ImVec2(200.0f, m_GUIViewport->Size.y - 300.0f - m_MainMenuBarSize.y)); // 50.0f Size of Add Menu
-	ImGui::SetNextWindowPos(ImVec2(0.0f, m_MainMenuBarSize.y)); // 200 Size of Add Menu
+	ImGui::SetNextWindowSize(m_HierarchyWindowSize);
+	ImGui::SetNextWindowPos(m_HierarchyWindowPosition); 
+
 	//ImGuiWindowFlags_NoBringToFrontOnFocus
 	ImGui::Begin("Heirarchy", &m_HeirarchyWindowOpened);
 
@@ -564,14 +178,14 @@ void Editor::RenderHeirarchyMenu() {
 	//TODO: This needs cleanup, especially the id check down there. Like test if the ID is reserved or something
 	std::vector<GameObject*> GameObjects = m_ECSReference->GetGameObjects();
 	for (uint32 i = 0; i < GameObjects.size(); i++) {
-		if (GameObjects.at(i)->GetObjectID() != VIEWPORT_CAMERA_OBJECT_ID && GameObjects.at(i)->GetParent() == nullptr)
+		if (!m_ECSReference->IsReserved(GameObjects.at(i)->GetObjectID()) && GameObjects.at(i)->GetParent() == nullptr)
 			AddHeirarchyEntry(GameObjects.at(i));
 	}
 
 	ImGui::End();
 	
 }
-void Editor::RenderAddGameObjectButton() {
+void Editor::RenderAddGameObjectMenu() {
 
 	if (!m_HeirarchyWindowOpened)
 		return;
@@ -583,16 +197,17 @@ void Editor::RenderAddGameObjectButton() {
 	Flags |= ImGuiWindowFlags_NoScrollbar;
 	Flags |= ImGuiWindowFlags_NoBackground;
 	Flags |= ImGuiWindowFlags_NoFocusOnAppearing;
-	//Flags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
+	Flags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
+	
+	//NOTE: This whole calculation thing here needs to be redone.
 
-	//NOTE: put this at the edge of the hierarchy bar!
 	ImGui::SetNextWindowSize(ImVec2(100.0f, 0.0f)); //As big as the button
-	ImGui::SetNextWindowPos(ImVec2(122.0f, -7.5f + m_MainMenuBarSize.y)); //BUG: Even after all this hardcoding this is still slightly off. It is visible
+	ImGui::SetNextWindowPos(ImVec2(m_HierarchyWindowPosition.x + m_HierarchyWindowSize.x - 25.0f, -7.5f + m_MainMenuBarSize.y)); //BUG: Even after all this hardcoding this is still slightly off. It is visible
 	ImGui::Begin("##AddGameObjectMenu", &m_HeirarchyWindowOpened, Flags);
 	CheckForHoveredWindows();
 
-	if (ImGui::Button("##AddButton", ImVec2(70.0f, 19.0f))) {
-		const ImVec2 PopupPosition = { ImGui::GetMousePos().x - 75, ImGui::GetMousePos().y }; //75 - Half box width
+	if (ImGui::Button("##AddGameObjectMenuButton", ImVec2(70.0f, 19.0f))) {
+		const ImVec2 PopupPosition = { ImGui::GetMousePos().x - 75.0f, ImGui::GetMousePos().y }; //75 - Half box width
 		ImGui::SetNextWindowPos(PopupPosition);
 		ImGui::OpenPopup("AddGameObjectMenu");
 	}
@@ -647,162 +262,435 @@ void Editor::RenderDirectoryExplorer() {
 
 	ImGui::End();
 }
+void Editor::RenderInfoDetails() {
 
-void Editor::RenderContentWindow() {
-
-
-	//Might be unnecessary to use this member variable but i can guarantee that the window will not appear then.
-	m_ContentWindowOpened = false;
-	m_ContentWindowOpened |= m_ContentBrowserOpened;
-	m_ContentWindowOpened |= m_DebugLogOpened;
-	m_ContentWindowOpened |= m_SystemLogOpened;
-	if (!m_ContentWindowOpened)
-		return;
-
-	//Reset focus
-	m_ContentBrowserFocusedInTab = true;
-	m_DebugLogFocusedInTab = false;
-	m_SystemLogFocusedInTab = false;
-
-
-
-	
-
-	ImGuiWindowFlags TabsWindowFlags = 0;
-	TabsWindowFlags |= ImGuiWindowFlags_NoCollapse;
-	//TabsWindowFlags |= ImGuiWindowFlags_NoTitleBar;
-	TabsWindowFlags |= ImGuiWindowFlags_NoScrollbar;
-	//TabsWindowFlags |= ImGuiWindowFlags_NoResize;
-	TabsWindowFlags |= ImGuiWindowFlags_NoBackground;
-	//TabsWindowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
-	TabsWindowFlags |= ImGuiWindowFlags_AlwaysAutoResize;
-	TabsWindowFlags |= ImGuiWindowFlags_NoDocking;
-
-
-	//Should be cleaned in new size and pos calculation
-	m_ContentBrowserWindowPosition = ImVec2(m_DirectoryExplorerWindowSize.x, m_GUIViewport->Size.y - m_ContentBrowserWindowSize.y);
-	m_ContentWindowTabsPosition.x = m_ContentBrowserWindowPosition.x;
-
-	std::string TabName = "Window";
-
-
-	//Notes
-	//I dont know what actually allows windows to dock other windows in them into tabs
-	//Its none of the flags and it seems to be the case for all windows i have except the standalone ones which the only
-	//unique thing they have is the way i calculate their positiona and size
-	//It wasnt it
-	//Last test is to see if normal windows is what works so make a normal content browser window and test it
-
-	//ImGui::SetNextWindowSize(m_ContentWindowTabsSize);
-	//ImGui::SetNextWindowPos(m_ContentWindowTabsPosition);
-
-
-
-	//if (ImGui::Begin("##TabsWindow", &m_ContentBrowserOpened, TabsWindowFlags)) {
-	//	CheckForHoveredWindows();
-	//	ImGui::SetWindowSize(m_ContentWindowTabsSize);
-	//	ImGui::SetWindowPos(m_ContentWindowTabsPosition);
-	//	if (ImGui::BeginTabBar("Tabs", ImGuiTabBarFlags_::ImGuiTabBarFlags_Reorderable)) {
-	//		
-	//		if (!m_ContentBrowserOpenedStandalone && ImGui::BeginTabItem("ContentBrowser", &m_ContentBrowserOpened)) {
-	//			m_ContentBrowserFocusedInTab = true;
-
-
-
-	//			m_ContentWindowTabsPosition.y = m_GUIViewport->Size.y - (m_ContentWindowSize.y + m_ContentWindowTabsSize.y);
-	//			const bool CheckResults = IsPointInBoundingBox(ImGui::GetMousePos(), m_ContentWindowTabsPosition, m_ContentWindowTabsSize);
-
-
-	//			//Final note: It works. I did not test it extensively but it worked!. Although getting the y for the pos is a problem
-	//			//This function needs a lot of cleaning and refactoring
-
-	//			if (!CheckResults && ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceNoDisableHover)) {
-	//				//It really seems like i need to know which flag it is to do a bunch of stuff
-	//				//Maybe use a struct
-
-	//				const auto Data = &m_ContentBrowserOpenedStandalone;
-	//				ImGui::SetDragDropPayload("Tab", &Data, sizeof(Data));
-	//				ImGui::EndDragDropSource();
-	//			}
-
-	//			TabName = "Content";
-	//			ImGui::EndTabItem();
-	//		}
-	//		if (!m_DebugLogOpenedStandalone && ImGui::BeginTabItem("DebugLog", &m_DebugLogOpened)) {
-	//			m_DebugLogFocusedInTab = true;
-
-	//			if (ImGui::BeginDragDropSource()) {
-	//				const auto Data = &m_DebugLogOpenedStandalone;
-	//				ImGui::SetDragDropPayload("Tab", &Data, sizeof(Data));
-	//				ImGui::EndDragDropSource();
-	//			}
-
-	//			TabName = "Debug";
-	//			ImGui::EndTabItem();
-	//		}
-	//		if (!m_SystemLogOpenedStandalone && ImGui::BeginTabItem("SystemLog", &m_SystemLogOpened)) {
-	//			m_SystemLogFocusedInTab = true;
-
-	//			if (ImGui::BeginDragDropSource()) {
-	//				const auto Data = &m_SystemLogOpenedStandalone;
-	//				ImGui::SetDragDropPayload("Tab", &Data, sizeof(Data));
-	//				ImGui::EndDragDropSource();
-	//			}
-
-	//			TabName = "System";
-	//			ImGui::EndTabItem();
-	//		}
-
-	//		ImGui::EndTabBar();
-	//	}
-
-	//}
-	//ImGui::End();
-
-
-	ImGuiWindowFlags ContentWindowFlags = 0;
-	//ContentWindowFlags |= ImGuiWindowFlags_NoCollapse;
-	//ContentWindowFlags |= ImGuiWindowFlags_AlwaysVerticalScrollbar;
-	//ContentWindowFlags |= ImGuiWindowFlags_AlwaysHorizontalScrollbar;
-	//ContentWindowFlags |= ImGuiWindowFlags_AlwaysAutoResize;
-	//ContentWindowFlags |= ImGuiWindowFlags_NoResize;
-	if (m_DebugLogFocusedInTab || m_SystemLogFocusedInTab)
-		ContentWindowFlags |= ImGuiWindowFlags_MenuBar;
-
-
-	//No window on? first one to be enabled gets the size of the content window
-
-	//ImGui::SetNextWindowSize(m_ContentWindowSize);
-	//ImGui::SetNextWindowPos(m_ContentWindowPosition);
-	if (ImGui::Begin(TabName.data(), &m_ContentWindowOpened, ContentWindowFlags)) {
-		CheckForHoveredWindows(); //Not Working? Check this
-		ImGui::SetWindowSize(m_ContentBrowserWindowSize);
-		ImGui::SetWindowPos(m_ContentBrowserWindowPosition);
-		//Should probably do another check if any window is in focus, otherwise its a crash!
-
-		//std::cout << ImGui::GetWindowContentRegionMax().x << " Y " << ImGui::GetWindowContentRegionMax().y << std::endl;
-		//Its one frame behind so it looks like its animated (Lagging behind)
-		m_ContentWindowTabsPosition.y = m_GUIViewport->Size.y - (ImGui::GetWindowSize().y + m_ContentWindowTabsSize.y);
-		//m_ContentWindowTabsPosition.y = ImGui::GetWindowContentRegionMax().y;
-
-
-
-		if (m_ContentBrowserFocusedInTab)
-			RenderContentBrowser();
-		else if (m_DebugLogFocusedInTab)
-			RenderDebugLog();
-		else if (m_SystemLogFocusedInTab)
-			RenderSystemLog();
+	ImGui::Text("Name");
+	ImGui::SameLine(50.0f);
+	ImGui::SetNextItemWidth(100.0f);
+	if (ImGui::InputText("##ObjectName", m_NameInputBuffer, 32, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
+		m_SelectedGameObject->SetName(m_NameInputBuffer);
 	}
 
-	ImGui::End();
+	ImGui::SameLine(175.0f);
+	bool Enabled = m_SelectedGameObject->GetEnabled();
+	if (ImGui::Checkbox("Enabled", &Enabled)) {
+		m_SelectedGameObject->SetEnabled(Enabled);
+	}
 
-	//Check if content window was closed by clicking the X and close all tabs then
-	//TODO: Make functions CloseAllContentTabs() to more easily  keep track of new tabs
-	if (!m_ContentWindowOpened) {
-		m_ContentBrowserOpened = false;
-		m_DebugLogOpened = false;
-		m_SystemLogOpened = false;
+	ImGui::SameLine(300.0f);
+	bool Static = m_SelectedGameObject->GetStatic();
+	if (ImGui::Checkbox("Static", &Static)) {
+		m_SelectedGameObject->SetStatic(Static);
+	}
+
+	ImGui::Text("Tag");
+	ImGui::SameLine(50.0f);
+	ImGui::SetNextItemWidth(100.0f);
+	if (ImGui::InputText("##ObjectTag", m_TagInputBuffer, 32, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
+		m_SelectedGameObject->SetTag(m_TagInputBuffer);
+	}
+}
+void Editor::RenderTransformDetails() {
+
+	Transform* SelectedTransform = &m_SelectedGameObject->GetTransform();
+	if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen)) {
+
+		ImGui::Text("Position");
+
+		ImGui::SameLine(100.0f);
+		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+		ImGui::Text("X");
+		ImGui::PopStyleColor();
+
+		ImGui::SameLine(120.0f);
+		ImGui::PushItemWidth(50.0F);
+		ImGui::InputFloat("##PX", &SelectedTransform->m_Position.m_X);
+
+		ImGui::SameLine(200.0f);
+		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
+		ImGui::Text("Y");
+		ImGui::PopStyleColor();
+
+		ImGui::SameLine(220.0f);
+		ImGui::PushItemWidth(50.0F);
+		ImGui::InputFloat("##PY", &SelectedTransform->m_Position.m_Y);
+
+		ImGui::SameLine(300.0f);
+		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 1.0f, 1.0f));
+		ImGui::Text("Z");
+		ImGui::PopStyleColor();
+
+		ImGui::SameLine(320.0f);
+		ImGui::PushItemWidth(50.0F);
+		ImGui::InputFloat("##PZ", &SelectedTransform->m_Position.m_Z);
+
+
+		ImGui::Text("Rotation");
+
+		ImGui::SameLine(100.0f);
+		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+		ImGui::Text("X");
+		ImGui::PopStyleColor();
+
+		ImGui::SameLine(120.0f);
+		ImGui::PushItemWidth(50.0F);
+		ImGui::InputFloat("##RX", &SelectedTransform->m_Rotation.m_X);
+
+		ImGui::SameLine(200.0f);
+		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
+		ImGui::Text("Y");
+		ImGui::PopStyleColor();
+
+		ImGui::SameLine(220.0f);
+		ImGui::PushItemWidth(50.0F);
+		ImGui::InputFloat("##RY", &SelectedTransform->m_Rotation.m_Y);
+
+		ImGui::SameLine(300.0f);
+		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 1.0f, 1.0f));
+		ImGui::Text("Z");
+		ImGui::PopStyleColor();
+
+		ImGui::SameLine(320.0f);
+		ImGui::PushItemWidth(50.0F);
+		ImGui::InputFloat("##RZ", &SelectedTransform->m_Rotation.m_Z);
+
+
+		ImGui::Text("Scale");
+
+		ImGui::SameLine(100.0f);
+		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+		ImGui::Text("X");
+		ImGui::PopStyleColor();
+
+		ImGui::SameLine(120.0f);
+		ImGui::PushItemWidth(50.0F);
+		ImGui::InputFloat("##SX", &SelectedTransform->m_Scale.m_X);
+
+		ImGui::SameLine(200.0f);
+		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
+		ImGui::Text("Y");
+		ImGui::PopStyleColor();
+
+		ImGui::SameLine(220.0f);
+		ImGui::PushItemWidth(50.0F);
+		ImGui::InputFloat("##SY", &SelectedTransform->m_Scale.m_Y);
+
+		ImGui::SameLine(300.0f);
+		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 1.0f, 1.0f));
+		ImGui::Text("Z");
+		ImGui::PopStyleColor();
+
+		ImGui::SameLine(320.0f);
+		ImGui::PushItemWidth(50.0F);
+		ImGui::InputFloat("##SZ", &SelectedTransform->m_Scale.m_Z);
+
+	}
+}
+void Editor::RenderSpriteRendererDetails() {
+
+	if (m_SelectedGameObject->HasComponent<SpriteRenderer>()) {
+		SpriteRenderer* SelectedSpriteRenderer = m_SelectedGameObject->GetComponent<SpriteRenderer>();
+		if (ImGui::CollapsingHeader("SpriteRenderer", ImGuiTreeNodeFlags_DefaultOpen)) {
+			
+			//NOTE: These could be broken down into smaller functions as well
+
+			//SPRITE
+			//IMPORTANT NOTE: For code like this, i used the same color from the style but in case of colors that are not 1.0.0, 0.1.0 and 0.0.1 -
+			//- the multiplication will not have the same results. So, in the long term, these values should be member variables and specific in the -
+			//- editor style class.
+			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(m_EditorStyle.m_MainColor.m_R * 0.2f, 0.0f, 0.0f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(m_EditorStyle.m_MainColor.m_R * 0.3f, 0.0f, 0.0f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(m_EditorStyle.m_MainColor.m_R * 0.4f, 0.0f, 0.0f, 1.0f));
+
+			const ImVec2 CursorPosition = ImGui::GetCursorPos();
+			if (ImGui::Button("##SpriteNameButton", ImVec2(m_DetailsWindowSize.x * 0.3f, 15.0f))) {
+				ImGui::SetNextWindowPos(ImGui::GetMousePos());
+				ImGui::SetNextWindowSize(m_SpriteSelectorWindowSize);
+				ImGui::OpenPopup("Sprite Selector");
+			}
+			ImGui::SetCursorPos(CursorPosition);
+			const Texture2D* Sprite = SelectedSpriteRenderer->GetSprite();
+			if (Sprite != nullptr)
+				ImGui::Text(Sprite->GetName().data());
+			else
+				ImGui::Text("None");
+
+			ImGui::PopStyleColor(3);
+			ImGui::PopStyleVar();
+
+			ImGui::PushStyleColor(ImGuiCol_ModalWindowDimBg, ImVec4(0.4f, 0.0f, 0.0f, 1.0f));
+			ImGui::PushStyleVar(ImGuiStyleVar_PopupRounding, 5.0f);
+			
+			ImGuiWindowFlags Flags = 0;
+			Flags |= ImGuiWindowFlags_AlwaysVerticalScrollbar;
+
+			if (ImGui::BeginPopupModal("Sprite Selector", nullptr, Flags)) {
+				CheckForHoveredWindows();
+				SetSpriteRendererEditTarget(SelectedSpriteRenderer);
+				UpdateSpriteSelectorEntries();
+				ImGui::EndPopup();
+			}
+			else if (m_SpriteRendererEditTarget != nullptr)
+				SetSpriteRendererEditTarget(nullptr);
+
+			ImGui::PopStyleColor();
+			ImGui::PopStyleVar();
+
+			AddSpacings(2);
+
+
+
+			//TINT
+			Color CurrentColor = SelectedSpriteRenderer->GetTint();
+			if (ImGui::ColorEdit4("Tint", &CurrentColor.m_R, ImGuiColorEditFlags_NoInputs)) {
+				SelectedSpriteRenderer->SetTint(CurrentColor);
+			}
+
+			AddSpacings(2);
+
+			//NOTE: this is getting weird with the sets and gets - Might be fine for the sake of using the setters to track changes to values
+			//FLIP
+			bool FlipX = SelectedSpriteRenderer->GetFlipX();
+			bool FlipY = SelectedSpriteRenderer->GetFlipY();
+			if (ImGui::Checkbox("FlipX", &FlipX)) {
+				SelectedSpriteRenderer->SetFlipX(FlipX);
+			}
+			ImGui::SameLine(100);
+			if (ImGui::Checkbox("FlipY", &FlipY)) {
+				SelectedSpriteRenderer->SetFlipY(FlipY);
+			}
+
+			AddSpacings(2);
+
+
+			//BLEND EQUATION
+			ImGui::PushItemWidth(200.0f);
+			if (ImGui::BeginCombo("Blend Equation", EnumToText::ToText(SelectedSpriteRenderer->GetBlendEquation()))) {
+
+				if (ImGui::Selectable("Additive", false)) {
+					SelectedSpriteRenderer->SetBlendEquation(BlendEquation::ADDITIVE);
+				}
+				if (ImGui::Selectable("Subtractive", false)) {
+					SelectedSpriteRenderer->SetBlendEquation(BlendEquation::SUBTRACTIVE);
+				}
+				if (ImGui::Selectable("Reverse Subtractive", false)) {
+					SelectedSpriteRenderer->SetBlendEquation(BlendEquation::REVERSE_SUBTRACTIVE);
+				}
+
+				ImGui::EndCombo();
+			}
+
+			//SOURCE BLEND MODE
+			ImGui::PushItemWidth(200.0f);
+			if (ImGui::BeginCombo("Source Blend Mode", EnumToText::ToText(SelectedSpriteRenderer->GetSourceBlendMode()))) {
+
+				if (AddBlendModeSelectable(SourceBlendMode::ZERO)) {
+					SelectedSpriteRenderer->SetSourceBlendMode(SourceBlendMode::ZERO);
+				}
+				else if (AddBlendModeSelectable(SourceBlendMode::ONE)) {
+					SelectedSpriteRenderer->SetSourceBlendMode(SourceBlendMode::ONE);
+				}
+				else if (AddBlendModeSelectable(SourceBlendMode::SOURCE_COLOR)) {
+					SelectedSpriteRenderer->SetSourceBlendMode(SourceBlendMode::SOURCE_COLOR);
+				}
+				else if (AddBlendModeSelectable(SourceBlendMode::ONE_MINUS_SOURCE_COLOR)) {
+					SelectedSpriteRenderer->SetSourceBlendMode(SourceBlendMode::ONE_MINUS_SOURCE_COLOR);
+				}
+				else if (AddBlendModeSelectable(SourceBlendMode::DESTINATION_COLOR)) {
+					SelectedSpriteRenderer->SetSourceBlendMode(SourceBlendMode::DESTINATION_COLOR);
+				}
+				else if (AddBlendModeSelectable(SourceBlendMode::ONE_MINUS_DESTINATION_COLOR)) {
+					SelectedSpriteRenderer->SetSourceBlendMode(SourceBlendMode::ONE_MINUS_DESTINATION_COLOR);
+				}
+				else if (AddBlendModeSelectable(SourceBlendMode::SOURCE_ALPHA)) {
+					SelectedSpriteRenderer->SetSourceBlendMode(SourceBlendMode::SOURCE_ALPHA);
+				}
+				else if (AddBlendModeSelectable(SourceBlendMode::ONE_MINUS_SOURCE_ALPHA)) {
+					SelectedSpriteRenderer->SetSourceBlendMode(SourceBlendMode::ONE_MINUS_SOURCE_ALPHA);
+				}
+				else if (AddBlendModeSelectable(SourceBlendMode::DESTINATION_ALPHA)) {
+					SelectedSpriteRenderer->SetSourceBlendMode(SourceBlendMode::DESTINATION_ALPHA);
+				}
+				else if (AddBlendModeSelectable(SourceBlendMode::ONE_MINUS_DESTINATION_ALPHA)) {
+					SelectedSpriteRenderer->SetSourceBlendMode(SourceBlendMode::ONE_MINUS_DESTINATION_ALPHA);
+				}
+				else if (AddBlendModeSelectable(SourceBlendMode::CONSTANT_COLOR)) {
+					SelectedSpriteRenderer->SetSourceBlendMode(SourceBlendMode::CONSTANT_COLOR);
+				}
+				else if (AddBlendModeSelectable(SourceBlendMode::ONE_MINUS_CONSTANT_COLOR)) {
+					SelectedSpriteRenderer->SetSourceBlendMode(SourceBlendMode::ONE_MINUS_CONSTANT_COLOR);
+				}
+				else if (AddBlendModeSelectable(SourceBlendMode::CONSTANT_ALPHA)) {
+					SelectedSpriteRenderer->SetSourceBlendMode(SourceBlendMode::CONSTANT_ALPHA);
+				}
+				else if (AddBlendModeSelectable(SourceBlendMode::ONE_MINUS_CONSTANT_ALPHA)) {
+					SelectedSpriteRenderer->SetSourceBlendMode(SourceBlendMode::ONE_MINUS_CONSTANT_ALPHA);
+				}
+				else if (AddBlendModeSelectable(SourceBlendMode::SOURCE_ALPHA_SATURATE)) {
+					SelectedSpriteRenderer->SetSourceBlendMode(SourceBlendMode::SOURCE_ALPHA_SATURATE);
+				}
+
+				ImGui::EndCombo();
+			}
+
+			//DESTINATION BLEND MODE
+			ImGui::PushItemWidth(200.0f);
+			if (ImGui::BeginCombo("Destination Blend Mode", EnumToText::ToText(SelectedSpriteRenderer->GetDestinationBlendMode()))) {
+
+				if (AddBlendModeSelectable(DestinationBlendMode::ZERO)) {
+					SelectedSpriteRenderer->SetDestinationBlendMode(DestinationBlendMode::ZERO);
+				}
+				else if (AddBlendModeSelectable(DestinationBlendMode::ONE)) {
+					SelectedSpriteRenderer->SetDestinationBlendMode(DestinationBlendMode::ONE);
+				}
+				else if (AddBlendModeSelectable(DestinationBlendMode::SOURCE_COLOR)) {
+					SelectedSpriteRenderer->SetDestinationBlendMode(DestinationBlendMode::SOURCE_COLOR);
+				}
+				else if (AddBlendModeSelectable(DestinationBlendMode::ONE_MINUS_SOURCE_COLOR)) {
+					SelectedSpriteRenderer->SetDestinationBlendMode(DestinationBlendMode::ONE_MINUS_SOURCE_COLOR);
+				}
+				else if (AddBlendModeSelectable(DestinationBlendMode::DESTINATION_COLOR)) {
+					SelectedSpriteRenderer->SetDestinationBlendMode(DestinationBlendMode::DESTINATION_COLOR);
+				}
+				else if (AddBlendModeSelectable(DestinationBlendMode::ONE_MINUS_DESTINATION_COLOR)) {
+					SelectedSpriteRenderer->SetDestinationBlendMode(DestinationBlendMode::ONE_MINUS_DESTINATION_COLOR);
+				}
+				else if (AddBlendModeSelectable(DestinationBlendMode::SOURCE_ALPHA)) {
+					SelectedSpriteRenderer->SetDestinationBlendMode(DestinationBlendMode::SOURCE_ALPHA);
+				}
+				else if (AddBlendModeSelectable(DestinationBlendMode::ONE_MINUS_SOURCE_ALPHA)) {
+					SelectedSpriteRenderer->SetDestinationBlendMode(DestinationBlendMode::ONE_MINUS_SOURCE_ALPHA);
+				}
+				else if (AddBlendModeSelectable(DestinationBlendMode::DESTINATION_ALPHA)) {
+					SelectedSpriteRenderer->SetDestinationBlendMode(DestinationBlendMode::DESTINATION_ALPHA);
+				}
+				else if (AddBlendModeSelectable(DestinationBlendMode::ONE_MINUS_DESTINATION_ALPHA)) {
+					SelectedSpriteRenderer->SetDestinationBlendMode(DestinationBlendMode::ONE_MINUS_DESTINATION_ALPHA);
+				}
+				else if (AddBlendModeSelectable(DestinationBlendMode::CONSTANT_COLOR)) {
+					SelectedSpriteRenderer->SetDestinationBlendMode(DestinationBlendMode::CONSTANT_COLOR);
+				}
+				else if (AddBlendModeSelectable(DestinationBlendMode::ONE_MINUS_CONSTANT_COLOR)) {
+					SelectedSpriteRenderer->SetDestinationBlendMode(DestinationBlendMode::ONE_MINUS_CONSTANT_COLOR);
+				}
+				else if (AddBlendModeSelectable(DestinationBlendMode::CONSTANT_ALPHA)) {
+					SelectedSpriteRenderer->SetDestinationBlendMode(DestinationBlendMode::CONSTANT_ALPHA);
+				}
+				else if (AddBlendModeSelectable(DestinationBlendMode::ONE_MINUS_CONSTANT_ALPHA)) {
+					SelectedSpriteRenderer->SetDestinationBlendMode(DestinationBlendMode::ONE_MINUS_CONSTANT_ALPHA);
+				}
+
+				ImGui::EndCombo();
+			}
+
+
+			AddSpacings(2);
+
+			//ADDRESSING MODE
+			ImGui::PushItemWidth(100.0f);
+			if (ImGui::BeginCombo("Addressing Mode S", EnumToText::ToText(SelectedSpriteRenderer->GetAddressingModeS()))) {
+
+				if (AddAddressingModeSelectable(AddressingMode::CLAMPED_TO_BORDER)) {
+					SelectedSpriteRenderer->SetAddressingModeS(AddressingMode::CLAMPED_TO_BORDER);
+				}
+				else if (AddAddressingModeSelectable(AddressingMode::CLAMPED_TO_EDGE)) {
+					SelectedSpriteRenderer->SetAddressingModeS(AddressingMode::CLAMPED_TO_EDGE);
+				}
+				else if (AddAddressingModeSelectable(AddressingMode::MIRRORED)) {
+					SelectedSpriteRenderer->SetAddressingModeS(AddressingMode::MIRRORED);
+				}
+				else if (AddAddressingModeSelectable(AddressingMode::REPEAT)) {
+					SelectedSpriteRenderer->SetAddressingModeS(AddressingMode::REPEAT);
+				}
+
+				ImGui::EndCombo();
+			}
+			ImGui::PushItemWidth(100.0f);
+			if (ImGui::BeginCombo("Addressing Mode T", EnumToText::ToText(SelectedSpriteRenderer->GetAddressingModeT()))) {
+
+				if (AddAddressingModeSelectable(AddressingMode::CLAMPED_TO_BORDER)) {
+					SelectedSpriteRenderer->SetAddressingModeT(AddressingMode::CLAMPED_TO_BORDER);
+				}
+				else if (AddAddressingModeSelectable(AddressingMode::CLAMPED_TO_EDGE)) {
+					SelectedSpriteRenderer->SetAddressingModeT(AddressingMode::CLAMPED_TO_EDGE);
+				}
+				else if (AddAddressingModeSelectable(AddressingMode::MIRRORED)) {
+					SelectedSpriteRenderer->SetAddressingModeT(AddressingMode::MIRRORED);
+				}
+				else if (AddAddressingModeSelectable(AddressingMode::REPEAT)) {
+					SelectedSpriteRenderer->SetAddressingModeT(AddressingMode::REPEAT);
+				}
+
+				ImGui::EndCombo();
+			}
+
+
+			AddSpacings(2);
+
+			//FILTERING MODE
+			ImGui::PushItemWidth(170.0f);
+			if (ImGui::BeginCombo("Filtering Mode Min", EnumToText::ToText(SelectedSpriteRenderer->GetFilteringModeMin()))) {
+
+				if (AddFilteringModeMinSelectable(FilteringModeMin::LINEAR)) {
+					SelectedSpriteRenderer->SetFilteringModeMin(FilteringModeMin::LINEAR);
+				}
+				else if (AddFilteringModeMinSelectable(FilteringModeMin::LINEAR_MIPMAP_LINEAR)) {
+					SelectedSpriteRenderer->SetFilteringModeMin(FilteringModeMin::LINEAR_MIPMAP_LINEAR);
+				}
+				else if (AddFilteringModeMinSelectable(FilteringModeMin::LINEAR_MIPMAP_NEAREST)) {
+					SelectedSpriteRenderer->SetFilteringModeMin(FilteringModeMin::LINEAR_MIPMAP_NEAREST);
+				}
+				else if (AddFilteringModeMinSelectable(FilteringModeMin::NEAREST)) {
+					SelectedSpriteRenderer->SetFilteringModeMin(FilteringModeMin::NEAREST);
+				}
+				else if (AddFilteringModeMinSelectable(FilteringModeMin::NEAREST_MIPMAP_LINEAR)) {
+					SelectedSpriteRenderer->SetFilteringModeMin(FilteringModeMin::NEAREST_MIPMAP_LINEAR);
+				}
+				else if (AddFilteringModeMinSelectable(FilteringModeMin::NEAREST_MIPMAP_NEAREST)) {
+					SelectedSpriteRenderer->SetFilteringModeMin(FilteringModeMin::NEAREST_MIPMAP_NEAREST);
+				}
+
+				ImGui::EndCombo();
+			}
+			ImGui::PushItemWidth(170.0f);
+			if (ImGui::BeginCombo("Filtering Mode Mag", EnumToText::ToText(SelectedSpriteRenderer->GetFilteringModeMag()))) {
+
+				if (AddFilteringModeMagSelectable(FilteringModeMag::LINEAR)) {
+					SelectedSpriteRenderer->SetFilteringModeMag(FilteringModeMag::LINEAR);
+				}
+				else if (AddFilteringModeMagSelectable(FilteringModeMag::NEAREST)) {
+					SelectedSpriteRenderer->SetFilteringModeMag(FilteringModeMag::NEAREST);
+				}
+
+				ImGui::EndCombo();
+			}
+
+
+		}
+	}
+}
+void Editor::RenderAddComponentMenu() {
+
+	ImGui::Separator();
+	AddSpacings(6);
+	ImGui::SameLine((m_DetailsWindowSize.x / 2) - 75.0f);
+	if (ImGui::Button("Add Component", ImVec2(150.0f, 20.0f))) {
+		ImVec2 PopupPosition = { ImGui::GetMousePos().x - 75, ImGui::GetMousePos().y }; //75 - Half box width
+		ImGui::SetNextWindowPos(PopupPosition);
+		ImGui::OpenPopup("AddComponentMenu");
+	}
+
+	if (ImGui::BeginPopup("AddComponentMenu")) {
+
+		if (ImGui::Selectable("SpriteRenderer", false, 0, ImVec2(150, 20))) {
+			m_SelectedGameObject->AddComponent<SpriteRenderer>();
+		}
+		else if (ImGui::Selectable("Camera", false, 0, ImVec2(150, 20))) {
+			m_SelectedGameObject->AddComponent<Camera>();
+		}
+
+		ImGui::EndPopup();
 	}
 }
 
@@ -910,34 +798,11 @@ void Editor::RenderViewportWindow() {
 	ViewportFlags |= ImGuiWindowFlags_NoTitleBar;
 	ViewportFlags |= ImGuiWindowFlags_NoDocking;
 	bool Open = true; //? should i allow the viewport to be closable. Yes in the future.
-	bool Hovered = false;
-	bool LeftMouseReleased = false;
 	if (ImGui::Begin("ViewportWindow", &Open, ViewportFlags)) {
 		ImGui::SetWindowSize(m_GUIViewport->Size);
 		ImGui::SetWindowPos(ImVec2(0, 0));
 
 
-		//Tabs payload check - Gets tab payload and sets it to true
-		auto Payload = ImGui::GetDragDropPayload();
-		Hovered = ImGui::IsWindowHovered();
-		LeftMouseReleased = ImGui::IsMouseReleased(ImGuiMouseButton_Left);
-		if (Hovered && LeftMouseReleased && Payload != nullptr) {
-			if (Payload->IsDataType("Tab")) {
-
-				bool ContentBrowserCache = m_ContentBrowserOpenedStandalone;
-				//bool DebugLogCache = m_DebugLogOpenedStandalone;
-				//bool SystemLogCache = m_SystemLogOpenedStandalone;
-
-				bool** DataPointer = static_cast<bool**>(Payload->Data);
-				if (DataPointer != nullptr) {
-					*(*DataPointer) = true; //Does not look so nice
-
-					//Terrible solution
-					if (m_ContentBrowserOpenedStandalone != ContentBrowserCache)
-						m_ContentBrowserWindowPosition = ImGui::GetMousePos();
-				}
-			}
-		}
 
 
 	}
@@ -949,46 +814,6 @@ void Editor::RenderContentWindows() {
 	RenderContentBrowser();
 	RenderDebugLog();
 	RenderSystemLog();
-
-}
-
-void Editor::RenderStandaloneWindows() {
-
-
-
-	//NOTE: Keep the balance between focused, opened and opened standalone and bug test it
-	//NOTE: The flags are special between each window version!
-	//All should have bring always to front flag or something
-
-	if (m_ContentBrowserOpenedStandalone) {
-		//Create Window and call appropriate function inside!
-		//Check window if closed afterwards to toggle other stuff?
-
-		if (ImGui::Begin("ContentBrowser", &m_ContentBrowserOpenedStandalone)) {
-			ImGui::SetWindowPos(m_ContentBrowserWindowPosition);
-			RenderContentBrowser();
-		}
-
-		ImGui::End();
-	}
-	if (true) {
-		if (ImGui::Begin("DebugLog", &m_DebugLogOpenedStandalone, ImGuiWindowFlags_::ImGuiWindowFlags_MenuBar)) {
-			RenderDebugLog();
-
-
-		}
-		ImGui::End();
-	}
-	if (m_SystemLogOpenedStandalone) {
-		if (ImGui::Begin("SystemLog", &m_SystemLogOpenedStandalone, ImGuiWindowFlags_::ImGuiWindowFlags_MenuBar)) {
-			RenderSystemLog();
-
-
-		}
-		ImGui::End();
-	}
-
-
 
 }
 
@@ -1004,7 +829,7 @@ void Editor::RenderContentBrowser() {
 	Flags |= ImGuiWindowFlags_NoSavedSettings;
 
 
-	//IMPORTANT NOTE: When it comes to the text offeset bug, check the alignment on the text by PushStyleVar()
+	//IMPORTANT NOTE: When it comes to the text offeset bug, check the alignment on the text by PushStyleVar(). update: that didnt do it i think.
 
 	if (m_ContentBrowserWindowReset) {
 		m_ContentBrowserWindowReset = false;
@@ -1293,6 +1118,8 @@ void Editor::CheckInput() {
 
 	//NOTE: Needs to be after the render calls otherwise its always false cause the flag is reseted right on top of this function
 
+	//TODO: Deal with popups problem for ishovering check.
+
 	//Unselect from hieracrchy
 	if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !ImGui::IsAnyItemHovered() && m_SelectedGameObject != nullptr && !m_IsAnyWindowHovered) {
 		//The only problem with this is that the IsAnyWindowHovered will not catch windows if a popup is open
@@ -1557,6 +1384,10 @@ void Editor::NewContentBrowserFrame() noexcept {
 	m_ContentLineElementsCount = 0;
 	m_FolderEntryOpened = false;
 }
+void Editor::NewSpriteSelectorFrame() noexcept {
+	m_SpriteSelectorElementCursor = 0.0f;
+	m_SpriteSelectorLineElementsCount = 0;
+}
 void Editor::UpdateContentBrowserFolderEntries() {
 
 	//TODO: Implement some countermeasure in case the texture was not found
@@ -1696,6 +1527,105 @@ void Editor::FlushContentTexts() {
 	AddSpacings(3);
 }
 
+void Editor::UpdateSpriteSelectorEntries() {
+
+	//NOTE: This applies to the content browser as well but this could be cleaned a lot more than this
+
+	AddSpacings(5);
+	SetupContentBrowserStyle();
+	NewSpriteSelectorFrame();
+
+	for (auto& Texture : m_TextureStorageReference->GetTexture2DStorage()) {
+
+
+		//Calculate element per line depending on window size
+		//TODO: Deal with in case it wasnt found!
+		if (Texture == nullptr) {
+			//Error texture!
+			continue;
+		}
+
+		void* TextureID = nullptr;
+		TextureID = (void*)(intptr_t)(Texture->GetID());
+		Texture->Bind();
+
+
+
+		std::string Name = Texture->GetName().data();
+		std::string ID = "##" + Name;
+		bool AppliedStyle = false;
+
+
+
+		//Calculate position and check if new line is necessary
+		m_SpriteSelectorElementCursor = (m_SpriteSelectorElementPadding * (m_SpriteSelectorLineElementsCount + 1)) + m_SpriteSelectorElementSize.x * m_SpriteSelectorLineElementsCount;
+		if (m_SpriteSelectorElementCursor + m_SpriteSelectorElementSize.x >= m_SpriteSelectorWindowSize.x) {
+			FlushSpriteSelectorTexts();
+			m_SpriteSelectorElementCursor = m_SpriteSelectorElementPadding;
+			m_SpriteSelectorLineElementsCount = 0; //This means its a new line!
+		}
+
+		//Apply selected style
+		if (m_SelectedSpriteSelectorElement == Texture) {
+			AppliedStyle = true;
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5f, 0.5f, 0.5f, 0.6f));
+		}
+
+		//Render content
+		ImGui::SameLine(m_SpriteSelectorElementCursor);
+		if (ImGui::ImageButton(ID.data(), TextureID, m_SpriteSelectorElementSize)) {
+			if (m_SelectedSpriteSelectorElement == Texture) {
+				m_SelectedSpriteSelectorElement = nullptr;
+
+				m_SpriteRendererEditTarget->SetSprite(Texture);
+				SetSpriteRendererEditTarget(nullptr); //Hmmmmm, should i keep track of when this should get unset?
+
+				ImGui::CloseCurrentPopup();
+			}
+			else
+				m_SelectedSpriteSelectorElement = Texture;
+		}
+
+		//Pop selected style
+		if (AppliedStyle)
+			ImGui::PopStyleColor();
+
+		m_QueuedSpriteSelectorTexts.emplace_back(Name);
+		m_SpriteSelectorLineElementsCount++;
+
+		if (Texture != nullptr)
+			Texture->Unbind();
+	}
+
+	ClearContentBrowserStyle();
+	FlushSpriteSelectorTexts();
+}
+void Editor::FlushSpriteSelectorTexts() {
+
+	if (m_QueuedSpriteSelectorTexts.size() == 0)
+		return;
+
+	AddSpacings(1);
+	float CurrentX = 0.0f;
+
+	for (uint32 Index = 0; Index < m_QueuedSpriteSelectorTexts.size(); Index++) {
+
+		std::string ElementName = m_QueuedSpriteSelectorTexts.at(Index);
+
+		ImVec2 TextSize = ImGui::CalcTextSize(ElementName.data());
+		CurrentX = (m_SpriteSelectorElementPadding * (Index + 1)) + m_SpriteSelectorElementSize.x * Index; //Same pos as content
+		CurrentX += m_SpriteSelectorElementSize.x / 2.0f; //Shift it by button half button size
+		CurrentX -= TextSize.x / 2.0f; //Shift it back by text half width
+		//TODO: Fix the positioning, it is slightly off still.
+
+		ImGui::SameLine(CurrentX);
+		ImGui::Text(ElementName.data());
+	}
+
+	m_QueuedSpriteSelectorTexts.clear();
+	AddSpacings(3);
+}
+
 
 bool Editor::AddBlendModeSelectable(SourceBlendMode mode) {
 	using namespace EnumToText;
@@ -1747,14 +1677,6 @@ void Editor::AddSeparators(uint32 count) {
 	for (uint32 index = 0; index < count; index++)
 		ImGui::Separator();
 }
-void Editor::PopStyleVars(uint32 count) {
-	for (uint32 index = 0; index < count; index++)
-		ImGui::PopStyleVar();
-}
-void Editor::PopStyleColors(uint32 count) {
-	for (uint32 index = 0; index < count; index++)
-		ImGui::PopStyleColor();
-}
 void Editor::SetSelectedGameObject(GameObject* object) noexcept {
 
 	m_SelectedGameObject = object;
@@ -1762,6 +1684,8 @@ void Editor::SetSelectedGameObject(GameObject* object) noexcept {
 		strcpy_s(m_NameInputBuffer, m_SelectedGameObject->GetName().c_str());
 		strcpy_s(m_TagInputBuffer, m_SelectedGameObject->GetTag().c_str());
 	}
+	if (m_SpriteRendererEditTarget != nullptr)
+		SetSpriteRendererEditTarget(nullptr);
 }
 void Editor::SetSelectedDirectory(Directory* directory) noexcept {
 
@@ -1783,62 +1707,18 @@ Texture2D* Editor::GetIconTexture(const Asset& asset) {
 	case AssetType::TEXTURE: {
 
 		//TODO: Add name to the asset and remove it from Texture2D and update that everywhere! It makes more sense and all asset types will have it
-		if (!m_TextureStorageReference->GetTexture2D(asset.m_Path.filename().replace_extension().string(), IconTexture))
+		if (!m_TextureStorageReference->GetTexture2DByName(asset.m_Path.filename().replace_extension().string(), IconTexture))
 			return nullptr;
 		return IconTexture;
 	}
 	default:
-		if (m_TextureStorageReference->GetTexture2D("Unknown", IconTexture))
+		if (m_TextureStorageReference->GetTexture2DByName("Unknown", IconTexture))
 			return IconTexture;
 		return nullptr;
 	}
 }
 
 
-void Editor::SetupEditorStyle() {
-
-	ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(m_EditorStyleColor.m_R * 0.4f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
-	ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(m_EditorStyleColor.m_R * 0.4f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
-
-	ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(m_EditorStyleColor.m_R * 0.4f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
-	ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(m_EditorStyleColor.m_R * 0.6f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
-	ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(m_EditorStyleColor.m_R * 0.3f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
-
-	ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(m_EditorStyleColor.m_R * 0.1f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
-	ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(m_EditorStyleColor.m_R * 0.3f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
-	ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(m_EditorStyleColor.m_R * 0.05f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
-
-	ImGui::PushStyleColor(ImGuiCol_CheckMark, ImVec4(1.0f, 1.0f, 1.0f, m_EditorStyleColor.m_A));
-
-	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(m_EditorStyleColor.m_R * 0.4f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
-	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(m_EditorStyleColor.m_R * 0.6f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
-	ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(m_EditorStyleColor.m_R * 0.2f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
-
-	ImGui::PushStyleColor(ImGuiCol_Tab, ImVec4(m_EditorStyleColor.m_R * 0.2f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
-	ImGui::PushStyleColor(ImGuiCol_TabHovered, ImVec4(m_EditorStyleColor.m_R * 0.5f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
-	ImGui::PushStyleColor(ImGuiCol_TabActive, ImVec4(m_EditorStyleColor.m_R * 0.6f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
-
-	ImGui::PushStyleColor(ImGuiCol_Separator, ImVec4(m_EditorStyleColor.m_R * 0.4f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
-	ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(m_EditorStyleColor.m_R * 0.2f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
-
-	ImGui::PushStyleColor(ImGuiCol_TabUnfocused, ImVec4(m_EditorStyleColor.m_R * 0.2f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
-	ImGui::PushStyleColor(ImGuiCol_TabUnfocusedActive, ImVec4(m_EditorStyleColor.m_R * 0.6f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
-
-	ImGui::PushStyleColor(ImGuiCol_DockingPreview, ImVec4(m_EditorStyleColor.m_R * 0.3f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
-	ImGui::PushStyleColor(ImGuiCol_DockingEmptyBg, ImVec4(m_EditorStyleColor.m_R * 0.2f, m_EditorStyleColor.m_G, m_EditorStyleColor.m_B, m_EditorStyleColor.m_A));
-
-
-	ImGui::PushStyleVar(ImGuiStyleVar_TabRounding, 5.0f);
-	ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10.0f);
-
-	
-}
-void Editor::ClearEditorStyle() {
-
-	//Make sure its the same amount of PushStyleColor() calls in SetupEditorStyle();
-	PopStyleVars(2);
-	PopStyleColors(21);
-}
 void Editor::SetupContentBrowserStyle() {
 
 	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
@@ -1848,7 +1728,7 @@ void Editor::SetupContentBrowserStyle() {
 void Editor::ClearContentBrowserStyle() {
 
 	//Make sure its the same amount of PushStyleColor() calls in SetupContentBrowserStyle();
-	PopStyleColors(3);
+	ImGui::PopStyleColor(3);
 }
 
 bool Editor::IsPointInBoundingBox(ImVec2 point, ImVec2 position, ImVec2 size) const noexcept {
@@ -1863,19 +1743,20 @@ bool Editor::IsPointInBoundingBox(ImVec2 point, ImVec2 position, ImVec2 size) co
 
 	return XWithin &= YWithin;
 }
-ImVec2 Editor::GetContentWindowStartPosition(ImVec2 windowSize) const noexcept {
-
-	//TODO: Could be inlined - Is this even needed anymore?
-	return ImVec2(m_GUIViewport->Size.x / 2 - windowSize.x / 2, m_GUIViewport->Size.y / 2 - windowSize.y / 2);
-}
 void Editor::UpdateWindowPositions() {
 	//NOTE: Seems like size then position cause a lot of positions depend on sizes
 	//NOTE: Any hardcoded values here such as 100 200 etc means the value has not been implemented in code yet. (percentage values are fine)
 	//NOTE: The percentage values can be changed safely and should be exposed later on
+
+	m_DirectoryExplorerWindowSize = ImVec2(m_GUIViewport->Size.x * 0.1f, m_GUIViewport->Size.y * 0.3f);
 	m_DetailsWindowSize = ImVec2(m_GUIViewport->Size.x * 0.2f, m_GUIViewport->Size.y - m_MainMenuBarSize.y);
 	m_ContentBrowserWindowSize = ImVec2(m_GUIViewport->Size.x - m_DetailsWindowSize.x - m_DirectoryExplorerWindowSize.x, m_DirectoryExplorerWindowSize.y);
 	m_NewContentWindowSize = ImVec2(m_GUIViewport->Size.x * 0.3f, m_GUIViewport->Size.y * 0.3f);
+	m_HierarchyWindowSize = ImVec2(m_GUIViewport->Size.x * 0.1f, m_GUIViewport->Size.y - m_DirectoryExplorerWindowSize.y - m_MainMenuBarSize.y);
+
+	m_SpriteSelectorWindowSize = ImVec2(400.0f, 700.f);
 
 	m_ContentBrowserWindowPosition = ImVec2(m_DirectoryExplorerWindowSize.x, m_GUIViewport->Size.y - m_ContentBrowserWindowSize.y);
 	m_DetailsWindowPosition = ImVec2(m_GUIViewport->Size.x - m_DetailsWindowSize.x, m_MainMenuBarSize.y);
+	m_HierarchyWindowPosition = ImVec2(0.0f, m_MainMenuBarSize.y);
 }

@@ -378,7 +378,6 @@ public:
 	//IMPORTANT: Why am i even calling it texture 2d? Just cause there are Texture 1D and 3D? I dont know if i will be adding support to those.
 
 
-	//Old _____[[nodiscard]] bool LoadTexture2D(const std::string_view& path, const std::string_view& name, Texture2D*& ptr, bool flipped = true)
 
 	[[nodiscard]] bool LoadTexture2D(Asset& asset, bool flipped = false) { //Flipped will be kinda problamatic now...
 
@@ -391,7 +390,7 @@ public:
 			stbi_set_flip_vertically_on_load(flipped);
 			if (LoadFromFile(asset, Buffer)) {
 				Texture2D* NewTexture2D = new Texture2D(asset, Buffer);
-				m_Storage.emplace_back(NewTexture2D);
+				m_Texture2DStorage.emplace_back(NewTexture2D);
 				return true;
 			}
 			else
@@ -399,7 +398,7 @@ public:
 		}
 	}
 
-	//Unfinished after rework
+	//Unfinished after rework - Should probably not be public API
 	void UnloadTexture2D(const std::string_view path) {
 		Texture2D* TargetTexture;
 		if (!FindTexture2D(path)) //Make it return the index of where it found it!
@@ -410,26 +409,29 @@ public:
 		}
 	}
 
-	//TODO: Add more finding functions. By Path?
-	[[nodiscard]] bool GetTexture2D(const std::string_view name, Texture2D*& ptr) {
 
-		for (auto& texture : m_Storage) {
+	[[nodiscard]] bool GetTexture2DByName(const std::string_view name, Texture2D*& ptr) {
+
+		for (auto& texture : m_Texture2DStorage) {
 			if (texture->GetName() == name) {
 				ptr = texture;
 				return true;
 			}
 		}
 		return false;
-
-
-
-		//for (auto& texture : m_Storage) {
-		//	if (texture.second->GetName() == name) {
-		//		ptr = texture.second;
-		//		return true;
-		//	}
-		//}
 	}
+	[[nodiscard]] bool GetTexture2DByPath(const std::string_view path, Texture2D*& ptr) {
+
+		for (auto& texture : m_Texture2DStorage) {
+			if (texture->GetFilePath() == path) {
+				ptr = texture;
+				return true;
+			}
+		}
+		return false;
+	}
+
+	std::vector<Texture2D*> GetTexture2DStorage() const noexcept { return m_Texture2DStorage; }
 
 public:
 	void ActivateTextureUnit(GLenum unit) noexcept {
@@ -440,7 +442,7 @@ private:
 	//Terrible function name - misleading
 	[[nodiscard]] bool FindTexture2D(const std::string_view path) { 
 
-		for (auto& texture : m_Storage) {
+		for (auto& texture : m_Texture2DStorage) {
 			if (texture->GetFilePath() == path)
 				return true;
 		}
@@ -452,7 +454,7 @@ private:
 		//else
 		//	return false;
 	}
-	[[nodiscard]] bool LoadFromFile(Asset& asset, Texture2DSourceData& buffer) {
+	[[nodiscard]] bool LoadFromFile(const Asset& asset, Texture2DSourceData& buffer) {
 
 		std::string AssetPath = asset.m_Path.string();
 		std::string AssetName = asset.m_Path.filename().replace_extension().string();
@@ -469,5 +471,5 @@ private:
 
 private:
 	//std::unordered_map<std::string_view, Texture2D*> m_Storage;
-	std::vector<Texture2D*> m_Storage;
+	std::vector<Texture2D*> m_Texture2DStorage;
 };

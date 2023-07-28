@@ -1,7 +1,7 @@
 #pragma once
 #include <GLAD/glad/glad.h>
 #include "GLErrorHandling.hpp"
-#include "AssetManager.hpp"
+#include "Systems/AssetManager.hpp"
 
 class Shader final {
 public:

@@ -3,7 +3,7 @@
 #include "ImGUI/imgui_impl_glfw.h"
 #include "ImGUI/imgui_impl_opengl3.h"
 
-#include "Logger.hpp"
+#include "Tools/Logger.hpp"
 #include "Utility.hpp"
 #include "Math.hpp" //For color only
 
@@ -17,6 +17,7 @@ class Time;
 class GameObject;
 class Directory;
 class Texture2D;
+class SpriteRenderer;
 class Asset;
 class Camera;
 
@@ -26,6 +27,68 @@ enum class FilteringModeMag;
 enum class BlendEquation;
 enum class SourceBlendMode;
 enum class DestinationBlendMode;
+
+
+
+class EditorStyle {
+public:
+	virtual void Apply() = 0;
+	virtual void Clear() = 0;
+
+	Color m_MainColor;
+};
+class EditorRedStyle final : public EditorStyle {
+public:
+	EditorRedStyle() noexcept
+	{
+		m_MainColor = Colors::Red;
+	}
+
+	void Apply() override {
+
+		ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(0.4f, 0.0f, 0.0f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.4f, 0.0f, 0.0f, 1.0f));
+
+		ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.4f, 0.0f, 0.0f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.6f, 0.0f, 0.0f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.3f, 0.0f, 0.0f, 1.0f));
+
+		ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.1f, 0.0f, 0.0f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.3f, 0.0f, 0.0f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.05f, 0.0f, 0.0f, 1.0f));
+
+		ImGui::PushStyleColor(ImGuiCol_CheckMark, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.4f, 0.0f, 0.0f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.6f, 0.0f, 0.0f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.0f, 0.0f, 1.0f));
+
+		ImGui::PushStyleColor(ImGuiCol_Tab, ImVec4(0.2f, 0.0f, 0.0f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_TabHovered, ImVec4(0.5f, 0.0f, 0.0f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_TabActive, ImVec4(0.6f, 0.0f, 0.0f, 1.0f));
+
+		ImGui::PushStyleColor(ImGuiCol_Separator, ImVec4(0.4f, 0.0f, 0.0f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.2f, 0.0f, 0.0f, 1.0f));
+
+		ImGui::PushStyleColor(ImGuiCol_TabUnfocused, ImVec4(0.2f, 0.0f, 0.0f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_TabUnfocusedActive, ImVec4(0.6f, 0.0f, 0.0f, 1.0f));
+
+		ImGui::PushStyleColor(ImGuiCol_DockingPreview, ImVec4(0.3f, 0.0f, 0.0f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_DockingEmptyBg, ImVec4(0.2f, 0.0f, 0.0f, 1.0f));
+
+
+		ImGui::PushStyleVar(ImGuiStyleVar_TabRounding, 2.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10.0f);
+	}
+	void Clear() override {
+		ImGui::PopStyleColor(21);
+		ImGui::PopStyleVar(2);
+	}
+
+
+};
+
+
 
 
 class Editor final {
@@ -57,22 +120,23 @@ private:
 	void RenderFrame() const;
 
 private:
-	void RenderDetailsMenu();
 	void RenderHeirarchyMenu();
-	void RenderAddGameObjectButton();
+	void RenderAddGameObjectMenu();
 	void RenderDirectoryExplorer();
-	void RenderContentWindows();
-
-	void RenderContentWindow();
-
 	void RenderMainMenuBar();
 	void RenderViewportWindow();
 
-	void RenderStandaloneWindows();
+	void RenderDetailsMenu();
+	void RenderInfoDetails();
+	void RenderTransformDetails();
+	void RenderSpriteRendererDetails();
+	void RenderAddComponentMenu();
 
+	void RenderContentWindows();
 	void RenderContentBrowser();
 	void RenderDebugLog();
 	void RenderSystemLog();
+
 
 private:
 	void CheckInput();
@@ -84,9 +148,12 @@ private:
 
 private:
 	void NewContentBrowserFrame() noexcept;
+	void NewSpriteSelectorFrame() noexcept;
 	void UpdateContentBrowserFolderEntries();
 	void UpdateContentBrowserAssetEntries();
+	void UpdateSpriteSelectorEntries();
 	void FlushContentTexts();
+	void FlushSpriteSelectorTexts();
 
 private:
 	bool AddBlendModeSelectable(SourceBlendMode mode);
@@ -98,58 +165,56 @@ private:
 private:
 	void AddSpacings(uint32 count);
 	void AddSeparators(uint32 count);
-	void PopStyleColors(uint32 count);
-	void PopStyleVars(uint32 count);
 	void SetSelectedGameObject(GameObject* object) noexcept;
 	void SetSelectedDirectory(Directory* directory) noexcept;
+	inline void SetSpriteRendererEditTarget(SpriteRenderer* target) noexcept { m_SpriteRendererEditTarget = target; }
 	void CheckForHoveredWindows();
 	Texture2D* GetIconTexture(const Asset& asset);
 
 private:
-	void SetupEditorStyle();
-	void ClearEditorStyle();
 	void SetupContentBrowserStyle();
 	void ClearContentBrowserStyle();
 	void UpdateWindowPositions();
 
 	bool IsPointInBoundingBox(ImVec2 point, ImVec2 position, ImVec2 size) const noexcept;
-	ImVec2 GetContentWindowStartPosition(ImVec2 windowSize) const noexcept;
+	inline ImVec2 GetContentWindowStartPosition(ImVec2 windowSize) const noexcept {
+		return ImVec2(m_GUIViewport->Size.x / 2 - windowSize.x / 2, m_GUIViewport->Size.y / 2 - windowSize.y / 2);
+	}
 
 private:
-	GameObject* m_SelectedGameObject	{ nullptr };
-	Directory* m_SelectedDirectory		{ nullptr };
-	bool m_IsAnyWindowHovered			{ false };
+	GameObject* m_SelectedGameObject			{ nullptr };
+	Directory* m_SelectedDirectory				{ nullptr };
+	SpriteRenderer* m_SpriteRendererEditTarget	{ nullptr };
+
+	bool m_IsAnyWindowHovered					{ false };
 	char m_NameInputBuffer[33];
 	char m_TagInputBuffer[33];
 
-private: //Most of these are relative to each other. Calculate them in runtime and maybe once at the start. Think about this.
-	ImVec2 m_ContentBrowserWindowSize { 1170.0f, 300.0f };
-	ImVec2 m_DetailsWindowSize{ 400.0f, 0.0f };
-	//ImVec2 m_CurrentContentBrowserWindowSize{ m_ContentWindowSize };
-		
-	ImVec2 m_ContentBrowserElementSize{ 100.0f, 100.0f };
-	float m_ContentBrowserElementPadding = 50.0f;
-
-	ImVec2 m_DirectoryExplorerWindowSize{ 350.0f, 300.0f };
+private: 
+	ImVec2 m_ContentBrowserWindowSize;
+	ImVec2 m_DetailsWindowSize;
+	ImVec2 m_HierarchyWindowSize;
+	ImVec2 m_DirectoryExplorerWindowSize;
 	ImVec2 m_MainMenuBarSize;
+	ImVec2 m_NewContentWindowSize;
 
+	ImVec2 m_SpriteSelectorWindowSize;
+	
 	ImVec2 m_ContentBrowserWindowPosition;
 	ImVec2 m_DetailsWindowPosition;
+	ImVec2 m_HierarchyWindowPosition;
+		
+	ImVec2 m_ContentBrowserElementSize	{ 100.0f, 100.0f };
+	float m_ContentBrowserElementPadding = 50.0f;
 
-	//Not needed
-	ImVec2 m_ContentWindowTabsSize{ m_ContentBrowserWindowSize.x, 27.0f }; //27 manually adjusted
-	ImVec2 m_ContentWindowTabsPosition{ m_ContentBrowserWindowPosition.x, 0.0f };
-
-
-	ImVec2 m_NewContentWindowSize;
+	ImVec2 m_SpriteSelectorElementSize	{ 100.0f, 100.0f };
+	float m_SpriteSelectorElementPadding = 50.0f;
 	
 
 	bool m_DetailsWindowOpened = true;
 	bool m_HeirarchyWindowOpened = true;
 	bool m_DirectoryExplorerWindowOpened = true;
 
-
-	bool m_ContentWindowOpened = false;
 	bool m_ContentBrowserOpened = true;
 	bool m_DebugLogOpened = false;
 	bool m_SystemLogOpened = false;
@@ -157,17 +222,6 @@ private: //Most of these are relative to each other. Calculate them in runtime a
 	bool m_ContentBrowserWindowReset = true;
 	bool m_DebugLogWindowReset = true;
 	bool m_SystemLogWindowReset = true;
-
-	bool m_ContentBrowserFocusedInTab = true;
-	bool m_DebugLogFocusedInTab = false;
-	bool m_SystemLogFocusedInTab = false;
-
-	bool m_ContentBrowserOpenedStandalone = false;
-	bool m_DebugLogOpenedStandalone = false;
-	bool m_SystemLogOpenedStandalone = false;
-
-
-	Color m_EditorStyleColor = Color(0.2f, 0.4f, 0.7f, 1.0f);
 
 private:
 	Camera* m_ViewportCameraReference{ nullptr };
@@ -189,15 +243,24 @@ private:
 	Texture2D* m_WarningTexture  { nullptr };
 	Texture2D* m_ErrorTexture    { nullptr };
 
-
+private:
 	float m_ContentElementCursor = 0.0f;
 	uint32 m_ContentLineElementsCount = 0;
-	std::vector<std::string> m_QueuedContentTexts;
+	std::vector<std::string> m_QueuedContentTexts; //Could use const char* instead
 
 	void* m_SelectedContentElement	{ nullptr };
 	bool m_FolderEntryOpened		{ false };
 
 private:
+	float m_SpriteSelectorElementCursor = 0.0f;
+	uint32 m_SpriteSelectorLineElementsCount = 0;
+	std::vector<std::string> m_QueuedSpriteSelectorTexts; //Could use const char* instead
+
+	void* m_SelectedSpriteSelectorElement	{ nullptr };
+
+
+private:
+	EditorRedStyle m_EditorStyle;
 	Logger m_Logger{ *m_TimeReference };
 
 private:
