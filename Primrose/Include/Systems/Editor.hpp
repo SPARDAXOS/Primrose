@@ -219,6 +219,8 @@ private:
 	bool m_DebugLogOpened = false;
 	bool m_SystemLogOpened = false;
 
+	bool m_SpriteSelectorOpened = false;
+
 	bool m_ContentBrowserWindowReset = true;
 	bool m_DebugLogWindowReset = true;
 	bool m_SystemLogWindowReset = true;

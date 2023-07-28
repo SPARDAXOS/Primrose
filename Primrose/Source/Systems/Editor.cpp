@@ -407,6 +407,7 @@ void Editor::RenderSpriteRendererDetails() {
 			if (ImGui::Button("##SpriteNameButton", ImVec2(m_DetailsWindowSize.x * 0.3f, 15.0f))) {
 				ImGui::SetNextWindowPos(ImGui::GetMousePos());
 				ImGui::SetNextWindowSize(m_SpriteSelectorWindowSize);
+				m_SpriteSelectorOpened = true;
 				ImGui::OpenPopup("Sprite Selector");
 			}
 			ImGui::SetCursorPos(CursorPosition);
@@ -425,14 +426,22 @@ void Editor::RenderSpriteRendererDetails() {
 			ImGuiWindowFlags Flags = 0;
 			Flags |= ImGuiWindowFlags_AlwaysVerticalScrollbar;
 
-			if (ImGui::BeginPopupModal("Sprite Selector", nullptr, Flags)) {
+			if (ImGui::BeginPopupModal("Sprite Selector", &m_SpriteSelectorOpened, Flags)) {
 				CheckForHoveredWindows();
 				SetSpriteRendererEditTarget(SelectedSpriteRenderer);
 				UpdateSpriteSelectorEntries();
+
+				m_SpriteSelectorWindowSize = ImGui::GetWindowSize(); //This method is great but it requires that i keep track of the bool and edit it manually.
+				//-Which is not a problem.
 				ImGui::EndPopup();
 			}
-			else if (m_SpriteRendererEditTarget != nullptr)
-				SetSpriteRendererEditTarget(nullptr);
+			else {
+				if (m_SpriteRendererEditTarget != nullptr)
+					SetSpriteRendererEditTarget(nullptr);
+				m_SpriteSelectorOpened = false; 
+			}
+			
+			std::cout << m_SpriteSelectorOpened << std::endl;
 
 			ImGui::PopStyleColor();
 			ImGui::PopStyleVar();
@@ -1754,7 +1763,8 @@ void Editor::UpdateWindowPositions() {
 	m_NewContentWindowSize = ImVec2(m_GUIViewport->Size.x * 0.3f, m_GUIViewport->Size.y * 0.3f);
 	m_HierarchyWindowSize = ImVec2(m_GUIViewport->Size.x * 0.1f, m_GUIViewport->Size.y - m_DirectoryExplorerWindowSize.y - m_MainMenuBarSize.y);
 
-	m_SpriteSelectorWindowSize = ImVec2(400.0f, 700.f);
+	if (!m_SpriteSelectorOpened)
+		m_SpriteSelectorWindowSize = ImVec2(m_GUIViewport->Size.x * 0.2f, m_GUIViewport->Size.y * 0.6f);
 
 	m_ContentBrowserWindowPosition = ImVec2(m_DirectoryExplorerWindowSize.x, m_GUIViewport->Size.y - m_ContentBrowserWindowSize.y);
 	m_DetailsWindowPosition = ImVec2(m_GUIViewport->Size.x - m_DetailsWindowSize.x, m_MainMenuBarSize.y);
