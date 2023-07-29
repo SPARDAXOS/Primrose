@@ -104,11 +104,16 @@ void Core::Run() {
 
 	//Component->SetTint(Colors::Red); //TODO: Remove vertex color attribute + clean up shaders + readjust attributes afterwards
 
-
 	Transform* GameObjectTransform = &GameObjectTest->GetTransform();
 	GameObjectTransform->m_Position = Vector3f(5.0f, 0.0f, 0.0f);
 	GameObjectTransform->m_Rotation = Vector3f(0.0f, 0.0f, 0.0f);
-	GameObjectTransform->m_Scale = Vector3f(0.5f, 0.5f, 0.5f);
+	GameObjectTransform->m_Scale = Vector3f(1.0f, 1.0f, 1.0f);
+
+
+	Transform* GameObjectTransform2 = &GameObjectTest2->GetTransform();
+	GameObjectTransform2->m_Position = Vector3f(-5.0f, 0.0f, 0.0f);
+	GameObjectTransform2->m_Rotation = Vector3f(0.0f, 0.0f, 0.0f);
+	GameObjectTransform2->m_Scale = Vector3f(1.5f, 1.5f, 1.5f);
 
 
 
@@ -121,6 +126,11 @@ void Core::Run() {
 	//InstansiatedGameObject->GetTransform().m_Position.m_X *= -1;
 	
 	while (m_Running) {
+
+
+		//LIGHT NOTES: It kinda works but the small 0.5f cube behaves too weirdly. Scaling breaks the light and it breaks even when not scaled!
+		if (m_Input->GetKey(Keycode::R))
+			GameObjectTransform->m_Rotation.m_Y += 1.0f;
 
 		UpdateSystems();
 	}

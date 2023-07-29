@@ -16,7 +16,6 @@ public:
 
 public:
 	[[nodiscard]] bool Update() const;
-	void TestRender(const VAO& vao) const;
 
 public:
 	void CheckRendererAPIVersion();

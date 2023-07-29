@@ -1,19 +1,19 @@
 #pragma once
 #include "LightComponentBase.hpp"
 
-class DirectionalLightComponent final : public LightComponentBase {
+class DirectionalLight final : public LightComponentBase {
 public:
 
-	DirectionalLightComponent() = delete;
-	DirectionalLightComponent(GameObject& owner, uint64 ownerID);
-	~DirectionalLightComponent() = default;
+	DirectionalLight() = delete;
+	DirectionalLight(GameObject& owner, uint64 ownerID);
+	~DirectionalLight() = default;
 
 	//For now it is not possbile to move or copy components - Copy only it should be? idk think about it
-	DirectionalLightComponent(const DirectionalLightComponent& other) = delete;
-	DirectionalLightComponent& operator=(const DirectionalLightComponent& other) = delete;
+	DirectionalLight(const DirectionalLight& other) = delete;
+	DirectionalLight& operator=(const DirectionalLight& other) = delete;
 
-	DirectionalLightComponent(DirectionalLightComponent&& other) = delete;
-	DirectionalLightComponent& operator=(DirectionalLightComponent&& other) = delete;
+	DirectionalLight(DirectionalLight&& other) = delete;
+	DirectionalLight& operator=(DirectionalLight&& other) = delete;
 
 
 

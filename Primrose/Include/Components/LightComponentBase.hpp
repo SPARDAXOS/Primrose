@@ -1,6 +1,7 @@
 #pragma once
 #include "Component.hpp"
 #include "Math.hpp"
+#include "Transform.hpp"
 
 class GameObject;
 

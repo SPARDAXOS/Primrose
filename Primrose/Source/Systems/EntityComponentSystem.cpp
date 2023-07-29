@@ -20,12 +20,23 @@ EntityComponentSystem::EntityComponentSystem() noexcept {
 
 
 	//Hmmmm this makes the index thing more complicated and weird now..
-	//Move into its own function as a special GO
+	//TODO: Move into its own function as a special GO - Doesnt need to be in the gameobjects vector. move it out along with the scene and such! Latest Note!
 	m_ViewportCameraGO = new GameObject(*this, VIEWPORT_CAMERA_OBJECT_ID);
 	m_ViewportCameraGO->Awake(); //sure...
 	m_ViewportCameraGO->SetName("ViewportCamera");
 	m_GameObjects.push_back(m_ViewportCameraGO);
 	m_ViewportCamera = m_ViewportCameraGO->AddComponent<Camera>();
+
+
+	//This is temporary. Delete this after a more proper light sources are added.
+	m_DirectionalLightTest = new GameObject(*this, 27);
+	m_DirectionalLightTest->Awake();
+	m_DirectionalLightTest->SetName("DirectionalLight");
+	m_GameObjects.push_back(m_DirectionalLightTest);
+	SpriteRenderer* Sp = m_DirectionalLightTest->AddComponent<SpriteRenderer>();
+	Sp->SetTint(Colors::White);
+	m_DirectionalLightTest->AddComponent<DirectionalLight>()->m_Tint = Colors::White;
+
 }
 EntityComponentSystem::~EntityComponentSystem() {
 	//Clean all Gameobjects and Components
@@ -141,7 +152,7 @@ int32 EntityComponentSystem::FindSpriteRenderer(uint64 objectID) const noexcept 
 			return index;
 		}
 	}
-	return -1;
+	return INVALID_OBJECT_ID;
 }
 int32 EntityComponentSystem::FindCamera(uint64 objectID) const noexcept {
 	for (uint32 index = 0; index < m_Cameras.size(); index++) {
@@ -149,7 +160,15 @@ int32 EntityComponentSystem::FindCamera(uint64 objectID) const noexcept {
 			return index;
 		}
 	}
-	return -1;
+	return INVALID_OBJECT_ID;
+}
+int32 EntityComponentSystem::FindDirectionalLight(uint64 objectID) const noexcept {
+	for (uint32 index = 0; index < m_DirectionalLights.size(); index++) {
+		if (m_DirectionalLights.at(index)->GetOwnerID() == objectID) {
+			return index;
+		}
+	}
+	return INVALID_OBJECT_ID;
 }
 
 bool EntityComponentSystem::IsReserved(uint64 objectID) const noexcept {
@@ -160,3 +179,6 @@ bool EntityComponentSystem::IsReserved(uint64 objectID) const noexcept {
 
 	return false;
 }
+
+
+GameObject* EntityComponentSystem::GetDirecitonalLightTEST() const noexcept { return m_DirectionalLightTest; }

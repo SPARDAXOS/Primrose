@@ -60,7 +60,7 @@ void Window::SetWindowMode(WindowMode mode) noexcept {
 
 //TODO: Move this to renderer - Clearcolor should be a member variable for camera components
 void Window::ClearBuffer() const noexcept {
-    const Color ClearColor = Colors::Black;
+    const Color ClearColor = Colors::PaleGreen;
     GLCall(glClearColor(ClearColor.m_R, ClearColor.m_G, ClearColor.m_B, ClearColor.m_A));
     GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 }

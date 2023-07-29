@@ -7,9 +7,9 @@
 //TODO: Use bits instead since these are in NDC so -1.0 -> 1.0
 
 struct Vertex {
-	Position m_Position;
-	Color m_Color;
-	TextureUV m_TextureCoordinates;
+	Vector3f m_Position;
+	Vector2f m_TextureCoordinates;
+	Vector3f m_Normal;
 };
 
 struct Triangle {
@@ -20,63 +20,65 @@ struct Triangle {
 	GLuint m_Indices[3] = {	0, 1, 2	};
 
 };
+
+//A lot of these are made with OpenGL coordinates system in mind!
 struct Square {
-	Vertex m_Data[4] = {	Position( 0.5f, -0.5f, 0.0f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 0.0f),
-							Position(-0.5f, -0.5f, 0.0f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 0.0f),
-							Position( 0.5f,  0.5f, 0.0f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 1.0f),
-							Position(-0.5f,  0.5f, 0.0f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 1.0f)	  };
+	Vertex m_Data[4] = {	Vector3f( 0.5f, -0.5f, 0.0f), Vector2f(1.0f, 0.0f), Vector3f(0.0f, 0.0f, -1.0f),
+							Vector3f(-0.5f, -0.5f, 0.0f), Vector2f(0.0f, 0.0f), Vector3f(0.0f, 0.0f, -1.0f),
+							Vector3f( 0.5f,  0.5f, 0.0f), Vector2f(1.0f, 1.0f), Vector3f(0.0f, 0.0f, -1.0f),
+							Vector3f(-0.5f,  0.5f, 0.0f), Vector2f(0.0f, 1.0f), Vector3f(0.0f, 0.0f, -1.0f)    };
 	
 	GLuint m_Indices[6] = {	0, 2, 3,
 							1, 0, 3	};
 };
 struct Cube {
 	Vertex m_Data[36] = {   //Back
-							Position(-0.5f, -0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 0.0f),
-							Position( 0.5f, -0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 0.0f),
-							Position( 0.5f,  0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 1.0f),
-							Position( 0.5f,  0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 1.0f),
-							Position(-0.5f,  0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 1.0f),
-							Position(-0.5f, -0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 0.0f),
+							Vector3f(-0.5f, -0.5f, -0.5f), Vector2f(0.0f, 0.0f), Vector3f(0.0f, 0.0f, -1.0f),
+							Vector3f( 0.5f, -0.5f, -0.5f), Vector2f(1.0f, 0.0f), Vector3f(0.0f, 0.0f, -1.0f),
+							Vector3f( 0.5f,  0.5f, -0.5f), Vector2f(1.0f, 1.0f), Vector3f(0.0f, 0.0f, -1.0f),
+							Vector3f( 0.5f,  0.5f, -0.5f), Vector2f(1.0f, 1.0f), Vector3f(0.0f, 0.0f, -1.0f),
+							Vector3f(-0.5f,  0.5f, -0.5f), Vector2f(0.0f, 1.0f), Vector3f(0.0f, 0.0f, -1.0f),
+							Vector3f(-0.5f, -0.5f, -0.5f), Vector2f(0.0f, 0.0f), Vector3f(0.0f, 0.0f, -1.0f),
 
 							//Front
-							Position(-0.5f, -0.5f, 0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 0.0f),
-							Position( 0.5f, -0.5f, 0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 0.0f),
-							Position( 0.5f,  0.5f, 0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 1.0f),
-							Position( 0.5f,  0.5f, 0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 1.0f),
-							Position(-0.5f,  0.5f, 0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 1.0f),
-							Position(-0.5f, -0.5f, 0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 0.0f),
+							Vector3f(-0.5f, -0.5f, 0.5f), Vector2f(0.0f, 0.0f),  Vector3f(0.0f, 0.0f, 1.0f),
+							Vector3f( 0.5f, -0.5f, 0.5f), Vector2f(1.0f, 0.0f),	 Vector3f(0.0f, 0.0f, 1.0f),
+							Vector3f( 0.5f,  0.5f, 0.5f), Vector2f(1.0f, 1.0f),	 Vector3f(0.0f, 0.0f, 1.0f),
+							Vector3f( 0.5f,  0.5f, 0.5f), Vector2f(1.0f, 1.0f),	 Vector3f(0.0f, 0.0f, 1.0f),
+							Vector3f(-0.5f,  0.5f, 0.5f), Vector2f(0.0f, 1.0f),	 Vector3f(0.0f, 0.0f, 1.0f),
+							Vector3f(-0.5f, -0.5f, 0.5f), Vector2f(0.0f, 0.0f),	 Vector3f(0.0f, 0.0f, 1.0f),
 	
 							
-							Position(-0.5f,  0.5f,  0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 0.0f),
-							Position(-0.5f,  0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 1.0f),
-							Position(-0.5f, -0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 1.0f),
-							Position(-0.5f, -0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 1.0f), 
-							Position(-0.5f, -0.5f,  0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 0.0f),
-							Position(-0.5f,  0.5f,  0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 0.0f),
+							Vector3f(-0.5f,  0.5f,  0.5f), Vector2f(1.0f, 0.0f), Vector3f(-1.0f, 0.0f, 0.0f),
+							Vector3f(-0.5f,  0.5f, -0.5f), Vector2f(1.0f, 1.0f), Vector3f(-1.0f, 0.0f, 0.0f),
+							Vector3f(-0.5f, -0.5f, -0.5f), Vector2f(0.0f, 1.0f), Vector3f(-1.0f, 0.0f, 0.0f),
+							Vector3f(-0.5f, -0.5f, -0.5f), Vector2f(0.0f, 1.0f), Vector3f(-1.0f, 0.0f, 0.0f),
+							Vector3f(-0.5f, -0.5f,  0.5f), Vector2f(0.0f, 0.0f), Vector3f(-1.0f, 0.0f, 0.0f),
+							Vector3f(-0.5f,  0.5f,  0.5f), Vector2f(1.0f, 0.0f), Vector3f(-1.0f, 0.0f, 0.0f),
 							
 							
-							Position(0.5f,  0.5f,  0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 0.0f),
-							Position(0.5f,  0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 1.0f),
-							Position(0.5f, -0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 1.0f),
-							Position(0.5f, -0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 1.0f),
-							Position(0.5f, -0.5f,  0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 0.0f),
-							Position(0.5f,  0.5f,  0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 0.0f),
+							Vector3f(0.5f,  0.5f,  0.5f), Vector2f(1.0f, 0.0f),  Vector3f(1.0f, 0.0f, 0.0f),
+							Vector3f(0.5f,  0.5f, -0.5f), Vector2f(1.0f, 1.0f),	 Vector3f(1.0f, 0.0f, 0.0f),
+							Vector3f(0.5f, -0.5f, -0.5f), Vector2f(0.0f, 1.0f),	 Vector3f(1.0f, 0.0f, 0.0f),
+							Vector3f(0.5f, -0.5f, -0.5f), Vector2f(0.0f, 1.0f),	 Vector3f(1.0f, 0.0f, 0.0f),
+							Vector3f(0.5f, -0.5f,  0.5f), Vector2f(0.0f, 0.0f),	 Vector3f(1.0f, 0.0f, 0.0f),
+							Vector3f(0.5f,  0.5f,  0.5f), Vector2f(1.0f, 0.0f),	 Vector3f(1.0f, 0.0f, 0.0f),
 	
 							
-							Position(-0.5f, -0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 1.0f),
-							Position( 0.5f, -0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 1.0f),
-							Position( 0.5f, -0.5f,  0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 0.0f),
-							Position( 0.5f, -0.5f,  0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 0.0f),
-							Position(-0.5f, -0.5f,  0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 0.0f),
-							Position(-0.5f, -0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 1.0f),
+							Vector3f(-0.5f, -0.5f, -0.5f), Vector2f(0.0f, 1.0f), Vector3f(0.0f, -1.0f, 0.0f),
+							Vector3f( 0.5f, -0.5f, -0.5f), Vector2f(1.0f, 1.0f), Vector3f(0.0f, -1.0f, 0.0f),
+							Vector3f( 0.5f, -0.5f,  0.5f), Vector2f(1.0f, 0.0f), Vector3f(0.0f, -1.0f, 0.0f),
+							Vector3f( 0.5f, -0.5f,  0.5f), Vector2f(1.0f, 0.0f), Vector3f(0.0f, -1.0f, 0.0f),
+							Vector3f(-0.5f, -0.5f,  0.5f), Vector2f(0.0f, 0.0f), Vector3f(0.0f, -1.0f, 0.0f),
+							Vector3f(-0.5f, -0.5f, -0.5f), Vector2f(0.0f, 1.0f), Vector3f(0.0f, -1.0f, 0.0f),
 							
 							
-							Position(-0.5f, 0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 1.0f),
-							Position( 0.5f, 0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 1.0f),
-							Position( 0.5f, 0.5f,  0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 0.0f),
-							Position( 0.5f, 0.5f,  0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(1.0f, 0.0f), 
-							Position(-0.5f, 0.5f,  0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 0.0f),
-							Position(-0.5f, 0.5f, -0.5f), Color(1.0f, 1.0f, 1.0f, 1.0f), TextureUV(0.0f, 1.0f)	 };
+							Vector3f(-0.5f, 0.5f, -0.5f), Vector2f(0.0f, 1.0f), Vector3f(0.0f, 11.0f, 0.0f),
+							Vector3f( 0.5f, 0.5f, -0.5f), Vector2f(1.0f, 1.0f),	Vector3f(0.0f, 11.0f, 0.0f),
+							Vector3f( 0.5f, 0.5f,  0.5f), Vector2f(1.0f, 0.0f),	Vector3f(0.0f, 11.0f, 0.0f),
+							Vector3f( 0.5f, 0.5f,  0.5f), Vector2f(1.0f, 0.0f), Vector3f(0.0f, 11.0f, 0.0f),
+							Vector3f(-0.5f, 0.5f,  0.5f), Vector2f(0.0f, 0.0f),	Vector3f(0.0f, 11.0f, 0.0f),
+							Vector3f(-0.5f, 0.5f, -0.5f), Vector2f(0.0f, 1.0f),	Vector3f(0.0f, 11.0f, 0.0f)		};
 
 	GLuint m_Indices[36] = { 0, 1, 2,
 							 3, 4, 5,
@@ -107,8 +109,8 @@ public:
 		Bind();
 		GLCall(glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW));
 		ActivatePositionAttribute();
-		ActivateColorAttribute();
 		ActivateTextureCoordinatesAttribute();
+		ActivateNormalAttribute();
 		Unbind();
 	}
 	~VBO() {
@@ -134,12 +136,12 @@ private:
 		GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0));
 		GLCall(glEnableVertexAttribArray(0));
 	}
-	void ActivateColorAttribute() const noexcept {
-		GLCall(glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(Position))));
+	void ActivateTextureCoordinatesAttribute() const noexcept {
+		GLCall(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(Vector3f))));
 		GLCall(glEnableVertexAttribArray(1));
 	}
-	void ActivateTextureCoordinatesAttribute() const noexcept {
-		GLCall(glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(Position) + sizeof(Color))));
+	void ActivateNormalAttribute() const noexcept {
+		GLCall(glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(Vector3f) + sizeof(Vector2f))));
 		GLCall(glEnableVertexAttribArray(2));
 	}
 

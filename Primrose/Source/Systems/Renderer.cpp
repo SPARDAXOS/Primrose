@@ -8,6 +8,9 @@ Renderer::Renderer(Core& core) noexcept
 {
     m_WindowReference = m_EngineCore->GetWindow();
     m_ECSReference = m_EngineCore->GetECS();
+
+    glEnable(GL_DEPTH_TEST); //TODO: move somewhere else
+    glEnable(GL_BLEND); //TODO: move somewhere else
 };
 
 
@@ -19,39 +22,27 @@ bool Renderer::Update() const {
 
     return RendererStatus;
 }
-void Renderer::TestRender(const VAO& vao) const {
-    //Clear(); //Only at the start of a new frame!
-
-    //glBindVertexArray(VertexArrayObject.m_ID);
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ElementBufferObject.m_ID);
-    //glDrawArrays(GL_TRIANGLES, 0, 3);
-
-    vao.Bind();
-    GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
-}
 
 
 bool Renderer::Render2D() const {
     
     //Shaders
     Shader VertexShader(GL_VERTEX_SHADER, "Resources/Shaders/Vertex.glsl");
-    Shader FragmentShader(GL_FRAGMENT_SHADER, "Resources/Shaders/Fragment.glsl");
+    Shader FragmentShader(GL_FRAGMENT_SHADER, "Resources/Shaders/Frag_PhongLighting.glsl");
 
     ShaderProgram ShaderProgramTest;
     ShaderProgramTest.AttachShader(VertexShader);
     ShaderProgramTest.AttachShader(FragmentShader);
     if (!ShaderProgramTest.LinkShaderProgram())
-        PrintMessage("LinkShaderProgram Failed");
+        m_EngineCore->SystemLog("Renderer failed to link shader program");
     ShaderProgramTest.Bind();
 
 
-    glEnable(GL_DEPTH_TEST); //TODO: move somewhere else
-    glEnable(GL_BLEND); //TODO: move somewhere else
-
-    //glBlendEquation();
 
     //TODO: Register error message when it happens here!
-
+    //TODO: Drop this approach and simply get a copy of the vector since its faster cause of something i forgot what it was called and its just a vector of ptrs
+    //- This still might be faster tho since no copying is happening and im just getting them in order as defined by the ECS. There are definitely some implications to
+    //- think of.
     const uint32 Amount = m_ECSReference->GetComponentsAmount<SpriteRenderer>();
     for (uint32 index = 0; index < Amount; index++) {
         //TODO: Check for nullness
@@ -82,8 +73,28 @@ bool Renderer::Render2D() const {
         if (Sprite != nullptr)
             Sprite->Bind();
 
-        ShaderProgramTest.SetUniform("uDiffuse", TextureUnit::DIFFUSE);
+        GameObject* DirectionalLightGO = m_ECSReference->GetDirecitonalLightTEST();
+
+        //TEMP
+        Texture2D* LightSprite = DirectionalLightGO->GetComponent<SpriteRenderer>()->GetSprite();
+        if (LightSprite == nullptr) {
+            Texture2D* BlockTexture = nullptr;
+            if (m_EngineCore->GetTextureStorage()->GetTexture2DByName("Block", BlockTexture)) 
+                DirectionalLightGO->GetComponent<SpriteRenderer>()->SetSprite(BlockTexture);
+            DirectionalLightGO->GetTransform().m_Scale = Vector3f(0.5f);
+        }
+
+
+
+
+
+        DirectionalLight* DirectionalLightComp = DirectionalLightGO->GetComponent<DirectionalLight>();
+        //DirectionalLightComp->m_Tint = Color(1.0f, 1.0f, 1.0f, 1.0f);
+        ShaderProgramTest.SetUniform("uDiffuseTexUnit", TextureUnit::DIFFUSE);
         ShaderProgramTest.SetUniform("uTint", TargetComponent->GetTint());
+        ShaderProgramTest.SetUniform("uLightColor", DirectionalLightComp->m_Tint);
+        ShaderProgramTest.SetUniform("uLightPosition", DirectionalLightGO->GetTransform().m_Position);
+        
 
         //TODO: Add clearcolor to camera! It would require some restructuring
 
@@ -136,10 +147,13 @@ bool Renderer::Render2D() const {
         //MVP
         Camera* ViewportCamera = &m_ECSReference->GetViewportCamera();
 
+        //Would probably be the main camera in case of play mode being on
+        ShaderProgramTest.SetUniform("uViewCameraPosition", ViewportCamera->GetOwner()->GetTransform().m_Position);
+
         ShaderProgramTest.SetUniform("uModel", *TargetMatrix); //Construct matrix here instead of getting to apply the flipx anmd y?
         ShaderProgramTest.SetUniform("uView", ViewportCamera->GetViewMatrix());
         ShaderProgramTest.SetUniform("uProjection", ViewportCamera->GetProjectionMatrix());
-
+        ShaderProgramTest.SetUniform("uNormalMatrix", glm::mat3(glm::transpose(glm::inverse(*TargetMatrix)))); //Inverse operations are costly in shaders
 
         TargetComponent->GetVAO()->Bind();
         GLCall(glDrawElements(GL_TRIANGLES, TargetComponent->GetEBO()->GetCount(), GL_UNSIGNED_INT, nullptr));

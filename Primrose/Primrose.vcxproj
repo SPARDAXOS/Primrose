@@ -217,6 +217,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Shaders\Fragment.glsl" />
+    <None Include="Resources\Shaders\Frag_PhongLighting.glsl" />
     <None Include="Resources\Shaders\Vertex.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

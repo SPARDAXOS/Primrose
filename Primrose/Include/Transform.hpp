@@ -54,6 +54,8 @@ public:
 	inline void ClearMatrix() { m_Matrix = glm::mat4(1.0f); }
 	void UpdateMatrix() {
 
+		ClampRotation();
+
 		//Matrix for each maybe?
 		m_Matrix = glm::translate(m_Matrix, glm::vec3(m_Position.m_X, m_Position.m_Y, m_Position.m_Z));
 
@@ -80,12 +82,29 @@ public:
 
 	[[nodiscard]] inline glm::mat4& GetMatrix() noexcept { return m_Matrix; };
 
+private:
+	inline void ClampRotation() noexcept {
 
+		if (m_Rotation.m_X > 360.0f)
+			m_Rotation.m_X -= 360.0f;
+		else if (m_Rotation.m_X < -360.0f)
+			m_Rotation.m_X += 360.0f;
+
+		if (m_Rotation.m_Y > 360.0f)
+			m_Rotation.m_Y -= 360.0f;
+		else if (m_Rotation.m_Y < -360.0f)
+			m_Rotation.m_Y += 360.0f;
+
+		if (m_Rotation.m_Z > 360.0f)
+			m_Rotation.m_Z -= 360.0f;
+		else if (m_Rotation.m_Z < -360.0f)
+			m_Rotation.m_Z += 360.0f;
+	}
 
 public:
-	Vector3f m_Position{ 0.0f };
-	Vector3f m_Rotation{ 0.0f };
-	Vector3f m_Scale{ 1.0f };
+	Vector3f m_Position	{ 0.0f };
+	Vector3f m_Rotation	{ 0.0f };
+	Vector3f m_Scale	{ 1.0f };
 
 private:
 	glm::mat4 m_Matrix;

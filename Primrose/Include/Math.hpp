@@ -110,7 +110,7 @@ struct Vector2f {
 	}
 };
 struct Vector3f {
-	float m_X, m_Y, m_Z = 0.0f;
+	float m_X, m_Y, m_Z;
 
 	Vector3f() noexcept
 		: m_X(0.0f), m_Y(0.0f), m_Z(0.0f)
@@ -225,23 +225,18 @@ struct Vector4f {
 };
 
 //Move somewhere else!
-struct Position { //Remove this and replace it with vector 3 in the vertices. Add redifinition or alias if its for clairties sake but i dont think its needed
-	float X, Y, Z;
-};
 struct Color {
 	float m_R, m_G, m_B = 0.0f;
 	float m_A = 1.0f;
 };
-struct TextureUV{
-	float m_U, m_V;
-};
+
 
 namespace Colors {
-	constexpr static Color Black    = { 0.0f, 0.0f, 0.0f, 1.0f };
-	constexpr static Color White    = { 1.0f, 1.0f, 1.0f, 1.0f };
-	constexpr static Color Red      = { 1.0f, 0.0f, 0.0f, 1.0f };
-	constexpr static Color Green    = { 0.0f, 1.0f, 0.0f, 1.0f };
-	constexpr static Color Blue     = { 0.0f, 0.0f, 1.0f, 1.0f };
-	constexpr static Color Magenta  = { 1.0f, 0.0f, 1.0f, 1.0f };
+	constexpr static Color Black     = { 0.0f, 0.0f, 0.0f, 1.0f };
+	constexpr static Color White     = { 1.0f, 1.0f, 1.0f, 1.0f };
+	constexpr static Color Red       = { 1.0f, 0.0f, 0.0f, 1.0f };
+	constexpr static Color Green     = { 0.0f, 1.0f, 0.0f, 1.0f };
+	constexpr static Color Blue      = { 0.0f, 0.0f, 1.0f, 1.0f };
+	constexpr static Color Magenta   = { 1.0f, 0.0f, 1.0f, 1.0f };
 	constexpr static Color PaleGreen = { 0.2f, 0.3f, 0.3f, 1.0f };
 }

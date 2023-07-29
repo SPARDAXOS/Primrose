@@ -118,10 +118,11 @@ public:
 	bool HasComponent() noexcept {
 		static_assert(std::is_base_of_v<ComponentBase, T>);
 		const uint32 ComponentID = Components::GetComponentID<T>();
-		if (ComponentID == INVALID_ID)
+		if (ComponentID == INVALID_COMPONENT_ID)
 			return false;
 
-		if ((m_ComponentFlags &= ComponentID) == 1)
+		uint32 Flags = m_ComponentFlags; //Using if ((m_ComponentFlags &= ComponentID) == 1) was actually clearing m_ComponentFlags!
+		if ((Flags &= ComponentID) == ComponentID)
 			return true;
 		else
 			return false;

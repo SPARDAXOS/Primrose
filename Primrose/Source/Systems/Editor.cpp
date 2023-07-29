@@ -101,7 +101,14 @@ void Editor::Render() {
 
 	UpdateWindowPositions(); //NOTE: Currently updates sizes and positions
 	m_EditorStyle.Apply();
-	
+
+
+	//Main Docking Space
+	ImGuiDockNodeFlags Flags = 0;
+	Flags |= ImGuiDockNodeFlags_PassthruCentralNode;
+	ImGui::DockSpaceOverViewport(m_GUIViewport, Flags);
+
+
 	//ImGui::ShowDemoWindow();
 	//IMPORTANT NOTE: Make the size of each element in relation to the size of the viewport so they would scale with it
 	//TODO: All the menus sizes and positions are relative to each other. Make sure to make the values used relative to each other instead of relying on literals
@@ -440,8 +447,6 @@ void Editor::RenderSpriteRendererDetails() {
 					SetSpriteRendererEditTarget(nullptr);
 				m_SpriteSelectorOpened = false; 
 			}
-			
-			std::cout << m_SpriteSelectorOpened << std::endl;
 
 			ImGui::PopStyleColor();
 			ImGui::PopStyleVar();
@@ -853,7 +858,6 @@ void Editor::RenderContentBrowser() {
 		}
 	}
 
-
 	if (m_ContentBrowserOpened) {
 		if (ImGui::Begin("Content Browser", &m_ContentBrowserOpened, Flags)) {
 			
@@ -868,6 +872,8 @@ void Editor::RenderContentBrowser() {
 				FlushContentTexts();
 				ClearContentBrowserStyle();
 			}
+
+			m_ContentBrowserWindowSize = ImGui::GetWindowSize();
 		}
 		ImGui::End();
 	}
@@ -1080,8 +1086,6 @@ void Editor::RenderSystemLog() {
 			//NOTE: Change the namings in the logger class
 			//-Debug should be the catagory and maybe just message or something instead of it
 			//System is also far too general
-
-			std::cout << ImGui::IsWindowDocked() << std::endl;
 
 			if (ImGui::BeginMenuBar()) {
 
@@ -1756,10 +1760,15 @@ void Editor::UpdateWindowPositions() {
 	//NOTE: Seems like size then position cause a lot of positions depend on sizes
 	//NOTE: Any hardcoded values here such as 100 200 etc means the value has not been implemented in code yet. (percentage values are fine)
 	//NOTE: The percentage values can be changed safely and should be exposed later on
+	//NOTE: A lot of these if not all could be calculated only when needed since they are required only at window creation
 
 	m_DirectoryExplorerWindowSize = ImVec2(m_GUIViewport->Size.x * 0.1f, m_GUIViewport->Size.y * 0.3f);
 	m_DetailsWindowSize = ImVec2(m_GUIViewport->Size.x * 0.2f, m_GUIViewport->Size.y - m_MainMenuBarSize.y);
-	m_ContentBrowserWindowSize = ImVec2(m_GUIViewport->Size.x - m_DetailsWindowSize.x - m_DirectoryExplorerWindowSize.x, m_DirectoryExplorerWindowSize.y);
+	
+	//lOOK AT CONTROL FLOW ESPECIALLY WITH HOW I SET THIS THEN. IT HAD A BUG BEFORE REGARDLESS
+	if (!m_ContentBrowserOpened || m_ContentBrowserWindowSize.x == 0.0f && m_ContentBrowserWindowSize.y == 0.0f) //Second condition is for being true on first frame
+		m_ContentBrowserWindowSize = ImVec2(m_GUIViewport->Size.x - m_DetailsWindowSize.x - m_DirectoryExplorerWindowSize.x, m_DirectoryExplorerWindowSize.y);
+
 	m_NewContentWindowSize = ImVec2(m_GUIViewport->Size.x * 0.3f, m_GUIViewport->Size.y * 0.3f);
 	m_HierarchyWindowSize = ImVec2(m_GUIViewport->Size.x * 0.1f, m_GUIViewport->Size.y - m_DirectoryExplorerWindowSize.y - m_MainMenuBarSize.y);
 
