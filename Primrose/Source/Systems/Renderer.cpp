@@ -74,20 +74,6 @@ bool Renderer::Render2D() const {
             Sprite->Bind();
 
         GameObject* DirectionalLightGO = m_ECSReference->GetDirecitonalLightTEST();
-
-        //TEMP
-        Texture2D* LightSprite = DirectionalLightGO->GetComponent<SpriteRenderer>()->GetSprite();
-        if (LightSprite == nullptr) {
-            Texture2D* BlockTexture = nullptr;
-            if (m_EngineCore->GetTextureStorage()->GetTexture2DByName("Block", BlockTexture)) 
-                DirectionalLightGO->GetComponent<SpriteRenderer>()->SetSprite(BlockTexture);
-            DirectionalLightGO->GetTransform().m_Scale = Vector3f(0.5f);
-        }
-
-
-
-
-
         DirectionalLight* DirectionalLightComp = DirectionalLightGO->GetComponent<DirectionalLight>();
         //DirectionalLightComp->m_Tint = Color(1.0f, 1.0f, 1.0f, 1.0f);
         ShaderProgramTest.SetUniform("uDiffuseTexUnit", TextureUnit::DIFFUSE);
@@ -154,7 +140,7 @@ bool Renderer::Render2D() const {
         ShaderProgramTest.SetUniform("uView", ViewportCamera->GetViewMatrix());
         ShaderProgramTest.SetUniform("uProjection", ViewportCamera->GetProjectionMatrix());
         ShaderProgramTest.SetUniform("uNormalMatrix", glm::mat3(glm::transpose(glm::inverse(*TargetMatrix)))); //Inverse operations are costly in shaders
-
+        
         TargetComponent->GetVAO()->Bind();
         GLCall(glDrawElements(GL_TRIANGLES, TargetComponent->GetEBO()->GetCount(), GL_UNSIGNED_INT, nullptr));
 

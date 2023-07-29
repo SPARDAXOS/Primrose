@@ -33,8 +33,6 @@ EntityComponentSystem::EntityComponentSystem() noexcept {
 	m_DirectionalLightTest->Awake();
 	m_DirectionalLightTest->SetName("DirectionalLight");
 	m_GameObjects.push_back(m_DirectionalLightTest);
-	SpriteRenderer* Sp = m_DirectionalLightTest->AddComponent<SpriteRenderer>();
-	Sp->SetTint(Colors::White);
 	m_DirectionalLightTest->AddComponent<DirectionalLight>()->m_Tint = Colors::White;
 
 }
