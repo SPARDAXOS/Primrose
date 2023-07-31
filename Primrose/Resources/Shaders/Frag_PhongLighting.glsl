@@ -23,11 +23,13 @@ void main() {
 	float AmbientStrength = 0.2;
     vec4 Ambient = vec4(texture(uDiffuseTexUnit, oCoords).xyz * AmbientStrength, 1.0) * uTint; 
 
-	vec3 Normal = oNormalMatrix * oNormal; //Its this probably. 
+	vec3 Normal = oNormalMatrix * normalize(oNormal); //Its this probably. 
 	vec3 LightDirection = normalize(uLightPosition - oFragPosition);  
 	float LightDotNormal = max(dot(Normal, LightDirection), 0.0);
 	vec4 Diffuse = texture(uDiffuseTexUnit, oCoords) * LightDotNormal * uLightColor;
 
+	//Scale affects amount of light
+	//Specular breaks when scaled
 
 	float SpecularStrength = 0.5;
 	int SpecularShininess = 32;
