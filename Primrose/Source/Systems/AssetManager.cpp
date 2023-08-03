@@ -147,12 +147,12 @@ void AssetManager::ScanDirectory(Directory& parent, bool editorDirectory) {
 void AssetManager::SetupAsset(Asset& asset, bool editorAsset) {
 
 	auto Extension = asset.m_Path.extension();
+	auto Name = asset.m_Path.filename().replace_extension();
+	asset.m_Extension = Extension.string();
+	asset.m_Name = Name.string();
+
 	//Any new supported asset types should be added here for checking
 	if (Extension == ".jpg" || Extension == ".png") {
-
-		auto Name = asset.m_Path.filename().replace_extension();
-		asset.m_Extension = Extension.string();
-		asset.m_Name = Name.string();
 		asset.m_Type = AssetType::TEXTURE;
 
 		if (editorAsset) {

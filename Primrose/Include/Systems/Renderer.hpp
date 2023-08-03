@@ -6,6 +6,7 @@
 
 class Core;
 class Window;
+class TextureStorage;
 class EntityComponentSystem;
 
 
@@ -33,7 +34,8 @@ private:
 	std::string m_LastExitMessage;
 
 private:
-	Core* m_EngineCore						{ nullptr };
-	Window* m_WindowReference				{ nullptr };
-	EntityComponentSystem* m_ECSReference	{ nullptr };
+	Core* m_EngineCore							{ nullptr };
+	Window* m_WindowReference					{ nullptr };
+	TextureStorage* m_TextureStorageReference	{ nullptr };
+	EntityComponentSystem* m_ECSReference		{ nullptr };
 };

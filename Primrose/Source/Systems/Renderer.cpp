@@ -7,6 +7,7 @@ Renderer::Renderer(Core& core) noexcept
     : m_EngineCore(&core)
 {
     m_WindowReference = m_EngineCore->GetWindow();
+    m_TextureStorageReference = m_EngineCore->GetTextureStorage();
     m_ECSReference = m_EngineCore->GetECS();
 
     glEnable(GL_DEPTH_TEST); //TODO: move somewhere else
@@ -69,15 +70,58 @@ bool Renderer::Render2D() const {
         GLCall(glBlendFunc((GLuint)TargetComponent->GetSourceBlendMode(), (GLuint)TargetComponent->GetDestinationBlendMode()));
         GLCall(glBlendEquation((GLuint)TargetComponent->GetBlendEquation()));
 
-        const Texture2D* Sprite = TargetComponent->GetSprite();
+        Texture2D* Sprite = TargetComponent->GetSprite();
+        Material CompMaterial = TargetComponent->GetMaterial();
+        m_TextureStorageReference->SetActiveTextureUnit(GL_TEXTURE0); //TODO: Create own abstraction for texture units
         if (Sprite != nullptr)
             Sprite->Bind();
+        else {
+            //If Material has diffuse instead
+            Sprite = CompMaterial.m_Diffuse;
+            if (Sprite != nullptr)
+                Sprite->Bind();
+            else {
+                if (m_TextureStorageReference->GetEditorTexture2DByName("NoDiffuse", Sprite))
+                    Sprite->Bind();
+            }
+        }
+
+        //Ambient
+        m_TextureStorageReference->SetActiveTextureUnit(GL_TEXTURE1); //TODO: Create own abstraction for texture units
+        if (CompMaterial.m_Ambient != nullptr){
+            CompMaterial.m_Ambient->Bind();
+        }
+
+        //Specular
+        m_TextureStorageReference->SetActiveTextureUnit(GL_TEXTURE2); //TODO: Create own abstraction for texture units
+        if (CompMaterial.m_Specular != nullptr) {
+            CompMaterial.m_Specular->Bind();
+        }
+
+
+        //Tasks for next time
+        //Simple window with text saying whats happening in the project
+        //When the project is fully loaded and ready, it opens the editor
+
+
 
         GameObject* DirectionalLightGO = m_ECSReference->GetDirecitonalLightTEST();
         DirectionalLight* DirectionalLightComp = DirectionalLightGO->GetComponent<DirectionalLight>();
         //DirectionalLightComp->m_Tint = Color(1.0f, 1.0f, 1.0f, 1.0f);
-        ShaderProgramTest.SetUniform("uDiffuseTexUnit", TextureUnit::DIFFUSE);
+
+
+        ShaderProgramTest.SetUniform("uMaterial.Diffuse", TextureUnit::DIFFUSE);
+        ShaderProgramTest.SetUniform("uMaterial.Ambient", TextureUnit::AMBIENT);
+        ShaderProgramTest.SetUniform("uMaterial.Specular", TextureUnit::SPECULAR);
+        ShaderProgramTest.SetUniform("uMaterial.AmbientStrength", CompMaterial.m_AmbientStrength);
+        ShaderProgramTest.SetUniform("uMaterial.SpecularShininess", CompMaterial.m_SpecularShininess);
+        ShaderProgramTest.SetUniform("uMaterial.SpecularStrength", CompMaterial.m_SpecularStrength);
+
+
         ShaderProgramTest.SetUniform("uTint", TargetComponent->GetTint());
+
+
+
         ShaderProgramTest.SetUniform("uLightColor", DirectionalLightComp->m_Tint);
         ShaderProgramTest.SetUniform("uLightPosition", DirectionalLightGO->GetTransform().m_Position);
         
@@ -144,8 +188,23 @@ bool Renderer::Render2D() const {
         TargetComponent->GetVAO()->Bind();
         GLCall(glDrawElements(GL_TRIANGLES, TargetComponent->GetEBO()->GetCount(), GL_UNSIGNED_INT, nullptr));
 
-        if (Sprite != nullptr)
+        //Diffuse
+        if (Sprite != nullptr) {
+            m_TextureStorageReference->SetActiveTextureUnit(GL_TEXTURE0);
             Sprite->Unbind();
+        }
+
+        //Ambient
+        if (CompMaterial.m_Ambient != nullptr) {
+            m_TextureStorageReference->SetActiveTextureUnit(GL_TEXTURE1);
+            CompMaterial.m_Ambient->Unbind();
+        }
+
+        //Specular
+        if (CompMaterial.m_Specular != nullptr) {
+            m_TextureStorageReference->SetActiveTextureUnit(GL_TEXTURE2);
+            CompMaterial.m_Specular->Unbind();
+        }
     }
 
     return true;

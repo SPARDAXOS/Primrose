@@ -16,9 +16,9 @@
 
 
 namespace TextureUnit {
-	static constexpr uint8 DIFFUSE = 0;
-	static constexpr uint8 AMBIENT = 1;
-	static constexpr uint8 SPECULAR = 2;
+	static constexpr int32 DIFFUSE = 0;
+	static constexpr int32 AMBIENT = 1;
+	static constexpr int32 SPECULAR = 2;
 
 }
 
@@ -154,7 +154,7 @@ public:
 	std::vector<Texture2D*> GetEditorTexture2DStorage() const noexcept { return m_EditorTexture2DStorage; }
 
 public:
-	void ActivateTextureUnit(GLenum unit) noexcept {
+	void SetActiveTextureUnit(GLenum unit) noexcept {
 		GLCall(glActiveTexture(unit));
 	}
 

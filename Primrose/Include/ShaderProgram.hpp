@@ -66,10 +66,49 @@ public:
 	}
 
 	template<>
-	void SetUniform<int>(const std::string_view& name, int value) {
+	void SetUniform<float>(const std::string_view& name, float value) {
+		const int UniformLocation = FindUniformLocation(name);
+		if (UniformLocation != -1) {
+			GLCall(glUniform1f(UniformLocation, value));
+		}
+		else
+			PrintMessages("Could not find requested uniform in shader program - Uniform: ", name.data());
+	}
+
+	template<>
+	void SetUniform<int32>(const std::string_view& name, int32 value) {
 		const int UniformLocation = FindUniformLocation(name);
 		if (UniformLocation != -1) {
 			GLCall(glUniform1i(UniformLocation, value));
+		}
+		else
+			PrintMessages("Could not find requested uniform in shader program - Uniform: ", name.data());
+	}
+	template<>
+	void SetUniform<uint32>(const std::string_view& name, uint32 value) {
+		const int UniformLocation = FindUniformLocation(name);
+		if (UniformLocation != -1) {
+			GLCall(glUniform1ui(UniformLocation, value));
+		}
+		else
+			PrintMessages("Could not find requested uniform in shader program - Uniform: ", name.data());
+	}
+
+	template<>
+	void SetUniform<uint16>(const std::string_view& name, uint16 value) {
+		const int UniformLocation = FindUniformLocation(name);
+		if (UniformLocation != -1) {
+			GLCall(glUniform1ui(UniformLocation, value));
+		}
+		else
+			PrintMessages("Could not find requested uniform in shader program - Uniform: ", name.data());
+	}
+
+	template<>
+	void SetUniform<uint8>(const std::string_view& name, uint8 value) {
+		const int UniformLocation = FindUniformLocation(name);
+		if (UniformLocation != -1) {
+			GLCall(glUniform1ui(UniformLocation, value));
 		}
 		else
 			PrintMessages("Could not find requested uniform in shader program - Uniform: ", name.data());

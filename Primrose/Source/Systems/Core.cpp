@@ -22,8 +22,6 @@ void Core::SetupCore() { // Sounds like 2 step initialization.
 	m_AssetManager->LoadAssets();
 	m_Editor->SaveEngineTexturesReferences();
 
-	m_TextureStorage->ActivateTextureUnit(GL_TEXTURE0);
-
 
 
 	SystemLog("Primrose initialized successfully.");
@@ -64,6 +62,22 @@ void Core::Run() {
 	GameObjectTest->AddComponent<SpriteRenderer>();
 	SpriteRenderer* Component = GameObjectTest->GetComponent<SpriteRenderer>();
 	Component->SetSprite(CrateTexture);
+
+
+	Texture2D* AmbientTexture = nullptr;
+	if (m_TextureStorage->GetTexture2DByName("CrateAmbient", AmbientTexture))
+		Component->GetMaterialRef().m_Ambient = AmbientTexture;
+
+	Texture2D* SpecularTexture = nullptr;
+	if (m_TextureStorage->GetTexture2DByName("CrateSpecular", SpecularTexture))
+		Component->GetMaterialRef().m_Specular = SpecularTexture;
+
+
+	Component->GetMaterialRef().m_AmbientStrength = 0.2f;
+	Component->GetMaterialRef().m_SpecularStrength = 0.5f;
+	Component->GetMaterialRef().m_SpecularShininess = 32;
+
+
 
 	GameObject* GameObjectTestChild = &m_ECS->CreateGameObject("GameObject2");
 	GameObjectTestChild->AddComponent<SpriteRenderer>();
