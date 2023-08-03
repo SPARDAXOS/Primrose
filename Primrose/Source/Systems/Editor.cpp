@@ -67,16 +67,16 @@ Editor::~Editor() {
 
 void Editor::SaveEngineTexturesReferences() {
 
-	if (!m_TextureStorageReference->GetTexture2DByName("Folder", m_FolderTexture))
+	if (!m_TextureStorageReference->GetEditorTexture2DByName("Folder", m_FolderTexture))
 		SystemLog("Failed to save reference to engine texture [Folder]");
 
-	if (!m_TextureStorageReference->GetTexture2DByName("Debug", m_DebugTexture))
+	if (!m_TextureStorageReference->GetEditorTexture2DByName("Debug", m_DebugTexture))
 		SystemLog("Failed to save reference to engine texture [Debug]");
 
-	if (!m_TextureStorageReference->GetTexture2DByName("Warning", m_WarningTexture))
+	if (!m_TextureStorageReference->GetEditorTexture2DByName("Warning", m_WarningTexture))
 		SystemLog("Failed to save reference to engine texture [Warning]");
 
-	if (!m_TextureStorageReference->GetTexture2DByName("Error", m_ErrorTexture))
+	if (!m_TextureStorageReference->GetEditorTexture2DByName("Error", m_ErrorTexture))
 		SystemLog("Failed to save reference to engine texture [Error]");
 
 }
@@ -257,15 +257,46 @@ void Editor::RenderDirectoryExplorer() {
 	ImGuiWindowFlags Flags = 0;
 	Flags |= ImGuiWindowFlags_NoCollapse;
 	Flags |= ImGuiWindowFlags_AlwaysVerticalScrollbar;
+	Flags |= ImGuiWindowFlags_MenuBar;
 
 	ImGui::Begin("Directory Explorer", &m_DirectoryExplorerWindowOpened, Flags);
 	CheckForHoveredWindows();
 
-	auto Root = m_AssetManagerReference->GetRoot();
-	if (m_SelectedDirectory == nullptr)
-		m_SelectedDirectory = Root;
 
-	AddFileExplorerEntry(Root);
+	if (ImGui::BeginMenuBar()) {
+		//Editor Filter
+		ImGui::SetWindowFontScale(0.95f);
+		const auto TextSize = ImGui::CalcTextSize("Editor");
+		ImGui::Selectable("Editor", &m_DirectoryExplorerEditorFilter, 0, TextSize);
+		ImGui::SetWindowFontScale(1.0f);
+
+
+		ImGui::EndMenuBar();
+	}
+
+
+
+	auto ProjectRoot = m_AssetManagerReference->GetProjectRoot();
+	if (ProjectRoot == nullptr) {
+		SystemLog("m_AssetManagerReference->GetProjectRoot() returned null! - RenderDirectoryExplorer()");
+		return;
+	}
+	if (m_SelectedDirectory == nullptr) //Set default directory if not set
+		m_SelectedDirectory = ProjectRoot;
+	AddFileExplorerEntry(ProjectRoot);
+
+	//TODO: Could be enabled by filter
+	//TODO: Do something about the assets then cause they will not be loaded from the correct texture storage for the editor. Content Browser!
+
+	if (m_DirectoryExplorerEditorFilter) {
+		auto EditorRoot = m_AssetManagerReference->GetEditorRoot();
+		if (EditorRoot == nullptr) {
+			SystemLog("m_AssetManagerReference->GetEditorRoot() returned null! - RenderDirectoryExplorer()");
+			return;
+		}
+		AddFileExplorerEntry(EditorRoot);
+	}
+
 
 	ImGui::End();
 }
@@ -1393,6 +1424,8 @@ void Editor::AddFileExplorerEntry(Directory* entry) {
 
 
 void Editor::NewContentBrowserFrame() noexcept {
+
+	//TODO: Maybe move these in and try to minimize these weird variables being member variables
 	m_ContentElementCursor = 0.0f;
 	m_ContentLineElementsCount = 0;
 	m_FolderEntryOpened = false;
@@ -1413,8 +1446,7 @@ void Editor::UpdateContentBrowserFolderEntries() {
 
 	for (auto& Folder : m_SelectedDirectory->m_Folders) {
 
-		std::string Name = Folder->m_Path.filename().replace_extension().string();
-		std::string ID = "##" + Name;
+		std::string ID = "##" + Folder->m_Name;
 		bool AppliedStyle = false;
 
 		//Calculate position and check if new line is necessary
@@ -1451,7 +1483,7 @@ void Editor::UpdateContentBrowserFolderEntries() {
 			ImGui::PopStyleColor();
 
 		//Book keeping
-		m_QueuedContentTexts.emplace_back(Name);
+		m_QueuedContentTexts.push_back(Folder->m_Name);
 
 		m_ContentLineElementsCount++;
 	}
@@ -1473,8 +1505,7 @@ void Editor::UpdateContentBrowserAssetEntries() {
 		}
 
 
-		std::string Name = Asset->m_Path.filename().replace_extension().string();
-		std::string ID = "##" + Name;
+		std::string ID = "##" + Asset->m_Name;
 		bool AppliedStyle = false;
 
 		//Calculate position and check if new line is necessary
@@ -1507,7 +1538,7 @@ void Editor::UpdateContentBrowserAssetEntries() {
 		if (AppliedStyle)
 			ImGui::PopStyleColor();
 
-		m_QueuedContentTexts.emplace_back(Name);
+		m_QueuedContentTexts.push_back(Asset->m_Name);
 		m_ContentLineElementsCount++;
 
 		if (IconTexture != nullptr)
@@ -1709,25 +1740,41 @@ void Editor::CheckForHoveredWindows() {
 	if (ImGui::IsWindowHovered())
 		m_IsAnyWindowHovered = true;
 }
-Texture2D* Editor::GetIconTexture(const Asset& asset) {
+Texture2D* Editor::GetIconTexture(const Asset& asset) noexcept {
 
 	Texture2D* IconTexture;
 
-	//TODO: Set the alpha blending for these icons cause transparency is borked currenrtly
+	//TODO: Set the alpha blending for these icons cause transparency is borked currenrtly.
 
 	switch (asset.m_Type)
 	{
 	case AssetType::TEXTURE: {
 
-		//TODO: Add name to the asset and remove it from Texture2D and update that everywhere! It makes more sense and all asset types will have it
-		if (!m_TextureStorageReference->GetTexture2DByName(asset.m_Path.filename().replace_extension().string(), IconTexture))
-			return nullptr;
+		if (asset.m_EditorAsset) {
+			if (!m_TextureStorageReference->GetEditorTexture2DByName(asset.m_Name, IconTexture)) {
+				if (!m_TextureStorageReference->GetEditorTexture2DByName("Error", IconTexture))
+					return nullptr;
+				return IconTexture;
+			}
+		}
+		else {
+			if (!m_TextureStorageReference->GetTexture2DByName(asset.m_Name, IconTexture)) {
+				if (!m_TextureStorageReference->GetEditorTexture2DByName("Error", IconTexture))
+					return nullptr;
+				return IconTexture;
+			}
+		}
+
 		return IconTexture;
 	}
 	default:
-		if (m_TextureStorageReference->GetTexture2DByName("Unknown", IconTexture))
+		if (m_TextureStorageReference->GetEditorTexture2DByName("Unknown", IconTexture))
 			return IconTexture;
-		return nullptr;
+		else {
+			if (!m_TextureStorageReference->GetEditorTexture2DByName("Error", IconTexture))
+				return nullptr;
+			return IconTexture;
+		}
 	}
 }
 

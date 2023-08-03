@@ -19,7 +19,7 @@ void Core::SetupCore() { // Sounds like 2 step initialization.
 
 	m_Window->SetWindowMode(WindowMode::WINDOWED);
 	m_Renderer->CheckRendererAPIVersion();
-	m_AssetManager->LoadProjectFiles();
+	m_AssetManager->LoadAssets();
 	m_Editor->SaveEngineTexturesReferences();
 
 	m_TextureStorage->ActivateTextureUnit(GL_TEXTURE0);

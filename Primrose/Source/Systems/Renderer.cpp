@@ -136,9 +136,9 @@ bool Renderer::Render2D() const {
         //Would probably be the main camera in case of play mode being on
         ShaderProgramTest.SetUniform("uViewCameraPosition", ViewportCamera->GetOwner()->GetTransform().m_Position);
 
-        ShaderProgramTest.SetUniform("uModel", *TargetMatrix); //Construct matrix here instead of getting to apply the flipx anmd y?
-        ShaderProgramTest.SetUniform("uView", ViewportCamera->GetViewMatrix());
-        ShaderProgramTest.SetUniform("uProjection", ViewportCamera->GetProjectionMatrix());
+        ShaderProgramTest.SetUniform("uMVP.Model", *TargetMatrix); //Construct matrix here instead of getting to apply the flipx anmd y?
+        ShaderProgramTest.SetUniform("uMVP.View", ViewportCamera->GetViewMatrix());
+        ShaderProgramTest.SetUniform("uMVP.Projection", ViewportCamera->GetProjectionMatrix());
         ShaderProgramTest.SetUniform("uNormalMatrix", glm::mat3(glm::transpose(glm::inverse(*TargetMatrix)))); //Inverse operations are costly in shaders
         
         TargetComponent->GetVAO()->Bind();

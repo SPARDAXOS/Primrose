@@ -5,96 +5,23 @@
 #include <fstream>
 #include <iostream>
 
-
+#include "Asset.hpp"
 #include "Utility.hpp"
 
 
-enum class AssetType {
-	INVALID = 0,
-	TEXTURE
-};
-class Asset {
-public:
-	Asset() = default;
-	Asset(std::filesystem::path path)
-		: m_Path(path)
-	{
-	}
-	Asset(std::filesystem::path path, AssetType type)
-		: m_Path(path), m_Type(type)
-	{
-	}
-
-	~Asset() = default;
-
-	Asset(const Asset& other) {
-		*this = other;
-	}
-	Asset& operator=(const Asset& other) {
-		if (*this == other) {
-			return *this;
-		}
-		else {
-			this->m_Path = other.m_Path;
-			this->m_Type = other.m_Type;
-			return *this;
-		}
-	}
-
-	Asset(Asset&& other) noexcept {
-		*this = std::move(other);
-	}
-	Asset& operator=(Asset&& other) noexcept {
-		if (*this == other) {
-			return *this;
-		}
-		else {
-			this->m_Path = std::move(other.m_Path);
-			this->m_Type = std::move(other.m_Type);
-			return *this;
-		}
-	}
-
-	bool operator==(const Asset& other) const noexcept {
-		if (m_Path != other.m_Path)
-			return false;
-		else if (m_Type != other.m_Type)
-			return false;
-		else
-			return true;
-	}
-	bool operator!=(const Asset& other) const noexcept {
-		if (!(*this == other))
-			return true;
-		else
-			return false;
-	}
-
-public:
-	std::filesystem::path m_Path;
-	AssetType m_Type{ AssetType::INVALID };
-};
-class Directory final {//Maybe change name to directory?
+class Directory final {
 public:
 	Directory() = delete;
-	Directory(std::filesystem::path path) 
-		:	m_Path(path)
+	Directory(std::filesystem::path path, std::string_view name) 
+		:	m_Path(path), m_Name(name)
 	{
 	}
 
-
-
-
-	//Contains a folder path and a list of all Assets in there
-
 	std::filesystem::path m_Path;
-	std::filesystem::path m_ParentPath; //This might not be needed actually. At least not for constructing the hierarchy
-	std::vector<Asset*> m_Assets; //This is going to be a problem - Maybe devide them into separate vectors based on type? It might not be redundant since each will
-	//be sent to the appropriate system for loading so im saving myself the trouble of reiterating. Unless, i go through all one by one and depending on type i load 
-	//using the appropriate system
+	std::filesystem::path m_ParentPath;
+	std::string m_Name;
+	std::vector<Asset*> m_Assets; 
 	std::vector<Directory*> m_Folders;
-
-	//After finish loading up all the paths, i go through all the assets and load them using the paths saved in the asset file
 };
 
 
@@ -107,7 +34,8 @@ public:
 	AssetManager() = delete;
 	AssetManager(Core& core) noexcept;
 	~AssetManager() {
-
+		CleanUpAssetsCopies(); //Just in case?
+		CleanUpDirectories();
 	}
 
 	AssetManager(const AssetManager&) = delete;
@@ -117,11 +45,12 @@ public:
 	AssetManager& operator=(AssetManager&&) = delete;
 
 public:
-	bool LoadProjectFiles();
+	bool LoadAssets();
 
 
 public:
-	inline Directory* GetRoot() const noexcept { return m_Root; }
+	inline Directory* GetProjectRoot() const noexcept { return m_ProjectRoot; }
+	inline Directory* GetEditorRoot() const noexcept { return m_EditorRoot; }
 
 public:
 	[[nodiscard]] inline static bool Read(const std::string_view& filePath, std::string& buffer) {
@@ -181,30 +110,35 @@ public:
 	//TODO: Add opening file at spot functionality
 	//TODO: Use main scene for the gameobjects heirarchy instead
 	//TODO: Changing names is gonna be hard to fix cause renaming affects it and creating new gameobjects does too.
-	//NOTE: There is a lot of clean up and such that could be done in these recent classes ive made
 
 
 
 private:
-	bool CheckForContentDirectory();
-	bool ScanForContent();
-	void ScanDirectory(std::filesystem::path path, Directory& parent);
-	void CheckAssetType(Asset& asset);
-	bool LoadAssets();
+	bool CheckForNecessaryDirectories();
+	bool SetupProjectDirectories();
+	bool SetupEditorDirectories();
+
+	void ScanDirectory(Directory& parent, bool editorDirectory = false);
+	void SetupAsset(Asset& asset, bool editorAsset = false);
+
+	bool LoadProjectAssets();
+	bool LoadEditorAssets();
+
+	void CleanUpAssetsCopies() noexcept;
+	void CleanUpDirectories() noexcept;
 	
 
 private:
+	std::vector<Directory*> m_ProjectDirectories;
+	std::vector<Directory*> m_EditorDirectories;
 
-	//Rethink this first. Directories list might be more applicable
+	std::vector<Asset*> m_ProjectTextureAssets;
+	std::vector<Asset*> m_EditorTextureAssets;
 
-	Profiler LoadingProfiler;
 
-	std::vector<Directory*> m_Directories;
-	Directory* m_Root = nullptr;
+	Directory* m_ProjectRoot	{ nullptr };
+	Directory* m_EditorRoot		{ nullptr };
 
-	//Since they will be cleaned up from here
-	//Copies on the stack might be better 
-	std::vector<Asset*> m_TexturesAssets;
 
 	Core* m_CoreReference;
 	TextureStorage* m_TextureStorageReference;

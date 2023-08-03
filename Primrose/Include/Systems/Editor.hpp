@@ -169,7 +169,7 @@ private:
 	void SetSelectedDirectory(Directory* directory) noexcept;
 	inline void SetSpriteRendererEditTarget(SpriteRenderer* target) noexcept { m_SpriteRendererEditTarget = target; }
 	void CheckForHoveredWindows();
-	Texture2D* GetIconTexture(const Asset& asset);
+	Texture2D* GetIconTexture(const Asset& asset) noexcept;
 
 private:
 	void SetupContentBrowserStyle();
@@ -259,6 +259,9 @@ private:
 	std::vector<std::string> m_QueuedSpriteSelectorTexts; //Could use const char* instead
 
 	void* m_SelectedSpriteSelectorElement	{ nullptr };
+
+private:
+	bool m_DirectoryExplorerEditorFilter = false;
 
 
 private:

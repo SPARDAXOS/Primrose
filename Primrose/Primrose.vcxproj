@@ -189,10 +189,12 @@
     <ClInclude Include="Dependencies\Includes\IMGUI\imstb_textedit.h" />
     <ClInclude Include="Dependencies\Includes\IMGUI\imstb_truetype.h" />
     <ClInclude Include="Dependencies\Includes\STB_Image\STB_Image.h" />
+    <ClInclude Include="Include\Asset.hpp" />
     <ClInclude Include="Include\Components\CameraComponent.hpp" />
     <ClInclude Include="Include\Components\Component.hpp" />
     <ClInclude Include="Include\Components\DirectionalLightComponent.hpp" />
     <ClInclude Include="Include\Components\LightComponentBase.hpp" />
+    <ClInclude Include="Include\Material.hpp" />
     <ClInclude Include="Include\Systems\Editor.hpp" />
     <ClInclude Include="Include\Systems\EntityComponentSystem.hpp" />
     <ClInclude Include="Include\Systems\AssetManager.hpp" />
@@ -200,6 +202,7 @@
     <ClInclude Include="Include\GraphicsResources.hpp" />
     <ClInclude Include="Include\GLErrorHandling.hpp" />
     <ClInclude Include="Include\Systems\Input.hpp" />
+    <ClInclude Include="Include\Texture2D.hpp" />
     <ClInclude Include="Include\Tools\Logger.hpp" />
     <ClInclude Include="Include\Math.hpp" />
     <ClInclude Include="Include\Tools\Profiler.hpp" />
