@@ -63,19 +63,23 @@ void Core::Run() {
 	SpriteRenderer* Component = GameObjectTest->GetComponent<SpriteRenderer>();
 	Component->SetSprite(CrateTexture);
 
+	//IMPORTANT NOTE: This is temporary so this will leak memory in the meanwhile
+	Asset* TestAsset = new Asset();
+	Material* TestMaterial = new Material(*TestAsset);
+	Component->SetMaterial(TestMaterial);
 
 	Texture2D* AmbientTexture = nullptr;
 	if (m_TextureStorage->GetTexture2DByName("CrateAmbient", AmbientTexture))
-		Component->GetMaterialRef().m_Ambient = AmbientTexture;
+		Component->GetMaterial()->m_Ambient = AmbientTexture;
 
 	Texture2D* SpecularTexture = nullptr;
 	if (m_TextureStorage->GetTexture2DByName("CrateSpecular", SpecularTexture))
-		Component->GetMaterialRef().m_Specular = SpecularTexture;
+		Component->GetMaterial()->m_Specular = SpecularTexture;
 
 
-	Component->GetMaterialRef().m_AmbientStrength = 0.2f;
-	Component->GetMaterialRef().m_SpecularStrength = 0.5f;
-	Component->GetMaterialRef().m_SpecularShininess = 32;
+	Component->GetMaterial()->m_AmbientStrength = 0.4f;
+	Component->GetMaterial()->m_SpecularStrength = 0.9f;
+	Component->GetMaterial()->m_SpecularShininess = 16;
 
 
 

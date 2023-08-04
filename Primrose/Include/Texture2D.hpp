@@ -260,7 +260,7 @@ class Texture2D final {
 public:
 
 	Texture2D() = delete;
-	Texture2D(const Asset& asset, Texture2DSourceData data) noexcept
+	Texture2D(Asset& asset, Texture2DSourceData data) noexcept
 		: m_Asset(&asset), m_Source(data)
 	{
 		GLCall(glGenTextures(1, &m_ID));
@@ -323,6 +323,6 @@ private:
 
 private:
 	GLuint m_ID;
-	const Asset* m_Asset;
+	Asset* m_Asset;
 	Texture2DSourceData m_Source;
 };

@@ -8,6 +8,7 @@ class Core;
 class Window;
 class TextureStorage;
 class EntityComponentSystem;
+class SpriteRenderer;
 
 
 class Renderer final {
@@ -16,19 +17,22 @@ public:
 	Renderer(Core& core) noexcept;
 
 public:
-	[[nodiscard]] bool Update() const;
+	[[nodiscard]] bool Update();
 
 public:
 	void CheckRendererAPIVersion();
 	inline std::string GetLastExitMessage() noexcept { return m_LastExitMessage; };
 
 private:
-	[[nodiscard]] bool Render2D() const;
-	[[nodiscard]] bool Render3D() const;
+	[[nodiscard]] bool Render2D();
+	[[nodiscard]] bool Render3D();
 
 private:
 	inline void RegisterExitMessage(std::string message) noexcept { m_LastExitMessage = message; };
 
+private:
+	void SetupMaterial(ShaderProgram& program, const SpriteRenderer* component);
+	void UnbindAllTextures(const SpriteRenderer* component);
 
 private:
 	std::string m_LastExitMessage;

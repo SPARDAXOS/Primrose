@@ -23,7 +23,7 @@ public:
 public:
 	inline void SetSprite(Texture2D* sprite) noexcept { m_Sprite = sprite; }
 	inline void SetTint(Color color) noexcept { m_Tint = color; }
-	inline void SetMaterial(Material material) noexcept { m_Material = material; }
+	inline void SetMaterial(Material* material) noexcept { m_Material = material; }
 	inline void SetFlipX(bool state) noexcept { m_FlipX = state; }
 	inline void SetFlipY(bool state) noexcept { m_FlipY = state; }
 
@@ -39,8 +39,7 @@ public:
 public:
 	inline Texture2D* GetSprite() const noexcept { return m_Sprite; }
 	inline Color GetTint() const noexcept { return m_Tint; }
-	inline Material GetMaterial() const noexcept { return m_Material; }
-	inline Material& GetMaterialRef() noexcept { return m_Material; }
+	inline Material* GetMaterial() const noexcept { return m_Material; }
 	inline bool GetFlipX() const noexcept { return m_FlipX; }
 	inline bool GetFlipY() const noexcept { return m_FlipY; }
 
@@ -60,7 +59,7 @@ public:
 private:
 	Texture2D* m_Sprite = nullptr;
 	Color m_Tint = Colors::White;
-	Material m_Material;
+	Material* m_Material = nullptr;
 	bool m_FlipX = false;
 	bool m_FlipY = false;
 

@@ -152,6 +152,7 @@ private:
 	void UpdateContentBrowserFolderEntries();
 	void UpdateContentBrowserAssetEntries();
 	void UpdateSpriteSelectorEntries();
+	void UpdateContentBrowserMenu();
 	void FlushContentTexts();
 	void FlushSpriteSelectorTexts();
 
@@ -220,6 +221,10 @@ private:
 	bool m_SystemLogOpened = false;
 
 	bool m_SpriteSelectorOpened = false;
+
+	Asset* m_AssetEditMenuTarget	{ nullptr };
+	bool m_IsContentBrowserWindowHovered = false;
+	bool m_OpenContentBrowserEditMenu = false;
 
 	bool m_ContentBrowserWindowReset = true;
 	bool m_DebugLogWindowReset = true;

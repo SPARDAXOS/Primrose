@@ -5,7 +5,11 @@
 class Material {
 public:
 
-	explicit Material() = default;
+	explicit Material() = delete;
+	Material(Asset& asset) 
+		: m_Asset(&asset)
+	{
+	}
 	~Material() = default;
 
 	Material(const Material& other) noexcept {
@@ -24,6 +28,7 @@ public:
 			this->m_SpecularShininess = other.m_SpecularShininess;
 
 			this->m_AmbientStrength = other.m_AmbientStrength;
+			//NOTE: Cant have 2 materials pointing to the same asset.
 
 			return *this;
 		}
@@ -43,6 +48,8 @@ public:
 			this->m_SpecularStrength = std::move(other.m_SpecularStrength);
 			this->m_SpecularShininess = std::move(other.m_SpecularShininess);
 			this->m_AmbientStrength = std::move(other.m_AmbientStrength);
+
+			this->m_Asset = std::move(other.m_Asset);
 			return *this;
 		}
 	}
@@ -72,12 +79,18 @@ public:
 	}
 
 public:
+	Asset* GetAsset() const noexcept { return m_Asset; }
+
+public:
 	Texture2D* m_Diffuse	{ nullptr };
 	Texture2D* m_Ambient	{ nullptr };
 	Texture2D* m_Specular	{ nullptr };
 
-	float m_AmbientStrength;
+	float m_AmbientStrength = 1.0f;
 
-	float m_SpecularStrength;
-	int32 m_SpecularShininess;
+	float m_SpecularStrength = 0.5f;
+	int32 m_SpecularShininess = 32;
+
+private:
+	Asset* m_Asset	{ nullptr };
 };

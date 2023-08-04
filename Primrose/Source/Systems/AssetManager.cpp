@@ -20,6 +20,7 @@ bool AssetManager::LoadAssets() {
 
 	//TODO: Implement proper error handling for this class
 	//TODO: Log system editor messages
+	//TODO: Add protection so this function can only be called once!
 
 	if (!CheckForNecessaryDirectories())
 		return false;
@@ -36,16 +37,116 @@ bool AssetManager::LoadAssets() {
 	if (!LoadProjectAssets())
 		return false;
 
-
-
-	//NOTE: Currently, this class loses access to the assets as the systems contain them and manage them instead as part of their respective type (Texture2D, etc)
-	//- It is a bit weird that this class called AssetManager does not contain assets, and if this class requires assets access for some reason, Simply make the types
-	//- Not inherit from Asset and instead require an asset pointer to construct. Then both this class and the type would point to the same asset. This however, would 
-	//- would break managing resources into type that is managed by the system and Asset that is managed by this. Might be too messy then.
-	//CleanUpAssetsCopies();
-
 	m_CoreReference->SystemLog("AssetManager finished loading assets successfully!");
 	return true;
+}
+bool AssetManager::CreateAsset(AssetType type, Directory& location) {
+	
+	
+	//Get specific header from function
+
+	//CreateFile at location with x name
+	//Add it to all lists and update location lists!
+
+	Asset* NewAsset = new Asset;
+	NewAsset->m_EditorAsset = false;
+	NewAsset->m_Extension = ".rose"; //Depending on AssetType? or just general engine asset
+	NewAsset->m_Type = type;
+	NewAsset->m_Name = "NewMaterial";
+	NewAsset->m_Path = location.m_Path.string() + std::string("\\" + NewAsset->m_Name + NewAsset->m_Extension);
+
+	if (m_MaterialAssets.size() >= 1) {
+		m_CoreReference->DebugLog("Exists!" + NewAsset->m_Name);
+	}
+
+	int CopyNameIncrement = 0;
+	while (location.DoesAssetExist(NewAsset->m_Path.string())) {
+		CopyNameIncrement++;
+		NewAsset->m_Name = "NewMaterial" + std::to_string(CopyNameIncrement);
+		NewAsset->m_Path = location.m_Path.string() + std::string("\\" + NewAsset->m_Name + NewAsset->m_Extension);
+	}
+
+	Material* NewMaterial = new Material(*NewAsset);
+
+	//Add to assets list
+	m_MaterialAssets.emplace_back(NewMaterial);
+
+	//Add to directory assets list
+	location.m_Assets.emplace_back(NewAsset);
+
+
+
+	std::string TempHeader = "##Material";
+	std::ofstream File;
+	//IMPORTANT NOTE: Using Windows slashes but the function does work regardless. However, using double slashes for consistency in Asset.m_Path and Directory.m_Path 
+	auto Result = location.m_Path.string() + "\\" + NewAsset->m_Name + NewAsset->m_Extension;
+	File.open(location.m_Path.string() + "\\" + NewAsset->m_Name + NewAsset->m_Extension);
+	
+	//TODO: Add header to file Function!
+	File << TempHeader;
+
+	File.close();
+	return true;
+}
+bool AssetManager::CreateNewFolder(Directory& location) {
+	
+	std::string FolderName = "NewFolder";
+	std::string FolderPath(location.m_Path.string() + "\\" + FolderName);
+
+	int CopyNameIncrement = 0;
+	while (location.DoesFolderExist(FolderPath)) {
+		CopyNameIncrement++;
+		FolderName = "NewFolder" + std::to_string(CopyNameIncrement);
+		FolderPath = location.m_Path.string() + "\\" + FolderName;
+	}
+
+	if (!std::filesystem::create_directory(FolderPath))
+		return false;
+
+	Directory* NewDirectory = new Directory(FolderPath.data(), FolderName);
+	m_ProjectDirectories.emplace_back(NewDirectory);
+	location.m_Folders.emplace_back(NewDirectory);
+	NewDirectory->m_ParentPath = location.m_Path;
+
+	return true;
+}
+
+bool AssetManager::SerializeMaterialToFile(Material& material) {
+
+	//NOTE: If you have a material, it means a file does exist!
+	
+	Asset* TargetAsset = material.GetAsset();
+	auto FilePath = TargetAsset->m_Path;
+	if (FilePath == "") {
+		m_CoreReference->SystemLog("Invalid asset path while serializing material to file [" + TargetAsset->m_Name + "]");
+		return false;
+	}
+
+
+	std::ofstream File;
+	File.open(FilePath);
+	File.clear(); //It clears the file fully before rewriting. This might be bad?
+	AddAssetFileHeader(File, AssetType::MATERIAL);
+
+
+}
+
+void AssetManager::AddAssetFileHeader(std::ofstream& file, AssetType type) const noexcept {
+
+	switch (type)
+	{
+	case AssetType::INVALID:
+		return;
+	case AssetType::TEXTURE: //Texture are stored as is instead of being an engine asset type.
+		return;
+	case AssetType::MATERIAL: {
+
+	}
+		break;
+	default:
+		return;
+	}
+
 }
 
 
@@ -207,7 +308,7 @@ bool AssetManager::LoadEditorAssets() {
 }
 
 
-void AssetManager::CleanUpAssetsCopies() noexcept {
+void AssetManager::CleanUpAssets() noexcept {
 
 	//IMPORTANT NOTE: This needs to be done for every stored asset type cause they are copied into the new created assets CURRENTLY. So these are not even used!
 

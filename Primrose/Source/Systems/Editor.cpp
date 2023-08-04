@@ -120,6 +120,9 @@ void Editor::Render() {
 	RenderMainMenuBar();
 	RenderContentWindows();
 
+
+
+
 	m_EditorStyle.Clear();
 
 	RenderFrame();
@@ -864,6 +867,9 @@ void Editor::RenderContentWindows() {
 
 void Editor::RenderContentBrowser() {
 
+	m_IsContentBrowserWindowHovered = false;
+	if (!m_ContentBrowserOpened)
+		return;
 
 	bool m_IsOtherContentWindowOpened = false;
 	m_IsOtherContentWindowOpened |= m_DebugLogOpened;
@@ -889,27 +895,34 @@ void Editor::RenderContentBrowser() {
 		}
 	}
 
-	if (m_ContentBrowserOpened) {
-		if (ImGui::Begin("Content Browser", &m_ContentBrowserOpened, Flags)) {
-			
-			if (m_SelectedDirectory != nullptr) {
-				AddSpacings(5);
-				SetupContentBrowserStyle();
-				NewContentBrowserFrame();
-				UpdateContentBrowserFolderEntries();
-				if (!m_FolderEntryOpened)
-					UpdateContentBrowserAssetEntries();
+	if (ImGui::Begin("Content Browser", &m_ContentBrowserOpened, Flags)) {
+		CheckForHoveredWindows();
+		if (ImGui::IsWindowHovered())
+			m_IsContentBrowserWindowHovered = true;
 
-				FlushContentTexts();
-				ClearContentBrowserStyle();
-			}
+		if (m_SelectedDirectory != nullptr) {
+			AddSpacings(5);
+			SetupContentBrowserStyle();
+			NewContentBrowserFrame();
+			UpdateContentBrowserFolderEntries();
+			if (!m_FolderEntryOpened)
+				UpdateContentBrowserAssetEntries();
 
-			m_ContentBrowserWindowSize = ImGui::GetWindowSize();
+			FlushContentTexts();
+			ClearContentBrowserStyle();
 		}
-		ImGui::End();
+
+		m_ContentBrowserWindowSize = ImGui::GetWindowSize();
+
 	}
+	ImGui::End();
+
+	UpdateContentBrowserMenu();
 }
 void Editor::RenderDebugLog() {
+
+	if (!m_DebugLogOpened)
+		return;
 
 	bool m_IsOtherContentWindowOpened = false;
 	m_IsOtherContentWindowOpened |= m_ContentBrowserOpened;
@@ -933,160 +946,161 @@ void Editor::RenderDebugLog() {
 		}
 	}
 
-	if (m_DebugLogOpened) {
-		if (ImGui::Begin("Debug Log", &m_DebugLogOpened, Flags)) {
+	if (ImGui::Begin("Debug Log", &m_DebugLogOpened, Flags)) {
+		CheckForHoveredWindows();
 
-			
-			//TODO: These could be broken down into functions
-			//TODO: The auto scroll could be made its own resusable function
-			if (ImGui::BeginMenuBar()) {
+		//TODO: These could be broken down into functions
+		//TODO: The auto scroll could be made its own resusable function
+		if (ImGui::BeginMenuBar()) {
 
-				//I guess it makes sense why they use static so much
-				bool ClearSelected = false;
-				const ImVec2 ClearSize = ImGui::CalcTextSize("Clear");
-				const ImVec2 AutoScrollSize = ImGui::CalcTextSize("AutoScroll");
-				if (ImGui::Selectable("Clear", &ClearSelected, 0, ClearSize)) {
-					m_Logger.ClearDebugLog();
-				}
-				if (ImGui::Selectable("AutoScroll", m_Logger.GetDebugLogAutoScroll(), 0, AutoScrollSize)) {
-					m_Logger.ToggleDebugLogAutoScroll();
-				}
-
-				//TODO: Implement a function that checks for an engine texture. 
-				//-If not found then it returns an error texture so then i can be sure im getting something each time
-
-				//TODO: DRY, This down here could be abstarcted away into a resusable function
-
-
-				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
-				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.4f, 0.4f, 0.4f));
-				ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.3f, 0.3f, 0.3f, 0.3f));
-				ImVec4 IconColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-
-				//Texture
-				void* TextureID = nullptr;
-				if (m_ErrorTexture) {
-					m_ErrorTexture->Bind();
-					TextureID = (void*)(intptr_t)(m_ErrorTexture->GetID());
-				}
-
-				//Color
-				if (!m_Logger.GetShowErrorMessages())
-					IconColor = ImVec4(0.3f, 0.3f, 0.3f, 1.0f);
-
-
-				ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 30.0f, ImGui::GetCursorPosY())); //Manual offset by +2
-				if (ImGui::ImageButton("##ErrorLog", TextureID, ImVec2(15.0f, 15.0f), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0.0f, 0.0f, 0.0f, 0.0f), IconColor))
-					m_Logger.ToggleShowErrorMessages();
-				if (m_ErrorTexture != nullptr)
-					m_ErrorTexture->Unbind();
-
-				ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 5.0f, ImGui::GetCursorPosY()));
-				ImGui::Text("%d", m_Logger.GetErrorMessagesCount());
-				IconColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-
-
-				//Texture
-				if (m_WarningTexture) {
-					m_WarningTexture->Bind();
-					TextureID = (void*)(intptr_t)(m_WarningTexture->GetID());
-				}
-
-				//Color
-				if (!m_Logger.GetShowWarningMessages())
-					IconColor = ImVec4(0.3f, 0.3f, 0.3f, 1.0f);
-
-				ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 80.0f, ImGui::GetCursorPosY())); //Manual offset by +2
-				if (ImGui::ImageButton("##WarningLog", TextureID, ImVec2(15.0f, 15.0f), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0.0f, 0.0f, 0.0f, 0.0f), IconColor))
-					m_Logger.ToggleShowWarningMessages();
-				if (m_WarningTexture != nullptr)
-					m_WarningTexture->Unbind();
-
-				ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 55.0f, ImGui::GetCursorPosY()));
-				ImGui::Text("%d", m_Logger.GetWarningMessagesCount());
-				IconColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-
-
-				//Texture
-				if (m_DebugTexture) {
-					m_DebugTexture->Bind();
-					TextureID = (void*)(intptr_t)(m_DebugTexture->GetID());
-				}
-
-				//Color
-				if (!m_Logger.GetShowDebugMessages())
-					IconColor = ImVec4(0.3f, 0.3f, 0.3f, 1.0f);
-
-				ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 130.0f, ImGui::GetCursorPosY())); //Manual offset by +2
-				if (ImGui::ImageButton("##DebugLog", TextureID, ImVec2(15.0f, 15.0f), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0.0f, 0.0f, 0.0f, 0.0f), IconColor))
-					m_Logger.ToggleShowDebugMessages();
-				if (m_DebugTexture != nullptr)
-					m_DebugTexture->Unbind();
-
-				ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 105.0f, ImGui::GetCursorPosY()));
-				ImGui::Text("%d", m_Logger.GetDebugMessagesCount());
-				IconColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-
-
-				ImGui::PopStyleColor();
-				ImGui::PopStyleColor();
-				ImGui::PopStyleColor();
-
-
-				ImGui::EndMenuBar();
+			//I guess it makes sense why they use static so much
+			bool ClearSelected = false;
+			const ImVec2 ClearSize = ImGui::CalcTextSize("Clear");
+			const ImVec2 AutoScrollSize = ImGui::CalcTextSize("AutoScroll");
+			if (ImGui::Selectable("Clear", &ClearSelected, 0, ClearSize)) {
+				m_Logger.ClearDebugLog();
 			}
-			if (m_Logger.GetLoggedMessagesCount() > 0) {
+			if (ImGui::Selectable("AutoScroll", m_Logger.GetDebugLogAutoScroll(), 0, AutoScrollSize)) {
+				m_Logger.ToggleDebugLogAutoScroll();
+			}
 
-				while (!m_Logger.IsLoggedBufferLooped()) {
+			//TODO: Implement a function that checks for an engine texture. 
+			//-If not found then it returns an error texture so then i can be sure im getting something each time
 
-					const Message* NewMessage = m_Logger.GetNextLoggedMessage();
-					if (NewMessage == nullptr)
-						continue;
-
-					const MessageType Type = NewMessage->GetType();
-					if (Type == MessageType::DEBUG && !m_Logger.GetShowDebugMessages())
-						continue;
-					if (Type == MessageType::WARNING && !m_Logger.GetShowWarningMessages())
-						continue;
-					if (Type == MessageType::ERROR && !m_Logger.GetShowErrorMessages())
-						continue;
-					if (Type == MessageType::SYSTEM) {
-						m_Logger.ErrorLog("System type message was saved in the logged messages buffer");
-						continue;
-					}
+			//TODO: DRY, This down here could be abstarcted away into a resusable function
 
 
-					if (Type == MessageType::DEBUG)
-						ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
-					else if (Type == MessageType::WARNING)
-						ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.1f, 1.0f));
-					else if (Type == MessageType::ERROR)
-						ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
-					else if (Type == MessageType::SYSTEM)
-						ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.4f, 0.4f, 0.4f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.3f, 0.3f, 0.3f, 0.3f));
+			ImVec4 IconColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 
-					//TODO: Add icons and numbers to show count of each message type
-					//TODO: Add visibility of each icon that indicates if the filter is active or not
-					//TODO: Add more info to messages like running time - Check what Unity does
+			//Texture
+			void* TextureID = nullptr;
+			if (m_ErrorTexture) {
+				m_ErrorTexture->Bind();
+				TextureID = (void*)(intptr_t)(m_ErrorTexture->GetID());
+			}
 
-					//NOTE: Separate window and buffer for system messages?
-					//TODO: Switch all log functions back to const char* and simply construct 1 string at the func definition in logger to minimize copies. Emplace it even
+			//Color
+			if (!m_Logger.GetShowErrorMessages())
+				IconColor = ImVec4(0.3f, 0.3f, 0.3f, 1.0f);
 
-					ImGui::Text("[%s] [%llu] %s", m_TimeReference->FormatTime(NewMessage->GetTimestamp()).data(), NewMessage->GetTick(), NewMessage->GetData().data());
 
-					ImGui::PopStyleColor();
-					AddSeparators(1);
+			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 30.0f, ImGui::GetCursorPosY())); //Manual offset by +2
+			if (ImGui::ImageButton("##ErrorLog", TextureID, ImVec2(15.0f, 15.0f), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0.0f, 0.0f, 0.0f, 0.0f), IconColor))
+				m_Logger.ToggleShowErrorMessages();
+			if (m_ErrorTexture != nullptr)
+				m_ErrorTexture->Unbind();
 
-					//AutoScroll
-					if (ImGui::GetScrollY() <= ImGui::GetScrollMaxY() && m_Logger.GetDebugLogAutoScroll())
-						ImGui::SetScrollHereY(1.0f);
+			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 5.0f, ImGui::GetCursorPosY()));
+			ImGui::Text("%d", m_Logger.GetErrorMessagesCount());
+			IconColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+
+
+			//Texture
+			if (m_WarningTexture) {
+				m_WarningTexture->Bind();
+				TextureID = (void*)(intptr_t)(m_WarningTexture->GetID());
+			}
+
+			//Color
+			if (!m_Logger.GetShowWarningMessages())
+				IconColor = ImVec4(0.3f, 0.3f, 0.3f, 1.0f);
+
+			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 80.0f, ImGui::GetCursorPosY())); //Manual offset by +2
+			if (ImGui::ImageButton("##WarningLog", TextureID, ImVec2(15.0f, 15.0f), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0.0f, 0.0f, 0.0f, 0.0f), IconColor))
+				m_Logger.ToggleShowWarningMessages();
+			if (m_WarningTexture != nullptr)
+				m_WarningTexture->Unbind();
+
+			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 55.0f, ImGui::GetCursorPosY()));
+			ImGui::Text("%d", m_Logger.GetWarningMessagesCount());
+			IconColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+
+
+			//Texture
+			if (m_DebugTexture) {
+				m_DebugTexture->Bind();
+				TextureID = (void*)(intptr_t)(m_DebugTexture->GetID());
+			}
+
+			//Color
+			if (!m_Logger.GetShowDebugMessages())
+				IconColor = ImVec4(0.3f, 0.3f, 0.3f, 1.0f);
+
+			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 130.0f, ImGui::GetCursorPosY())); //Manual offset by +2
+			if (ImGui::ImageButton("##DebugLog", TextureID, ImVec2(15.0f, 15.0f), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0.0f, 0.0f, 0.0f, 0.0f), IconColor))
+				m_Logger.ToggleShowDebugMessages();
+			if (m_DebugTexture != nullptr)
+				m_DebugTexture->Unbind();
+
+			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 105.0f, ImGui::GetCursorPosY()));
+			ImGui::Text("%d", m_Logger.GetDebugMessagesCount());
+			IconColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+
+
+			ImGui::PopStyleColor();
+			ImGui::PopStyleColor();
+			ImGui::PopStyleColor();
+
+
+			ImGui::EndMenuBar();
+		}
+		if (m_Logger.GetLoggedMessagesCount() > 0) {
+
+			while (!m_Logger.IsLoggedBufferLooped()) {
+
+				const Message* NewMessage = m_Logger.GetNextLoggedMessage();
+				if (NewMessage == nullptr)
+					continue;
+
+				const MessageType Type = NewMessage->GetType();
+				if (Type == MessageType::DEBUG && !m_Logger.GetShowDebugMessages())
+					continue;
+				if (Type == MessageType::WARNING && !m_Logger.GetShowWarningMessages())
+					continue;
+				if (Type == MessageType::ERROR && !m_Logger.GetShowErrorMessages())
+					continue;
+				if (Type == MessageType::SYSTEM) {
+					m_Logger.ErrorLog("System type message was saved in the logged messages buffer");
+					continue;
 				}
+
+
+				if (Type == MessageType::DEBUG)
+					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+				else if (Type == MessageType::WARNING)
+					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.1f, 1.0f));
+				else if (Type == MessageType::ERROR)
+					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+				else if (Type == MessageType::SYSTEM)
+					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
+
+				//TODO: Add icons and numbers to show count of each message type
+				//TODO: Add visibility of each icon that indicates if the filter is active or not
+				//TODO: Add more info to messages like running time - Check what Unity does
+
+				//NOTE: Separate window and buffer for system messages?
+				//TODO: Switch all log functions back to const char* and simply construct 1 string at the func definition in logger to minimize copies. Emplace it even
+
+				ImGui::Text("[%s] [%llu] %s", m_TimeReference->FormatTime(NewMessage->GetTimestamp()).data(), NewMessage->GetTick(), NewMessage->GetData().data());
+
+				ImGui::PopStyleColor();
+				AddSeparators(1);
+
+				//AutoScroll
+				if (ImGui::GetScrollY() <= ImGui::GetScrollMaxY() && m_Logger.GetDebugLogAutoScroll())
+					ImGui::SetScrollHereY(1.0f);
 			}
 		}
-		ImGui::End();
 	}
+	ImGui::End();
 }
 void Editor::RenderSystemLog() {
+
+	if (!m_SystemLogOpened)
+		return;
 
 	bool m_IsOtherContentWindowOpened = false;
 	m_IsOtherContentWindowOpened |= m_ContentBrowserOpened;
@@ -1110,51 +1124,49 @@ void Editor::RenderSystemLog() {
 		}
 	}
 
-	if (m_SystemLogOpened) {
-		if (ImGui::Begin("System Log", &m_SystemLogOpened, Flags)) {
-			
+	if (ImGui::Begin("System Log", &m_SystemLogOpened, Flags)) {
+		CheckForHoveredWindows();
 
-			//NOTE: Change the namings in the logger class
-			//-Debug should be the catagory and maybe just message or something instead of it
-			//System is also far too general
+		//NOTE: Change the namings in the logger class
+		//-Debug should be the catagory and maybe just message or something instead of it
+		//System is also far too general
 
-			if (ImGui::BeginMenuBar()) {
+		if (ImGui::BeginMenuBar()) {
 
-				bool ClearSelected = false;
-				const ImVec2 ClearSize = ImGui::CalcTextSize("Clear");
-				const ImVec2 AutoScrollSize = ImGui::CalcTextSize("AutoScroll");
-				if (ImGui::Selectable("Clear", &ClearSelected, 0, ClearSize))
-					m_Logger.ClearSystemLog();
-				if (ImGui::Selectable("AutoScroll", m_Logger.GetSystemLogAutoScroll(), 0, AutoScrollSize))
-					m_Logger.ToggleSystemLogAutoScroll();
-
+			bool ClearSelected = false;
+			const ImVec2 ClearSize = ImGui::CalcTextSize("Clear");
+			const ImVec2 AutoScrollSize = ImGui::CalcTextSize("AutoScroll");
+			if (ImGui::Selectable("Clear", &ClearSelected, 0, ClearSize))
+				m_Logger.ClearSystemLog();
+			if (ImGui::Selectable("AutoScroll", m_Logger.GetSystemLogAutoScroll(), 0, AutoScrollSize))
+				m_Logger.ToggleSystemLogAutoScroll();
 
 
-				ImGui::EndMenuBar();
-			}
-			if (m_Logger.GetSystemMessagesCount() > 0) {
 
-				while (!m_Logger.IsSystemBufferLooped()) {
-
-					const Message* NewMessage = m_Logger.GetNextSystemMessage();
-					if (NewMessage == nullptr)
-						continue;
-
-					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
-					ImGui::Text("[%s] [%llu] %s", m_TimeReference->FormatTime(NewMessage->GetTimestamp()).data(), NewMessage->GetTick(), NewMessage->GetData().data());
-					ImGui::PopStyleColor();
-					AddSeparators(1);
-
-					//TODO: Moving the scroll manually disables auto scroll
-					//AutoScroll debug log
-					if (ImGui::GetScrollY() <= ImGui::GetScrollMaxY() && m_Logger.GetSystemLogAutoScroll())
-						ImGui::SetScrollHereY(1.0f);
-				}
-			}
-
+			ImGui::EndMenuBar();
 		}
-		ImGui::End();
+		if (m_Logger.GetSystemMessagesCount() > 0) {
+
+			while (!m_Logger.IsSystemBufferLooped()) {
+
+				const Message* NewMessage = m_Logger.GetNextSystemMessage();
+				if (NewMessage == nullptr)
+					continue;
+
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
+				ImGui::Text("[%s] [%llu] %s", m_TimeReference->FormatTime(NewMessage->GetTimestamp()).data(), NewMessage->GetTick(), NewMessage->GetData().data());
+				ImGui::PopStyleColor();
+				AddSeparators(1);
+
+				//TODO: Moving the scroll manually disables auto scroll
+				//AutoScroll debug log
+				if (ImGui::GetScrollY() <= ImGui::GetScrollMaxY() && m_Logger.GetSystemLogAutoScroll())
+					ImGui::SetScrollHereY(1.0f);
+			}
+		}
+
 	}
+	ImGui::End();
 }
 
 
@@ -1168,6 +1180,15 @@ void Editor::CheckInput() {
 	if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !ImGui::IsAnyItemHovered() && m_SelectedGameObject != nullptr && !m_IsAnyWindowHovered) {
 		//The only problem with this is that the IsAnyWindowHovered will not catch windows if a popup is open
 		SetSelectedGameObject(nullptr);
+	}
+
+	if (m_IsContentBrowserWindowHovered && !ImGui::IsAnyItemHovered()){
+
+		if (m_SelectedContentElement != nullptr && ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+			m_SelectedContentElement = nullptr;
+
+		if (ImGui::IsMouseReleased(ImGuiMouseButton_Right))
+			m_OpenContentBrowserEditMenu = true;
 	}
 
 
@@ -1299,11 +1320,9 @@ void Editor::AddHeirarchyEntry(GameObject* entry) {
 			ImGui::Text(std::string("Edit: " + entry->GetName()).data());
 
 			if (ImGui::Selectable("Delete", false)) {
-				ImGui::CloseCurrentPopup();
 				Deleting = true;
 			}
 			if (ImGui::Selectable("Rename", false)) {
-				ImGui::CloseCurrentPopup();
 				Renaming = true;
 			}
 
@@ -1496,17 +1515,19 @@ void Editor::UpdateContentBrowserAssetEntries() {
 
 	for (auto& Asset : m_SelectedDirectory->m_Assets) {
 
-		//TODO: Deal with in case it wasnt found!
+		//TODO: Deal with in case it wasnt found! - Doesnt the function do that?
 		void* TextureID = nullptr;
 		const Texture2D* IconTexture = GetIconTexture(*Asset);
 		if (IconTexture != nullptr) {
 			TextureID = (void*)(intptr_t)(IconTexture->GetID());
+			m_TextureStorageReference->SetActiveTextureUnit(GL_TEXTURE0);
 			IconTexture->Bind();
 		}
 
 
 		std::string ID = "##" + Asset->m_Name;
 		bool AppliedStyle = false;
+
 
 		//Calculate position and check if new line is necessary
 		m_ContentElementCursor = (m_ContentBrowserElementPadding * (m_ContentLineElementsCount + 1)) + m_ContentBrowserElementSize.x * m_ContentLineElementsCount;
@@ -1526,6 +1547,8 @@ void Editor::UpdateContentBrowserAssetEntries() {
 		//Render content
 		ImGui::SameLine(m_ContentElementCursor);
 		if (ImGui::ImageButton(ID.data(), TextureID, m_ContentBrowserElementSize)) {
+
+			//Select
 			if (m_SelectedContentElement == Asset) {
 				m_SelectedContentElement = nullptr;
 				//OPEN WHATEVER!
@@ -1533,6 +1556,36 @@ void Editor::UpdateContentBrowserAssetEntries() {
 			else
 				m_SelectedContentElement = Asset;
 		}
+
+		//Edit Menu - IsItemHovered() checks last submitted item so this needs to be afterwards
+		if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) && ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
+			if (m_SelectedContentElement != Asset)
+				m_SelectedContentElement = Asset;
+
+			m_AssetEditMenuTarget = Asset;
+			ImGui::OpenPopup(m_AssetEditMenuTarget->m_Name.data());
+		}
+
+		//I dont need the bool
+		if (m_AssetEditMenuTarget == Asset) {
+
+			//TODO: This could be moved into its own function and the size could be made into a member variable
+			ImGui::SetNextWindowSize(ImVec2(200.0f, 100.0f));
+			if (ImGui::BeginPopup(m_AssetEditMenuTarget->m_Name.data())) {
+
+				ImGui::Text(std::string("Edit: " + Asset->m_Name).data());
+
+				if (ImGui::MenuItem("Rename")) {
+
+				}
+				if (ImGui::MenuItem("Delete")) {
+
+				}
+
+				ImGui::EndPopup();
+			}
+		}
+
 
 		//Pop selected style
 		if (AppliedStyle)
@@ -1643,6 +1696,30 @@ void Editor::UpdateSpriteSelectorEntries() {
 
 	ClearContentBrowserStyle();
 	FlushSpriteSelectorTexts();
+}
+void Editor::UpdateContentBrowserMenu() {
+
+	//Open Popup
+	if (m_OpenContentBrowserEditMenu) {
+		if (!ImGui::IsPopupOpen("##ContentBrowserMenu"))
+			ImGui::OpenPopup("##ContentBrowserMenu");
+		m_OpenContentBrowserEditMenu = false;
+	}
+
+	//Render Popup
+	if (ImGui::BeginPopup("##ContentBrowserMenu")) {
+
+		if (ImGui::MenuItem("NewFolder")) {
+			m_AssetManagerReference->CreateNewFolder(*m_SelectedDirectory);
+		}
+		ImGui::Separator();
+
+		if (ImGui::MenuItem("Material")) {
+			m_AssetManagerReference->CreateAsset(AssetType::MATERIAL, *m_SelectedDirectory);
+		}
+
+		ImGui::EndPopup();
+	}
 }
 void Editor::FlushSpriteSelectorTexts() {
 

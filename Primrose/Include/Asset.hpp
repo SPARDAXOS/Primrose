@@ -4,7 +4,8 @@
 
 enum class AssetType {
 	INVALID = 0,
-	TEXTURE
+	TEXTURE,
+	MATERIAL
 };
 class Asset {
 public:

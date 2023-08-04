@@ -4,9 +4,33 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
+#include <ostream>
 
 #include "Asset.hpp"
 #include "Utility.hpp"
+
+
+
+//A header contains
+// -Header Start Marker
+// -Asset Type
+// -Asset Version
+// -Header End Marker
+// -
+//
+//
+
+
+namespace AssetFilesVersions {
+	constexpr std::string_view MATERIAL_FILE_VERSION = "0.0.1";
+}
+namespace AssetFilesHeader {
+
+	constexpr std::string_view MATERIAL_FILE_HEADER = "";
+
+
+}
+
 
 
 class Directory final {
@@ -15,6 +39,21 @@ public:
 	Directory(std::filesystem::path path, std::string_view name) 
 		:	m_Path(path), m_Name(name)
 	{
+	}
+
+	inline bool DoesAssetExist(const std::string_view& path) const {
+		for (uint32 index = 0; index < m_Assets.size(); index++) {
+			if (m_Assets.at(index)->m_Path == path)
+				return true;
+		}
+		return false;
+	}
+	inline bool DoesFolderExist(const std::string_view& path) const {
+		for (uint32 index = 0; index < m_Folders.size(); index++) {
+			if (m_Folders.at(index)->m_Path == path)
+				return true;
+		}
+		return false;
 	}
 
 	std::filesystem::path m_Path;
@@ -27,6 +66,7 @@ public:
 
 class TextureStorage;
 class Core;
+class Material;
 
 class AssetManager final {
 public:
@@ -34,7 +74,7 @@ public:
 	AssetManager() = delete;
 	AssetManager(Core& core) noexcept;
 	~AssetManager() {
-		CleanUpAssetsCopies(); //Just in case?
+		CleanUpAssets();
 		CleanUpDirectories();
 	}
 
@@ -46,7 +86,11 @@ public:
 
 public:
 	bool LoadAssets();
+	bool CreateAsset(AssetType type, Directory& location);
+	bool CreateNewFolder(Directory& location);
 
+	bool SerializeMaterialToFile(Material& material);
+	bool SerializeMaterialFromFile(Material* material); //??
 
 public:
 	inline Directory* GetProjectRoot() const noexcept { return m_ProjectRoot; }
@@ -124,8 +168,10 @@ private:
 	bool LoadProjectAssets();
 	bool LoadEditorAssets();
 
-	void CleanUpAssetsCopies() noexcept;
+	void CleanUpAssets() noexcept;
 	void CleanUpDirectories() noexcept;
+
+	void AddAssetFileHeader(std::ofstream& file, AssetType type) const noexcept;
 	
 
 private:
@@ -134,6 +180,8 @@ private:
 
 	std::vector<Asset*> m_ProjectTextureAssets;
 	std::vector<Asset*> m_EditorTextureAssets;
+
+	std::vector<Material*> m_MaterialAssets;
 
 
 	Directory* m_ProjectRoot	{ nullptr };

@@ -60,7 +60,7 @@ public:
 
 
 
-	[[nodiscard]] bool LoadTexture2D(const Asset& asset, bool flipped = false) {
+	[[nodiscard]] bool LoadTexture2D(Asset& asset, bool flipped = false) {
 
 		if (IsTexture2DLoaded(asset.m_Path.string())) {
 			return true;
@@ -77,7 +77,7 @@ public:
 				return false;
 		}
 	}
-	[[nodiscard]] bool LoadEditorTexture2D(const Asset& asset, bool flipped = false) {
+	[[nodiscard]] bool LoadEditorTexture2D(Asset& asset, bool flipped = false) {
 
 		if (IsTexture2DLoaded(asset.m_Path.string())) {
 			return true;

@@ -15,7 +15,7 @@ Renderer::Renderer(Core& core) noexcept
 };
 
 
-bool Renderer::Update() const {
+bool Renderer::Update() {
 
     bool RendererStatus = true;
     if (!Render2D() && !Render3D())
@@ -25,7 +25,7 @@ bool Renderer::Update() const {
 }
 
 
-bool Renderer::Render2D() const {
+bool Renderer::Render2D() {
     
     //Shaders
     Shader VertexShader(GL_VERTEX_SHADER, "Resources/Shaders/Vertex.glsl");
@@ -60,43 +60,8 @@ bool Renderer::Render2D() const {
         if (!TargetGameObject->GetActiveInHeirarchy())
             continue;
 
-        //Texture
-        GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (GLuint)TargetComponent->GetAddressingModeS()));
-        GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (GLuint)TargetComponent->GetAddressingModeT()));
-        GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (GLuint)TargetComponent->GetFilteringModeMin()));
-        GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (GLuint)TargetComponent->GetFilteringModeMag()));
 
-        //Blending
-        GLCall(glBlendFunc((GLuint)TargetComponent->GetSourceBlendMode(), (GLuint)TargetComponent->GetDestinationBlendMode()));
-        GLCall(glBlendEquation((GLuint)TargetComponent->GetBlendEquation()));
-
-        Texture2D* Sprite = TargetComponent->GetSprite();
-        Material CompMaterial = TargetComponent->GetMaterial();
-        m_TextureStorageReference->SetActiveTextureUnit(GL_TEXTURE0); //TODO: Create own abstraction for texture units
-        if (Sprite != nullptr)
-            Sprite->Bind();
-        else {
-            //If Material has diffuse instead
-            Sprite = CompMaterial.m_Diffuse;
-            if (Sprite != nullptr)
-                Sprite->Bind();
-            else {
-                if (m_TextureStorageReference->GetEditorTexture2DByName("NoDiffuse", Sprite))
-                    Sprite->Bind();
-            }
-        }
-
-        //Ambient
-        m_TextureStorageReference->SetActiveTextureUnit(GL_TEXTURE1); //TODO: Create own abstraction for texture units
-        if (CompMaterial.m_Ambient != nullptr){
-            CompMaterial.m_Ambient->Bind();
-        }
-
-        //Specular
-        m_TextureStorageReference->SetActiveTextureUnit(GL_TEXTURE2); //TODO: Create own abstraction for texture units
-        if (CompMaterial.m_Specular != nullptr) {
-            CompMaterial.m_Specular->Bind();
-        }
+        SetupMaterial(ShaderProgramTest, TargetComponent);
 
 
         //Tasks for next time
@@ -108,17 +73,6 @@ bool Renderer::Render2D() const {
         GameObject* DirectionalLightGO = m_ECSReference->GetDirecitonalLightTEST();
         DirectionalLight* DirectionalLightComp = DirectionalLightGO->GetComponent<DirectionalLight>();
         //DirectionalLightComp->m_Tint = Color(1.0f, 1.0f, 1.0f, 1.0f);
-
-
-        ShaderProgramTest.SetUniform("uMaterial.Diffuse", TextureUnit::DIFFUSE);
-        ShaderProgramTest.SetUniform("uMaterial.Ambient", TextureUnit::AMBIENT);
-        ShaderProgramTest.SetUniform("uMaterial.Specular", TextureUnit::SPECULAR);
-        ShaderProgramTest.SetUniform("uMaterial.AmbientStrength", CompMaterial.m_AmbientStrength);
-        ShaderProgramTest.SetUniform("uMaterial.SpecularShininess", CompMaterial.m_SpecularShininess);
-        ShaderProgramTest.SetUniform("uMaterial.SpecularStrength", CompMaterial.m_SpecularStrength);
-
-
-        ShaderProgramTest.SetUniform("uTint", TargetComponent->GetTint());
 
 
 
@@ -170,10 +124,6 @@ bool Renderer::Render2D() const {
         }
 
 
-        ////Testing
-        //TargetGameObject->GetTransform().m_Rotation.m_X += 1.0f;
-        //TargetGameObject->GetTransform().m_Rotation.m_Y += 1.0f;
-
         //MVP
         Camera* ViewportCamera = &m_ECSReference->GetViewportCamera();
 
@@ -188,30 +138,106 @@ bool Renderer::Render2D() const {
         TargetComponent->GetVAO()->Bind();
         GLCall(glDrawElements(GL_TRIANGLES, TargetComponent->GetEBO()->GetCount(), GL_UNSIGNED_INT, nullptr));
 
-        //Diffuse
-        if (Sprite != nullptr) {
-            m_TextureStorageReference->SetActiveTextureUnit(GL_TEXTURE0);
-            Sprite->Unbind();
-        }
-
-        //Ambient
-        if (CompMaterial.m_Ambient != nullptr) {
-            m_TextureStorageReference->SetActiveTextureUnit(GL_TEXTURE1);
-            CompMaterial.m_Ambient->Unbind();
-        }
-
-        //Specular
-        if (CompMaterial.m_Specular != nullptr) {
-            m_TextureStorageReference->SetActiveTextureUnit(GL_TEXTURE2);
-            CompMaterial.m_Specular->Unbind();
-        }
+        UnbindAllTextures(TargetComponent);
     }
 
     return true;
 }
-bool Renderer::Render3D() const {
+bool Renderer::Render3D() {
 
     return true;
+}
+
+void Renderer::SetupMaterial(ShaderProgram& program, const SpriteRenderer* component) {
+
+
+    //TODO: Refactor this function further!
+
+    //Texture
+    GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (GLuint)component->GetAddressingModeS()));
+    GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (GLuint)component->GetAddressingModeT()));
+    GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (GLuint)component->GetFilteringModeMin()));
+    GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (GLuint)component->GetFilteringModeMag()));
+
+    //Blending
+    GLCall(glBlendFunc((GLuint)component->GetSourceBlendMode(), (GLuint)component->GetDestinationBlendMode()));
+    GLCall(glBlendEquation((GLuint)component->GetBlendEquation()));
+
+    Texture2D* Sprite = component->GetSprite();
+    Material* CompMaterial = component->GetMaterial();
+
+
+    //Sprite/Diffuse
+    m_TextureStorageReference->SetActiveTextureUnit(GL_TEXTURE0); //TODO: Create own abstraction for texture units
+    if (Sprite != nullptr)
+        Sprite->Bind();
+    else {
+        //If Material has diffuse instead
+        if (CompMaterial != nullptr) {
+            Sprite = CompMaterial->m_Diffuse;
+            if (Sprite != nullptr)
+                Sprite->Bind();
+        }
+        else {
+            if (m_TextureStorageReference->GetEditorTexture2DByName("NoDiffuse", Sprite))
+                Sprite->Bind();
+        }
+    }
+
+    if (CompMaterial != nullptr) {
+
+        //Ambient
+        m_TextureStorageReference->SetActiveTextureUnit(GL_TEXTURE1); //TODO: Create own abstraction for texture units
+        if (CompMaterial->m_Ambient != nullptr) {
+            CompMaterial->m_Ambient->Bind();
+        }
+        //Specular
+        m_TextureStorageReference->SetActiveTextureUnit(GL_TEXTURE2); //TODO: Create own abstraction for texture units
+        if (CompMaterial->m_Specular != nullptr) {
+            CompMaterial->m_Specular->Bind();
+        }
+
+        program.SetUniform("uMaterial.Ambient", TextureUnit::AMBIENT);
+        program.SetUniform("uMaterial.Specular", TextureUnit::SPECULAR);
+        program.SetUniform("uMaterial.AmbientStrength", CompMaterial->m_AmbientStrength);
+        program.SetUniform("uMaterial.SpecularShininess", CompMaterial->m_SpecularShininess);
+        program.SetUniform("uMaterial.SpecularStrength", CompMaterial->m_SpecularStrength);
+    }
+
+
+    program.SetUniform("uTint", component->GetTint());
+
+    program.SetUniform("uMaterial.Diffuse", TextureUnit::DIFFUSE);
+}
+void Renderer::UnbindAllTextures(const SpriteRenderer* component) {
+
+    //TODO: Divide this function into 2 types since sprites use the sprite instead of diffuse but will use diffuse if sprite does not exist!
+
+    Texture2D* Sprite = component->GetSprite();
+    Material* CompMaterial = component->GetMaterial();
+
+    //Diffuse
+    if (Sprite != nullptr) {
+        m_TextureStorageReference->SetActiveTextureUnit(GL_TEXTURE0);
+        Sprite->Unbind();
+    }
+
+
+    if (CompMaterial == nullptr)
+        return;
+
+    //Ambient
+    if (CompMaterial->m_Ambient != nullptr) {
+        m_TextureStorageReference->SetActiveTextureUnit(GL_TEXTURE1);
+        CompMaterial->m_Ambient->Unbind();
+    }
+
+    //Specular
+    if (CompMaterial->m_Specular != nullptr) {
+        m_TextureStorageReference->SetActiveTextureUnit(GL_TEXTURE2);
+        CompMaterial->m_Specular->Unbind();
+    }
+
 }
 
 
