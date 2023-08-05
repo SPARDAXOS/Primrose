@@ -11,27 +11,6 @@
 
 
 
-//A header contains
-// -Header Start Marker
-// -Asset Type
-// -Asset Version
-// -Header End Marker
-// -
-//
-//
-
-
-namespace AssetFilesVersions {
-	constexpr std::string_view MATERIAL_FILE_VERSION = "0.0.1";
-}
-namespace AssetFilesHeader {
-
-	constexpr std::string_view MATERIAL_FILE_HEADER = "";
-
-
-}
-
-
 
 class Directory final {
 public:
@@ -64,6 +43,7 @@ public:
 };
 
 
+class Serializer;
 class TextureStorage;
 class Core;
 class Material;
@@ -88,9 +68,7 @@ public:
 	bool LoadAssets();
 	bool CreateAsset(AssetType type, Directory& location);
 	bool CreateNewFolder(Directory& location);
-
-	bool SerializeMaterialToFile(Material& material);
-	bool SerializeMaterialFromFile(Material* material); //??
+	bool RemoveAsset(Asset& asset);
 
 public:
 	inline Directory* GetProjectRoot() const noexcept { return m_ProjectRoot; }
@@ -171,8 +149,8 @@ private:
 	void CleanUpAssets() noexcept;
 	void CleanUpDirectories() noexcept;
 
-	void AddAssetFileHeader(std::ofstream& file, AssetType type) const noexcept;
-	
+private:
+	bool CreateMaterialAsset(Directory& location);
 
 private:
 	std::vector<Directory*> m_ProjectDirectories;
@@ -190,6 +168,7 @@ private:
 
 	Core* m_CoreReference;
 	TextureStorage* m_TextureStorageReference;
+	Serializer* m_SerializerReference;
 };
 
 

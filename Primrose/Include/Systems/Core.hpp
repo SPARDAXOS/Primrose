@@ -15,6 +15,7 @@
 #include "Time.hpp"
 #include "Input.hpp"
 #include "Editor.hpp"
+#include "Serializer.hpp"
 
 
 #pragma warning(push, 0)
@@ -41,6 +42,7 @@ public:
 	[[nodiscard]] inline Time* GetTime() const noexcept { return m_Time.get(); }
 	[[nodiscard]] inline Input* GetInput() const noexcept { return m_Input.get(); }
 	[[nodiscard]] inline Editor* GetEditor() const noexcept { return m_Editor.get(); }
+	[[nodiscard]] inline Serializer* GetSerializer() const noexcept { return m_Serializer.get(); }
 
 public:
 	void DebugLog(std::string message) noexcept;
@@ -73,7 +75,7 @@ private:
 private:
 	bool m_Running = false;
 
-public:
+private:
 	std::unique_ptr<Renderer> m_Renderer;
 	std::unique_ptr<Window> m_Window;
 	std::unique_ptr<TextureStorage> m_TextureStorage;
@@ -82,4 +84,5 @@ public:
 	std::unique_ptr<Time> m_Time;
 	std::unique_ptr<Input> m_Input;
 	std::unique_ptr<Editor> m_Editor;
+	std::unique_ptr<Serializer> m_Serializer;
 };

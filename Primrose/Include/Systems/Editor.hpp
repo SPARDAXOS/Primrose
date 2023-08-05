@@ -14,6 +14,7 @@ class TextureStorage;
 class AssetManager;
 class Input;
 class Time;
+class Serializer;
 class GameObject;
 class Directory;
 class Texture2D;
@@ -274,13 +275,14 @@ private:
 	Logger m_Logger{ *m_TimeReference };
 
 private:
-	Core* m_EngineCore							{ nullptr };
+	Core* m_CoreReference							{ nullptr };
 	Window* m_WindowReference					{ nullptr };
 	EntityComponentSystem* m_ECSReference		{ nullptr };
 	TextureStorage* m_TextureStorageReference	{ nullptr };
 	AssetManager* m_AssetManagerReference		{ nullptr };
 	Input* m_InputReference						{ nullptr };
 	Time* m_TimeReference						{ nullptr };
+	Serializer* m_SerializerReference			{ nullptr };
 
 private:
 	ImGuiContext* m_GUIContext		{ nullptr };

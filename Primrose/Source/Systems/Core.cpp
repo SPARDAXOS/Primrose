@@ -6,6 +6,7 @@
 Core::Core() noexcept {
 
 	//Order matters
+	m_Serializer = std::make_unique<Serializer>(*this);
 	m_Time = std::make_unique<Time>();
 	m_Window = std::make_unique<Window>(*this);
 	m_TextureStorage = std::make_unique<TextureStorage>();

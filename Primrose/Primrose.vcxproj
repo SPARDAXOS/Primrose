@@ -162,6 +162,7 @@
     <ClCompile Include="Source\Components\CameraComponent.cpp" />
     <ClCompile Include="Source\Components\DirectionalLightComponent.cpp" />
     <ClCompile Include="Source\Components\LightComponentBase.cpp" />
+    <ClCompile Include="Source\Serializer.cpp" />
     <ClCompile Include="Source\Systems\EntityComponentSystem.cpp" />
     <ClCompile Include="Source\Systems\AssetManager.cpp" />
     <ClCompile Include="Source\GameObject.cpp" />
@@ -202,6 +203,7 @@
     <ClInclude Include="Include\GraphicsResources.hpp" />
     <ClInclude Include="Include\GLErrorHandling.hpp" />
     <ClInclude Include="Include\Systems\Input.hpp" />
+    <ClInclude Include="Include\Systems\Serializer.hpp" />
     <ClInclude Include="Include\Texture2D.hpp" />
     <ClInclude Include="Include\Tools\Logger.hpp" />
     <ClInclude Include="Include\Math.hpp" />

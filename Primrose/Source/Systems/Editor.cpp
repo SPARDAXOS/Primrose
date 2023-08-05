@@ -7,14 +7,15 @@
 
 
 Editor::Editor(Core& core)
-	: m_EngineCore(&core)
+	: m_CoreReference(&core)
 {
-	m_WindowReference = m_EngineCore->GetWindow();
-	m_ECSReference = m_EngineCore->GetECS();
-	m_TextureStorageReference = m_EngineCore->GetTextureStorage();
-	m_AssetManagerReference = m_EngineCore->GetAssetManager();
-	m_InputReference = m_EngineCore->GetInput();
-	m_TimeReference = m_EngineCore->GetTime();
+	m_WindowReference = m_CoreReference->GetWindow();
+	m_ECSReference = m_CoreReference->GetECS();
+	m_TextureStorageReference = m_CoreReference->GetTextureStorage();
+	m_AssetManagerReference = m_CoreReference->GetAssetManager();
+	m_InputReference = m_CoreReference->GetInput();
+	m_TimeReference = m_CoreReference->GetTime();
+	m_SerializerReference = m_CoreReference->GetSerializer();
 
 	//Get folder texture?
 
@@ -1566,6 +1567,17 @@ void Editor::UpdateContentBrowserAssetEntries() {
 			ImGui::OpenPopup(m_AssetEditMenuTarget->m_Name.data());
 		}
 
+		//Pop selected style
+		if (AppliedStyle)
+			ImGui::PopStyleColor();
+
+		m_QueuedContentTexts.push_back(Asset->m_Name);
+		m_ContentLineElementsCount++;
+
+		if (IconTexture != nullptr)
+			IconTexture->Unbind();
+
+		//NOTE: I put it here since once the asset is delete in this func, I shouldnt do anything else with it!
 		//I dont need the bool
 		if (m_AssetEditMenuTarget == Asset) {
 
@@ -1578,24 +1590,14 @@ void Editor::UpdateContentBrowserAssetEntries() {
 				if (ImGui::MenuItem("Rename")) {
 
 				}
-				if (ImGui::MenuItem("Delete")) {
-
-				}
+				if (ImGui::MenuItem("Delete"))
+					m_AssetManagerReference->RemoveAsset(*Asset);
 
 				ImGui::EndPopup();
 			}
 		}
 
 
-		//Pop selected style
-		if (AppliedStyle)
-			ImGui::PopStyleColor();
-
-		m_QueuedContentTexts.push_back(Asset->m_Name);
-		m_ContentLineElementsCount++;
-
-		if (IconTexture != nullptr)
-			IconTexture->Unbind();
 	}
 }
 void Editor::FlushContentTexts() {
