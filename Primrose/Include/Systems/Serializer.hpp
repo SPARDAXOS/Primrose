@@ -18,6 +18,7 @@
 
 class Core;
 class Material;
+class TextureStorage;
 
 namespace AssetFilesVersions {
 	constexpr uint32 MATERIAL_FILE_VERSION = 1111;
@@ -34,7 +35,7 @@ private:
 
 public:
 	Serializer() = delete;
-	Serializer(Core& core);
+	Serializer(Core& core) noexcept;
 	~Serializer() = default;
 
 	Serializer(const Serializer&) = delete;
@@ -55,10 +56,14 @@ public: //TODO: Add concepts?
 
 	bool DeleteFile(const Asset& asset) const;
 
+	AssetType GetAssetTypeFromFile(const Asset& asset) const;
+
 private:
 	void AddHeader(std::ofstream& file, AssetType type) const;
+	bool ValidateFileHeader(const Asset& asset) const;
 
 private:
 	Core* m_CoreReference;
+	TextureStorage* m_TextureStorageReference;
 
 };

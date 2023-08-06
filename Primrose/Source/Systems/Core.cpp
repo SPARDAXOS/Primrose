@@ -6,10 +6,10 @@
 Core::Core() noexcept {
 
 	//Order matters
-	m_Serializer = std::make_unique<Serializer>(*this);
 	m_Time = std::make_unique<Time>();
 	m_Window = std::make_unique<Window>(*this);
 	m_TextureStorage = std::make_unique<TextureStorage>();
+	m_Serializer = std::make_unique<Serializer>(*this);
 	m_ECS = std::make_unique<EntityComponentSystem>();
 	m_AssetManager = std::make_unique<AssetManager>(*this);
 	m_Input = std::make_unique<Input>(*m_Window);
@@ -70,7 +70,7 @@ void Core::Run() {
 	Component->SetMaterial(TestMaterial);
 
 	Texture2D* AmbientTexture = nullptr;
-	if (m_TextureStorage->GetTexture2DByName("CrateAmbient", AmbientTexture))
+	if (m_TextureStorage->GetTexture2DByName("Crate2", AmbientTexture))
 		Component->GetMaterial()->m_Ambient = AmbientTexture;
 
 	Texture2D* SpecularTexture = nullptr;

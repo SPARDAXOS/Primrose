@@ -191,6 +191,7 @@ void Renderer::SetupMaterial(ShaderProgram& program, const SpriteRenderer* compo
         if (CompMaterial->m_Ambient != nullptr) {
             CompMaterial->m_Ambient->Bind();
         }
+        //TODO: Otherwise use sprite/diffuse as ambient!
         //Specular
         m_TextureStorageReference->SetActiveTextureUnit(GL_TEXTURE2); //TODO: Create own abstraction for texture units
         if (CompMaterial->m_Specular != nullptr) {
@@ -212,6 +213,8 @@ void Renderer::SetupMaterial(ShaderProgram& program, const SpriteRenderer* compo
 void Renderer::UnbindAllTextures(const SpriteRenderer* component) {
 
     //TODO: Divide this function into 2 types since sprites use the sprite instead of diffuse but will use diffuse if sprite does not exist!
+    //TODO: This function does not work due to the combinations of bind and unbind that could be happening in the previous above function !!!!!!!
+
 
     Texture2D* Sprite = component->GetSprite();
     Material* CompMaterial = component->GetMaterial();

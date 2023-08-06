@@ -4,9 +4,9 @@
 
 enum class AssetType {
 	INVALID = 0,
-	TEXTURE,
-	MATERIAL,
-	SCENE
+	TEXTURE = 1,
+	MATERIAL = 2,
+	SCENE = 3
 };
 class Asset {
 public:

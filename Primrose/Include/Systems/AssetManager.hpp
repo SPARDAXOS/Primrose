@@ -3,8 +3,6 @@
 #include <string_view>
 #include <sstream>
 #include <fstream>
-#include <iostream>
-#include <ostream>
 
 #include "Asset.hpp"
 #include "Utility.hpp"
@@ -66,6 +64,7 @@ public:
 
 public:
 	bool LoadAssets();
+	//TODO: Template this instead!
 	bool CreateAsset(AssetType type, Directory& location);
 	bool CreateNewFolder(Directory& location);
 	bool RemoveAsset(Asset& asset);
@@ -133,6 +132,9 @@ public:
 	//TODO: Use main scene for the gameobjects heirarchy instead
 	//TODO: Changing names is gonna be hard to fix cause renaming affects it and creating new gameobjects does too.
 
+	//IMPORTANT NOTE: Turning this class into a massive storage of all asset types might not be a bad idea.
+	//-The only weird thing would be the texture storage that loads and manages textures. However, it might not be bad since they require unique work.
+	//-Think about this and decided!
 
 
 private:
@@ -146,11 +148,13 @@ private:
 	bool LoadProjectAssets();
 	bool LoadEditorAssets();
 
+	bool SerializeAssets();
+
 	void CleanUpAssets() noexcept;
 	void CleanUpDirectories() noexcept;
 
 private:
-	bool CreateMaterialAsset(Directory& location);
+	bool CreateMaterialAssetFile(Directory& location);
 
 private:
 	std::vector<Directory*> m_ProjectDirectories;
@@ -159,7 +163,9 @@ private:
 	std::vector<Asset*> m_ProjectTextureAssets;
 	std::vector<Asset*> m_EditorTextureAssets;
 
-	std::vector<Material*> m_MaterialAssets;
+	//Create one for materials
+	std::vector<Asset*> m_MaterialAssets;
+	std::vector<Material*> m_MaterialStorage;
 
 
 	Directory* m_ProjectRoot	{ nullptr };

@@ -1845,7 +1845,17 @@ Texture2D* Editor::GetIconTexture(const Asset& asset) noexcept {
 		}
 
 		return IconTexture;
-	}
+	}break;
+	case AssetType::MATERIAL: {
+
+		if (!m_TextureStorageReference->GetEditorTexture2DByName("MaterialAsset", IconTexture)) {
+			if (!m_TextureStorageReference->GetEditorTexture2DByName("Error", IconTexture))
+				return nullptr;
+			return IconTexture;
+		}
+
+		return IconTexture;
+	}break;
 	default:
 		if (m_TextureStorageReference->GetEditorTexture2DByName("Unknown", IconTexture))
 			return IconTexture;

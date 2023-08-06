@@ -38,9 +38,14 @@ bool AssetManager::LoadAssets() {
 	if (!LoadProjectAssets())
 		return false;
 
+	if (!SerializeAssets())
+		return false;
+
 	m_CoreReference->SystemLog("AssetManager finished loading assets successfully!");
 	return true;
 }
+
+
 
 bool AssetManager::CreateAsset(AssetType type, Directory& location) {
 
@@ -51,12 +56,20 @@ bool AssetManager::CreateAsset(AssetType type, Directory& location) {
 	case AssetType::TEXTURE:
 		return false;
 	case AssetType::MATERIAL:
-		return CreateMaterialAsset(location);
+		return CreateMaterialAssetFile(location);
 	default:
 		return false;
 	}
 }
-bool AssetManager::CreateMaterialAsset(Directory& location) {
+
+/// <summary>
+/// Creates a new material asset and file at directory.
+/// </summary>
+/// <param name="location"> -Directory to create the file at.</param>
+/// <returns></returns>
+bool AssetManager::CreateMaterialAssetFile(Directory& location) {
+
+	//This is meant to be used to create a new asset for the first time.
 
 	//Creating asset
 	Asset* NewAsset = new Asset; //Rememeber to clean this if the function fails
@@ -70,7 +83,7 @@ bool AssetManager::CreateMaterialAsset(Directory& location) {
 	int CopyNameIncrement = 0;
 	while (location.DoesAssetExist(NewAsset->m_Path.string())) {
 		CopyNameIncrement++;
-		NewAsset->m_Name = "NewMaterial" + std::to_string(CopyNameIncrement);
+		NewAsset->m_Name = NewAsset->m_Name + std::to_string(CopyNameIncrement);
 		//IMPORTANT NOTE: Using Windows slashes but the function does work regardless. 
 		//-However, using double slashes for consistency in Asset.m_Path and Directory.m_Path 
 		NewAsset->m_Path = location.m_Path.string() + std::string("\\" + NewAsset->m_Name + NewAsset->m_Extension);
@@ -87,7 +100,7 @@ bool AssetManager::CreateMaterialAsset(Directory& location) {
 	}
 
 	//Add to assets list
-	m_MaterialAssets.emplace_back(NewMaterial);
+	m_MaterialStorage.emplace_back(NewMaterial);
 
 	//Add to directory assets list
 	location.m_Assets.emplace_back(NewAsset);
@@ -104,7 +117,7 @@ bool AssetManager::CreateNewFolder(Directory& location) {
 	int CopyNameIncrement = 0;
 	while (location.DoesFolderExist(FolderPath)) {
 		CopyNameIncrement++;
-		FolderName = "NewFolder" + std::to_string(CopyNameIncrement);
+		FolderName = FolderName + std::to_string(CopyNameIncrement);
 		FolderPath = location.m_Path.string() + "\\" + FolderName;
 	}
 
@@ -121,6 +134,10 @@ bool AssetManager::CreateNewFolder(Directory& location) {
 bool AssetManager::RemoveAsset(Asset& asset) {
 
 	m_SerializerReference->DeleteFile(asset);
+
+	//Notes for later features!
+	//When it comes to deleting and such. There is a bunch of problems that would need to be tackled such as
+	//What if i delete an asset from windows while the engine is open? and edge cases like this.
 
 	//Remove ref from parent directory
 	//Free memory from ptr
@@ -229,42 +246,52 @@ void AssetManager::SetupAsset(Asset& asset, bool editorAsset) {
 	auto Name = asset.m_Path.filename().replace_extension();
 	asset.m_Extension = Extension.string();
 	asset.m_Name = Name.string();
+	asset.m_EditorAsset = editorAsset;
 
 	//Any new supported asset types should be added here for checking
 	if (Extension == ".jpg" || Extension == ".png") {
 		asset.m_Type = AssetType::TEXTURE;
 
-		if (editorAsset) {
-			asset.m_EditorAsset = true;
+		if (editorAsset)
 			m_EditorTextureAssets.emplace_back(&asset);
-		}
-		else {
-			asset.m_EditorAsset = false;
+		else
 			m_ProjectTextureAssets.emplace_back(&asset);
-		}
 	}
+	else if (Extension == ".rose") {
+		asset.m_Type = m_SerializerReference->GetAssetTypeFromFile(asset);
+		if (asset.m_Type == AssetType::MATERIAL)
+			m_MaterialAssets.emplace_back(&asset);
 
-	//TODO: Add materials type. Custom! .mt? .pr as general engine file with header?
 
+	}
 }
 bool AssetManager::LoadProjectAssets() {
 
-	//IMPORTANT NOTE: Some images will be flipped when loaded. The problem is that i cant know which will be. So at some point i should implement the option to flip 
-	//-them in engine. Maybe texture editor? Tick the option and the image will be reloaded!
-
-	//IMPORTANT NOTE: String_view is meant to keep track of one block of memory. So assigning to it a copy will be invalid since it will keep track of the copies data
-	
 	
 	m_CoreReference->SystemLog("Started loading project assets...");
+
+	//////////
+	//	Texture2D
+	//////////
 	for (auto& TextureAsset : m_ProjectTextureAssets) {
-		std::string FileName = TextureAsset->m_Path.filename().replace_extension().string();
 		if (!m_TextureStorageReference->LoadTexture2D(*TextureAsset)) {
-			m_CoreReference->SystemLog("Asset failed to load [Texture] [" + FileName + "] " + TextureAsset->m_Path.string());
+			m_CoreReference->SystemLog("Asset failed to load [Texture] [" + TextureAsset->m_Name + "] " + TextureAsset->m_Path.string());
 		}
 		else {
-			m_CoreReference->SystemLog("Asset loaded successfully [Texture] [" + FileName + "] " + TextureAsset->m_Path.string());
+			m_CoreReference->SystemLog("Asset loaded successfully [Texture] [" + TextureAsset->m_Name + "] " + TextureAsset->m_Path.string());
 		}
 	}
+
+
+	//////////
+	//	Materials
+	//////////
+	for (auto& MaterialAsset : m_MaterialAssets) {
+		Material* NewMaterial = new Material(*MaterialAsset);
+		m_MaterialStorage.emplace_back(NewMaterial);
+		m_CoreReference->SystemLog("Added asset entry successfully [Material] [" + MaterialAsset->m_Name + "] " + MaterialAsset->m_Path.string());
+	}
+
 
 	m_CoreReference->SystemLog("Finished loading project assets successfully!");
 	return true;
@@ -284,7 +311,32 @@ bool AssetManager::LoadEditorAssets() {
 	m_CoreReference->SystemLog("Finished loading editor assets successfully!");
 	return true;
 }
+bool AssetManager::SerializeAssets() {
 
+	m_CoreReference->SystemLog("Started serializing project assets...");
+
+	//////////
+	//	Materials
+	//////////
+	for (uint32 index = 0; index < m_MaterialStorage.size(); index++) {
+		Material* MaterialAsset = m_MaterialStorage.at(index);
+		if (MaterialAsset == nullptr) {
+			m_CoreReference->SystemLog("Invalid material ptr was found in material storage while serializing assets.");
+			m_MaterialStorage.erase(std::begin(m_MaterialStorage) + index);
+			continue;
+		}
+		else if (!m_SerializerReference->SerializeFromFile<Material>(*MaterialAsset)) {
+			m_CoreReference->SystemLog("Error serializing asset [" + MaterialAsset->GetAsset()->m_Name + "] from file.");
+			delete MaterialAsset;
+			m_MaterialStorage.erase(std::begin(m_MaterialStorage) + index);
+		}
+		m_CoreReference->SystemLog("Asset serialized successfully [Material] [" + MaterialAsset->GetAsset()->m_Name + "] " + MaterialAsset->GetAsset()->m_Path.string());
+	}
+
+
+	m_CoreReference->SystemLog("Finished serializing project assets successfully!");
+	return true;
+}
 
 void AssetManager::CleanUpAssets() noexcept {
 
