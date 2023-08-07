@@ -79,7 +79,7 @@ public:
 	}
 
 public:
-	Asset* GetAsset() const noexcept { return m_Asset; }
+	Asset& GetAsset() const noexcept { return *m_Asset; }
 
 public:
 	Texture2D* m_Diffuse	{ nullptr };

@@ -1,44 +1,11 @@
 #pragma once
-#include <filesystem>
-#include <string_view>
 #include <sstream>
 #include <fstream>
 
 #include "Asset.hpp"
-#include "Utility.hpp"
 
 
 
-
-class Directory final {
-public:
-	Directory() = delete;
-	Directory(std::filesystem::path path, std::string_view name) 
-		:	m_Path(path), m_Name(name)
-	{
-	}
-
-	inline bool DoesAssetExist(const std::string_view& path) const {
-		for (uint32 index = 0; index < m_Assets.size(); index++) {
-			if (m_Assets.at(index)->m_Path == path)
-				return true;
-		}
-		return false;
-	}
-	inline bool DoesFolderExist(const std::string_view& path) const {
-		for (uint32 index = 0; index < m_Folders.size(); index++) {
-			if (m_Folders.at(index)->m_Path == path)
-				return true;
-		}
-		return false;
-	}
-
-	std::filesystem::path m_Path;
-	std::filesystem::path m_ParentPath;
-	std::string m_Name;
-	std::vector<Asset*> m_Assets; 
-	std::vector<Directory*> m_Folders;
-};
 
 
 class Serializer;
@@ -74,6 +41,7 @@ public:
 	inline Directory* GetEditorRoot() const noexcept { return m_EditorRoot; }
 
 public:
+	//TODO: Move to Serializer!
 	[[nodiscard]] inline static bool Read(const std::string_view& filePath, std::string& buffer) {
 
 		std::stringstream TargetFileData;
@@ -155,6 +123,9 @@ private:
 
 private:
 	bool CreateMaterialAssetFile(Directory& location);
+
+	template<typename T>
+	inline bool DeleteAsset(Asset& asset) {}
 
 private:
 	std::vector<Directory*> m_ProjectDirectories;

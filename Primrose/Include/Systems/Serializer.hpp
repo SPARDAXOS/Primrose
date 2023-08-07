@@ -54,7 +54,7 @@ public: //TODO: Add concepts?
 	template<typename T>
 	[[nodiscard]] bool CreateFile(const T& asset) const;
 
-	bool DeleteFile(const Asset& asset) const;
+	bool DeleteFile(const std::filesystem::path& path) const;
 
 	AssetType GetAssetTypeFromFile(const Asset& asset) const;
 

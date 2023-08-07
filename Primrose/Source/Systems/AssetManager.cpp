@@ -77,6 +77,7 @@ bool AssetManager::CreateMaterialAssetFile(Directory& location) {
 	NewAsset->m_Extension = ".rose"; //Depending on AssetType? or just general engine asset
 	NewAsset->m_Type = AssetType::MATERIAL;
 	NewAsset->m_Name = "NewMaterial";
+	NewAsset->m_Parent = &location;
 	NewAsset->m_Path = location.m_Path.string() + std::string("\\" + NewAsset->m_Name + NewAsset->m_Extension);
 
 	//Naming
@@ -107,7 +108,21 @@ bool AssetManager::CreateMaterialAssetFile(Directory& location) {
 
 	return true;
 }
+template<>
+bool AssetManager::DeleteAsset<Material>(Asset& asset) {
 
+	auto AssetPath = asset.m_Path;
+	for (uint32 index = 0; index < m_ProjectTextureAssets.size(); index++) {
+		if (asset == *m_ProjectTextureAssets.at(index)) {
+			delete m_ProjectTextureAssets.at(index);
+			m_ProjectTextureAssets.erase(std::begin(m_ProjectTextureAssets) + index);
+			m_CoreReference->SystemLog("Successfully deleted asset [Material] at " + AssetPath.string());
+			return true;
+		}
+	}
+	m_CoreReference->SystemLog("Failed to find asset [Material] to delete at " + AssetPath.string());
+	return false;
+}
 
 bool AssetManager::CreateNewFolder(Directory& location) {
 	
@@ -133,16 +148,54 @@ bool AssetManager::CreateNewFolder(Directory& location) {
 }
 bool AssetManager::RemoveAsset(Asset& asset) {
 
-	m_SerializerReference->DeleteFile(asset);
+	if (asset.m_Type == AssetType::INVALID) {
+		m_CoreReference->SystemLog("Attempted to delete asset with invalid type [" + asset.m_Name + "]");
+		return false;
+	}
+
+	//NAME IS NAME + EXTENSION SO USUALLY YOU CAN HAVE 2 FILES WITH THE SAME NAME AT THE SAME PLACE ITS JUST THAT THE EXTENSION IS DIFFERENT!
+	//Might be already done? If the manager loads it then it must mean its a different asset! Looking up images will be a problem tho! cause it just checks name!
+	//Fix find texture by name to also consider the extension then! add comment to function too!
+
+
+
+	//Data -> Directory Entry -> Asset -> File
+	switch (asset.m_Type) {
+	case AssetType::TEXTURE: {
+
+		if (!m_TextureStorageReference->UnloadTexture2D(asset.m_Path.string()))
+			return false;
+
+		if (!asset.m_Parent->RemoveAssetEntry(asset)) {
+			m_CoreReference->SystemLog("Failed to remove asset entry from directory  " + asset.m_Parent->m_Path.string());
+			return false;
+		}
+
+		auto AssetPath = asset.m_Path;
+		if (!DeleteAsset<Material>(asset))
+			return false;
+
+		if (!m_SerializerReference->DeleteFile(AssetPath))
+			return false;
+
+		return true;
+		
+	}break;
+	case AssetType::MATERIAL: {
+
+
+
+	}break;
+	}
+
+
+
 
 	//Notes for later features!
 	//When it comes to deleting and such. There is a bunch of problems that would need to be tackled such as
 	//What if i delete an asset from windows while the engine is open? and edge cases like this.
 
-	//Remove ref from parent directory
-	//Free memory from ptr
-	//Remove ptr from list
-	return true;
+	return false;
 }
 
 bool AssetManager::CheckForNecessaryDirectories() {
@@ -222,6 +275,7 @@ void AssetManager::ScanDirectory(Directory& parent, bool editorDirectory) {
 		if (directory.is_regular_file()) {
 			Asset* NewAsset = new Asset;
 			NewAsset->m_Path = directory;
+			NewAsset->m_Parent = &parent;
 			parent.m_Assets.emplace_back(NewAsset);
 			SetupAsset(*NewAsset, editorDirectory);
 		}
@@ -326,11 +380,11 @@ bool AssetManager::SerializeAssets() {
 			continue;
 		}
 		else if (!m_SerializerReference->SerializeFromFile<Material>(*MaterialAsset)) {
-			m_CoreReference->SystemLog("Error serializing asset [" + MaterialAsset->GetAsset()->m_Name + "] from file.");
+			m_CoreReference->SystemLog("Error serializing asset [" + MaterialAsset->GetAsset().m_Name + "] from file.");
 			delete MaterialAsset;
 			m_MaterialStorage.erase(std::begin(m_MaterialStorage) + index);
 		}
-		m_CoreReference->SystemLog("Asset serialized successfully [Material] [" + MaterialAsset->GetAsset()->m_Name + "] " + MaterialAsset->GetAsset()->m_Path.string());
+		m_CoreReference->SystemLog("Asset serialized successfully [Material] [" + MaterialAsset->GetAsset().m_Name + "] " + MaterialAsset->GetAsset().m_Path.string());
 	}
 
 
@@ -356,7 +410,23 @@ void AssetManager::CleanUpAssets() noexcept {
 		std::for_each(std::begin(m_ProjectTextureAssets), std::end(m_ProjectTextureAssets), CleanUp);
 		m_ProjectTextureAssets.clear();
 	}
+	if (!m_MaterialAssets.empty()) {
+		auto CleanUp = [](Asset* ptr) {
+			delete ptr;
+		};
+		std::for_each(std::begin(m_MaterialAssets), std::end(m_MaterialAssets), CleanUp);
+		m_MaterialAssets.clear();
+	}
 
+
+	//Maybe somewhere else?
+	if (!m_MaterialStorage.empty()) {
+		auto CleanUp = [](Material* ptr) {
+			delete ptr;
+		};
+		std::for_each(std::begin(m_MaterialStorage), std::end(m_MaterialStorage), CleanUp);
+		m_MaterialStorage.clear();
+	}
 
 
 }

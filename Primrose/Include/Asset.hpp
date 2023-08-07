@@ -1,5 +1,5 @@
 #pragma once
-#include <filesystem>
+#include "Directory.hpp"
 
 
 enum class AssetType {
@@ -21,6 +21,7 @@ public:
 			return *this;
 		}
 		else {
+			this->m_Parent = other.m_Parent;
 			this->m_Path = other.m_Path;
 			this->m_Extension = other.m_Extension;
 			this->m_Name = other.m_Name;
@@ -38,6 +39,7 @@ public:
 			return *this;
 		}
 		else {
+			this->m_Parent = std::move(other.m_Parent);
 			this->m_Path = std::move(other.m_Path);
 			this->m_Extension = std::move(other.m_Extension);
 			this->m_Name = std::move(other.m_Name);
@@ -50,6 +52,8 @@ public:
 	bool operator==(const Asset& other) const noexcept {
 		//NOTE: Might be enough to compare the path since it is not possible to have 2 assets with the same path.
 		if (m_Path != other.m_Path)
+			return false;
+		else if (m_Parent != other.m_Parent)
 			return false;
 		else if (m_Extension != other.m_Extension)
 			return false;
@@ -69,7 +73,8 @@ public:
 			return false;
 	}
 
-public:
+
+	Directory* m_Parent;
 	std::filesystem::path m_Path;
 	std::string m_Extension;
 	std::string m_Name;

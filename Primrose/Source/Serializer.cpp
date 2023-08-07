@@ -34,7 +34,7 @@ bool Serializer::SerializeToFile<Material>(const Material& output) const {
 		int32 m_SpecularShininess;
 	*/
 
-	std::ofstream File(output.GetAsset()->m_Path);
+	std::ofstream File(output.GetAsset().m_Path);
 	AddHeader(File, AssetType::MATERIAL);
 
 	//This is a material and i havent decided what no texture is for materials. I want to avoid looking for NONE texture since it doesnt exist! unnecessary look up.
@@ -90,7 +90,7 @@ bool Serializer::SerializeFromFile<Material>(Material& input) const {
 		int32 m_SpecularShininess;
 	*/
 
-	const Asset* TargetAsset = input.GetAsset();
+	const Asset* TargetAsset = &input.GetAsset();
 	if (!ValidateFileHeader(*TargetAsset)) {
 		m_CoreReference->SystemLog("Failed to serialize material from file [" + TargetAsset->m_Name + "] - Header validation failed.");
 		return false;
@@ -175,7 +175,7 @@ template<typename T>
 template<>
 bool Serializer::CreateFile<Material>(const Material& material) const {
 
-	const Asset* TargetAsset = material.GetAsset();
+	const Asset* TargetAsset = &material.GetAsset();
 
 	std::ofstream File;
 
@@ -184,15 +184,21 @@ bool Serializer::CreateFile<Material>(const Material& material) const {
 	File.close();
 
 	if (!SerializeToFile(material)) {
-		DeleteFile(*TargetAsset);
+		DeleteFile(TargetAsset->m_Path);
 		return false;
 	}
 	return true;
 }
 
 
-bool Serializer::DeleteFile(const Asset& asset) const {
-	return std::remove(asset.m_Path.string().data()); //Error is -1 and it would turn into false(0)
+bool Serializer::DeleteFile(const std::filesystem::path& path) const {
+
+	const auto Results = std::remove(path.string().data());
+	if (Results != -0) {
+		m_CoreReference->SystemLog("Failed to delete file at " + path.string());
+		return false;
+	}
+	return true;
 }
 
 AssetType Serializer::GetAssetTypeFromFile(const Asset& asset) const {

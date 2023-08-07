@@ -309,6 +309,7 @@ public:
 
 public:
 	[[nodiscard]] inline bool IsValid() const noexcept { return m_IsValid; }
+	Asset& GetAsset() const noexcept { return *m_Asset; }
 	inline GLuint GetID() const noexcept { return m_ID; }
 	inline int32 GetWidth() const noexcept { return m_Source.m_Width; }
 	inline int32 GetHeight() const noexcept { return m_Source.m_Height; }
@@ -316,7 +317,7 @@ public:
 	inline uint8* GetData() const noexcept { return m_Source.m_Data; }
 	inline std::string_view GetName() const noexcept { return m_Asset->m_Name; }
 	inline std::string_view GetExtension() const noexcept { return m_Asset->m_Extension; }
-	inline std::string_view GetFilePath() const { return m_Asset->m_Path.string(); }
+	inline std::string GetFilePath() const { return m_Asset->m_Path.string(); }
 
 private:
 	bool m_IsValid;

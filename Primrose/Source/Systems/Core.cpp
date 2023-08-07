@@ -8,7 +8,7 @@ Core::Core() noexcept {
 	//Order matters
 	m_Time = std::make_unique<Time>();
 	m_Window = std::make_unique<Window>(*this);
-	m_TextureStorage = std::make_unique<TextureStorage>();
+	m_TextureStorage = std::make_unique<TextureStorage>(*this);
 	m_Serializer = std::make_unique<Serializer>(*this);
 	m_ECS = std::make_unique<EntityComponentSystem>();
 	m_AssetManager = std::make_unique<AssetManager>(*this);

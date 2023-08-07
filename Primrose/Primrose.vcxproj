@@ -162,11 +162,13 @@
     <ClCompile Include="Source\Components\CameraComponent.cpp" />
     <ClCompile Include="Source\Components\DirectionalLightComponent.cpp" />
     <ClCompile Include="Source\Components\LightComponentBase.cpp" />
+    <ClCompile Include="Source\Directory.cpp" />
     <ClCompile Include="Source\Serializer.cpp" />
     <ClCompile Include="Source\Systems\EntityComponentSystem.cpp" />
     <ClCompile Include="Source\Systems\AssetManager.cpp" />
     <ClCompile Include="Source\GameObject.cpp" />
     <ClCompile Include="Source\Components\SpriteRendererComponent.cpp" />
+    <ClCompile Include="Source\Systems\TextureStorage.cpp" />
     <ClCompile Include="Source\Tools\Logger.cpp" />
     <ClCompile Include="Source\STB_Image.cpp" />
     <ClCompile Include="Source\Systems\Core.cpp" />
@@ -195,6 +197,7 @@
     <ClInclude Include="Include\Components\Component.hpp" />
     <ClInclude Include="Include\Components\DirectionalLightComponent.hpp" />
     <ClInclude Include="Include\Components\LightComponentBase.hpp" />
+    <ClInclude Include="Include\Directory.hpp" />
     <ClInclude Include="Include\Material.hpp" />
     <ClInclude Include="Include\Systems\Editor.hpp" />
     <ClInclude Include="Include\Systems\EntityComponentSystem.hpp" />

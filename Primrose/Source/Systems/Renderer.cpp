@@ -168,7 +168,7 @@ void Renderer::SetupMaterial(ShaderProgram& program, const SpriteRenderer* compo
 
 
     //Sprite/Diffuse
-    m_TextureStorageReference->SetActiveTextureUnit(GL_TEXTURE0); //TODO: Create own abstraction for texture units
+    m_TextureStorageReference->SetActiveTextureUnit(TextureUnit::TEXTURE0); //TODO: Create own abstraction for texture units
     if (Sprite != nullptr)
         Sprite->Bind();
     else {
@@ -187,19 +187,19 @@ void Renderer::SetupMaterial(ShaderProgram& program, const SpriteRenderer* compo
     if (CompMaterial != nullptr) {
 
         //Ambient
-        m_TextureStorageReference->SetActiveTextureUnit(GL_TEXTURE1); //TODO: Create own abstraction for texture units
+        m_TextureStorageReference->SetActiveTextureUnit(TextureUnit::TEXTURE1); //TODO: Create own abstraction for texture units
         if (CompMaterial->m_Ambient != nullptr) {
             CompMaterial->m_Ambient->Bind();
         }
         //TODO: Otherwise use sprite/diffuse as ambient!
         //Specular
-        m_TextureStorageReference->SetActiveTextureUnit(GL_TEXTURE2); //TODO: Create own abstraction for texture units
+        m_TextureStorageReference->SetActiveTextureUnit(TextureUnit::TEXTURE2); //TODO: Create own abstraction for texture units
         if (CompMaterial->m_Specular != nullptr) {
             CompMaterial->m_Specular->Bind();
         }
 
-        program.SetUniform("uMaterial.Ambient", TextureUnit::AMBIENT);
-        program.SetUniform("uMaterial.Specular", TextureUnit::SPECULAR);
+        program.SetUniform("uMaterial.Ambient", TextureType::AMBIENT);
+        program.SetUniform("uMaterial.Specular", TextureType::SPECULAR);
         program.SetUniform("uMaterial.AmbientStrength", CompMaterial->m_AmbientStrength);
         program.SetUniform("uMaterial.SpecularShininess", CompMaterial->m_SpecularShininess);
         program.SetUniform("uMaterial.SpecularStrength", CompMaterial->m_SpecularStrength);
@@ -208,7 +208,7 @@ void Renderer::SetupMaterial(ShaderProgram& program, const SpriteRenderer* compo
 
     program.SetUniform("uTint", component->GetTint());
 
-    program.SetUniform("uMaterial.Diffuse", TextureUnit::DIFFUSE);
+    program.SetUniform("uMaterial.Diffuse", TextureType::DIFFUSE);
 }
 void Renderer::UnbindAllTextures(const SpriteRenderer* component) {
 
@@ -221,7 +221,7 @@ void Renderer::UnbindAllTextures(const SpriteRenderer* component) {
 
     //Diffuse
     if (Sprite != nullptr) {
-        m_TextureStorageReference->SetActiveTextureUnit(GL_TEXTURE0);
+        m_TextureStorageReference->SetActiveTextureUnit(TextureUnit::TEXTURE0);
         Sprite->Unbind();
     }
 
@@ -231,13 +231,13 @@ void Renderer::UnbindAllTextures(const SpriteRenderer* component) {
 
     //Ambient
     if (CompMaterial->m_Ambient != nullptr) {
-        m_TextureStorageReference->SetActiveTextureUnit(GL_TEXTURE1);
+        m_TextureStorageReference->SetActiveTextureUnit(TextureUnit::TEXTURE1);
         CompMaterial->m_Ambient->Unbind();
     }
 
     //Specular
     if (CompMaterial->m_Specular != nullptr) {
-        m_TextureStorageReference->SetActiveTextureUnit(GL_TEXTURE2);
+        m_TextureStorageReference->SetActiveTextureUnit(TextureUnit::TEXTURE2);
         CompMaterial->m_Specular->Unbind();
     }
 

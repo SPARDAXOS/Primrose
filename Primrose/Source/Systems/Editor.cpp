@@ -1521,7 +1521,7 @@ void Editor::UpdateContentBrowserAssetEntries() {
 		const Texture2D* IconTexture = GetIconTexture(*Asset);
 		if (IconTexture != nullptr) {
 			TextureID = (void*)(intptr_t)(IconTexture->GetID());
-			m_TextureStorageReference->SetActiveTextureUnit(GL_TEXTURE0);
+			m_TextureStorageReference->SetActiveTextureUnit(TextureUnit::TEXTURE0);
 			IconTexture->Bind();
 		}
 
@@ -1714,6 +1714,7 @@ void Editor::UpdateContentBrowserMenu() {
 		if (ImGui::MenuItem("NewFolder")) {
 			m_AssetManagerReference->CreateNewFolder(*m_SelectedDirectory);
 		}
+		ImGui::SameLine();
 		ImGui::Separator();
 
 		if (ImGui::MenuItem("Material")) {
