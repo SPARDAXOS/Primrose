@@ -18,7 +18,7 @@ public:
 		//NOTE: Might be enough to compare the path since it is not possible to have 2 assets with the same path.
 		if (m_Path != other.m_Path)
 			return false;
-		else if (m_ParentPath != other.m_ParentPath)
+		else if (m_Parent != other.m_Parent)
 			return false;
 		else if (m_Name != other.m_Name)
 			return false;
@@ -42,10 +42,10 @@ public:
 	bool DoesFolderExist(const std::string_view& path) const;
 
 	bool RemoveAssetEntry(const Asset& asset);
-	bool RemoveFolder(const Directory& directory);
+	bool RemoveFolderEntry(const Directory& directory);
 
 	std::filesystem::path m_Path;
-	std::filesystem::path m_ParentPath;
+	Directory* m_Parent;
 	std::string m_Name;
 	std::vector<Asset*> m_Assets;
 	std::vector<Directory*> m_Folders;

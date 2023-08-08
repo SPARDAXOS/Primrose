@@ -27,7 +27,7 @@ bool Directory::RemoveAssetEntry(const Asset& asset) {
 	}
 	return false;
 }
-bool Directory::RemoveFolder(const Directory& directory) {
+bool Directory::RemoveFolderEntry(const Directory& directory) {
 
 	for (uint32 index = 0; m_Folders.size(); index++) {
 		if (*m_Folders.at(index) == directory) {

@@ -108,14 +108,30 @@ bool AssetManager::CreateMaterialAssetFile(Directory& location) {
 
 	return true;
 }
+
 template<>
-bool AssetManager::DeleteAsset<Material>(Asset& asset) {
+bool AssetManager::RemoveAssetEntry<Texture2D>(Asset& asset) {
 
 	auto AssetPath = asset.m_Path;
 	for (uint32 index = 0; index < m_ProjectTextureAssets.size(); index++) {
 		if (asset == *m_ProjectTextureAssets.at(index)) {
 			delete m_ProjectTextureAssets.at(index);
 			m_ProjectTextureAssets.erase(std::begin(m_ProjectTextureAssets) + index);
+			m_CoreReference->SystemLog("Successfully deleted asset [Texture2D] at " + AssetPath.string());
+			return true;
+		}
+	}
+	m_CoreReference->SystemLog("Failed to find asset [Texture2D] to delete at " + AssetPath.string());
+	return false;
+}
+template<>
+bool AssetManager::RemoveAssetEntry<Material>(Asset& asset) {
+
+	auto AssetPath = asset.m_Path;
+	for (uint32 index = 0; index < m_MaterialAssets.size(); index++) {
+		if (asset == *m_MaterialAssets.at(index)) {
+			delete m_MaterialAssets.at(index);
+			m_MaterialAssets.erase(std::begin(m_MaterialAssets) + index);
 			m_CoreReference->SystemLog("Successfully deleted asset [Material] at " + AssetPath.string());
 			return true;
 		}
@@ -123,6 +139,22 @@ bool AssetManager::DeleteAsset<Material>(Asset& asset) {
 	m_CoreReference->SystemLog("Failed to find asset [Material] to delete at " + AssetPath.string());
 	return false;
 }
+
+bool AssetManager::RemoveFolderEntry(Directory& folder) {
+
+	auto FolderPath = folder.m_Path;
+	for (uint32 index = 0; index < m_ProjectDirectories.size(); index++) {
+		if (folder == *m_ProjectDirectories.at(index)) {
+			delete m_ProjectDirectories.at(index);
+			m_ProjectDirectories.erase(std::begin(m_ProjectDirectories) + index);
+			m_CoreReference->SystemLog("Successfully deleted folder [" + folder.m_Name + "]" + "at" + FolderPath.string());
+			return true;
+		}
+	}
+	m_CoreReference->SystemLog("Failed to find folder [" + folder.m_Name + "]" "to delete at " + FolderPath.string());
+	return false;
+}
+
 
 bool AssetManager::CreateNewFolder(Directory& location) {
 	
@@ -142,7 +174,7 @@ bool AssetManager::CreateNewFolder(Directory& location) {
 	Directory* NewDirectory = new Directory(FolderPath.data(), FolderName);
 	m_ProjectDirectories.emplace_back(NewDirectory);
 	location.m_Folders.emplace_back(NewDirectory);
-	NewDirectory->m_ParentPath = location.m_Path;
+	NewDirectory->m_Parent = &location;
 
 	return true;
 }
@@ -172,7 +204,7 @@ bool AssetManager::RemoveAsset(Asset& asset) {
 		}
 
 		auto AssetPath = asset.m_Path;
-		if (!DeleteAsset<Material>(asset))
+		if (!RemoveAssetEntry<Texture2D>(asset))
 			return false;
 
 		if (!m_SerializerReference->DeleteFile(AssetPath))
@@ -183,7 +215,28 @@ bool AssetManager::RemoveAsset(Asset& asset) {
 	}break;
 	case AssetType::MATERIAL: {
 
+		//Confusing!
+		for (uint32 index = 0; index < m_MaterialStorage.size(); index++) {
+			if (asset == *m_MaterialStorage.at(index)) {
+				delete m_MaterialStorage.at(index);
+				m_MaterialStorage.erase(std::begin(m_MaterialStorage) + index);
+				m_CoreReference->SystemLog("Successfully deleted Material [" + asset.m_Name +  "]" + "at " + asset.m_Path.string());
+			}
+		}
 
+		if (!asset.m_Parent->RemoveAssetEntry(asset)) {
+			m_CoreReference->SystemLog("Failed to remove asset entry from directory  " + asset.m_Parent->m_Path.string());
+			return false;
+		}
+
+		auto AssetPath = asset.m_Path;
+		if (!RemoveAssetEntry<Material>(asset))
+			return false;
+
+		if (!m_SerializerReference->DeleteFile(AssetPath))
+			return false;
+
+		return true;
 
 	}break;
 	}
@@ -196,6 +249,27 @@ bool AssetManager::RemoveAsset(Asset& asset) {
 	//What if i delete an asset from windows while the engine is open? and edge cases like this.
 
 	return false;
+}
+bool AssetManager::RemoveDirectory(Directory& directory) {
+
+	for (auto& folder : directory.m_Folders)
+		RemoveDirectory(*folder);
+
+	for (auto& asset : directory.m_Assets)
+		RemoveAsset(*asset);
+
+	if (!directory.m_Parent->RemoveFolderEntry(directory)) {
+		m_CoreReference->SystemLog("Failed to remove directory entry from parent entries.");
+		return false;
+	}
+	auto FolderPath = directory.m_Path;
+	if (!RemoveFolderEntry(directory))
+		return false;
+
+	if (!m_SerializerReference->DeleteFile(FolderPath))
+		return false;
+
+	return true;
 }
 
 bool AssetManager::CheckForNecessaryDirectories() {
@@ -282,7 +356,7 @@ void AssetManager::ScanDirectory(Directory& parent, bool editorDirectory) {
 		else {
 
 			Directory* NewDirectory = new Directory(directory.path(), directory.path().filename().string());
-			NewDirectory->m_ParentPath = parent.m_Path;
+			NewDirectory->m_Parent = &parent;
 			parent.m_Folders.emplace_back(NewDirectory);
 
 			if (editorDirectory)

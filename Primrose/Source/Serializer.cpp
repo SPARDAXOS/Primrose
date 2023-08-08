@@ -195,7 +195,7 @@ bool Serializer::DeleteFile(const std::filesystem::path& path) const {
 
 	const auto Results = std::remove(path.string().data());
 	if (Results != -0) {
-		m_CoreReference->SystemLog("Failed to delete file at " + path.string());
+		m_CoreReference->SystemLog("Failed to delete file/folder at " + path.string());
 		return false;
 	}
 	return true;

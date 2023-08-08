@@ -35,6 +35,7 @@ public:
 	bool CreateAsset(AssetType type, Directory& location);
 	bool CreateNewFolder(Directory& location);
 	bool RemoveAsset(Asset& asset);
+	bool RemoveDirectory(Directory& directory);
 
 public:
 	inline Directory* GetProjectRoot() const noexcept { return m_ProjectRoot; }
@@ -125,7 +126,8 @@ private:
 	bool CreateMaterialAssetFile(Directory& location);
 
 	template<typename T>
-	inline bool DeleteAsset(Asset& asset) {}
+	inline bool RemoveAssetEntry(Asset& asset) {}
+	bool RemoveFolderEntry(Directory& folder);
 
 private:
 	std::vector<Directory*> m_ProjectDirectories;
