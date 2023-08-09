@@ -55,8 +55,13 @@ public: //TODO: Add concepts?
 	[[nodiscard]] bool CreateFile(const T& asset) const;
 
 	bool DeleteFile(const std::filesystem::path& path) const;
+	bool DeleteFolder(const std::filesystem::path& path) const;
 
 	AssetType GetAssetTypeFromFile(const Asset& asset) const;
+
+	//Prototypes
+	bool TestSerializeToFile(const Material& output) const;
+
 
 private:
 	void AddHeader(std::ofstream& file, AssetType type) const;

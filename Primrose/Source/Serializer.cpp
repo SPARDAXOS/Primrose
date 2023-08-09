@@ -34,6 +34,7 @@ bool Serializer::SerializeToFile<Material>(const Material& output) const {
 		int32 m_SpecularShininess;
 	*/
 
+	//Create or Open file
 	std::ofstream File(output.GetAsset().m_Path);
 	AddHeader(File, AssetType::MATERIAL);
 
@@ -74,7 +75,6 @@ template<typename T>
 	m_CoreReference->SystemLog("Asset type was not identified.");
 	m_CoreReference->SystemLog("Failed to serialize from file");
 }
-
 template<>
 bool Serializer::SerializeFromFile<Material>(Material& input) const {
 
@@ -195,11 +195,51 @@ bool Serializer::DeleteFile(const std::filesystem::path& path) const {
 
 	const auto Results = std::remove(path.string().data());
 	if (Results != -0) {
-		m_CoreReference->SystemLog("Failed to delete file/folder at " + path.string());
+		m_CoreReference->SystemLog("Failed to delete file at " + path.string());
 		return false;
 	}
 	return true;
 }
+bool Serializer::DeleteFolder(const std::filesystem::path& path) const {
+
+	auto Results = std::filesystem::remove(path);
+	if (!Results) {
+		m_CoreReference->SystemLog("Failed to delete folder at " + path.string());
+		return false;
+	}
+
+	return Results;
+}
+
+bool Serializer::TestSerializeToFile(const Material& output) const {
+
+
+	//Create or Open file
+	std::ofstream File(output.GetAsset().m_Path);
+	AddHeader(File, AssetType::MATERIAL);
+
+	auto Size = sizeof(output);
+	//Memcpy
+	auto PointerToData = &output;
+
+	unsigned char Buffer[512];
+
+	std::memcpy(&Buffer, PointerToData, Size);
+
+	std::cout << Size << std::endl;
+	std::cout << PointerToData << std::endl;
+
+	File << *Buffer;
+
+	//Note: Dont just copy binary. Copy it as text.
+	//Note: Make each class has its own serialization function? To handle cases like pointer, strings and such
+	//IMPORTANT NOTE: Serializer will crash the engine if a file has corrupt header data
+
+	File.close();
+
+	return true;
+}
+
 
 AssetType Serializer::GetAssetTypeFromFile(const Asset& asset) const {
 

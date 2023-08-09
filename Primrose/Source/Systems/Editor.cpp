@@ -1193,12 +1193,6 @@ void Editor::CheckInput() {
 	}
 
 
-	//Unfinished - NOTE: It might be worthwhile to save the name of the hovered over window
-	////Deselect content element
-	//if (ImGui::IsMouseClicked(ImGuiMouseButton_Right) && m_SelectedContentElement != nullptr && !ImGui::IsAnyItemHovered()) {
-	//	m_SelectedContentElement = nullptr;
-	//}
-
 	//Delete selected from hieracrchy
 	if (ImGui::IsKeyReleased(ImGuiKey_Delete)) {
 		if (m_SelectedGameObject != nullptr) {
@@ -1504,8 +1498,37 @@ void Editor::UpdateContentBrowserFolderEntries() {
 
 		//Book keeping
 		m_QueuedContentTexts.push_back(Folder->m_Name);
-
 		m_ContentLineElementsCount++;
+
+
+		//Edit Menu - IsItemHovered() checks last submitted item so this needs to be afterwards
+		if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) && ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
+			if (m_SelectedContentElement != Folder)
+				m_SelectedContentElement = Folder;
+
+			m_FolderEditMenuTarget = Folder;
+			ImGui::OpenPopup(m_FolderEditMenuTarget->m_Name.data());
+		}
+
+		//NOTE: I put it here since once the asset is delete in this func, I shouldnt do anything else with it!
+		if (m_FolderEditMenuTarget == Folder) {
+
+			//TODO: This could be moved into its own function and the size could be made into a member variable
+			ImGui::SetNextWindowSize(ImVec2(200.0f, 100.0f));
+			if (ImGui::BeginPopup(m_FolderEditMenuTarget->m_Name.data())) {
+
+				ImGui::Text(std::string("Edit: " + Folder->m_Name).data());
+				ImGui::Separator();
+
+				if (ImGui::MenuItem("Rename")) {
+
+				}
+				if (ImGui::MenuItem("Delete"))
+					m_AssetManagerReference->RemoveDirectory(*Folder);
+
+				ImGui::EndPopup();
+			}
+		}
 	}
 
 	//Unbind texture
@@ -1558,14 +1581,6 @@ void Editor::UpdateContentBrowserAssetEntries() {
 				m_SelectedContentElement = Asset;
 		}
 
-		//Edit Menu - IsItemHovered() checks last submitted item so this needs to be afterwards
-		if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) && ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
-			if (m_SelectedContentElement != Asset)
-				m_SelectedContentElement = Asset;
-
-			m_AssetEditMenuTarget = Asset;
-			ImGui::OpenPopup(m_AssetEditMenuTarget->m_Name.data());
-		}
 
 		//Pop selected style
 		if (AppliedStyle)
@@ -1577,6 +1592,15 @@ void Editor::UpdateContentBrowserAssetEntries() {
 		if (IconTexture != nullptr)
 			IconTexture->Unbind();
 
+		//Edit Menu - IsItemHovered() checks last submitted item so this needs to be afterwards
+		if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) && ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
+			if (m_SelectedContentElement != Asset)
+				m_SelectedContentElement = Asset;
+
+			m_AssetEditMenuTarget = Asset;
+			ImGui::OpenPopup(m_AssetEditMenuTarget->m_Name.data());
+		}
+
 		//NOTE: I put it here since once the asset is delete in this func, I shouldnt do anything else with it!
 		//I dont need the bool
 		if (m_AssetEditMenuTarget == Asset) {
@@ -1586,6 +1610,7 @@ void Editor::UpdateContentBrowserAssetEntries() {
 			if (ImGui::BeginPopup(m_AssetEditMenuTarget->m_Name.data())) {
 
 				ImGui::Text(std::string("Edit: " + Asset->m_Name).data());
+				ImGui::Separator();
 
 				if (ImGui::MenuItem("Rename")) {
 
@@ -1596,8 +1621,6 @@ void Editor::UpdateContentBrowserAssetEntries() {
 				ImGui::EndPopup();
 			}
 		}
-
-
 	}
 }
 void Editor::FlushContentTexts() {
@@ -1714,7 +1737,7 @@ void Editor::UpdateContentBrowserMenu() {
 		if (ImGui::MenuItem("NewFolder")) {
 			m_AssetManagerReference->CreateNewFolder(*m_SelectedDirectory);
 		}
-		ImGui::SameLine();
+		ImGui::Text("Add New...");
 		ImGui::Separator();
 
 		if (ImGui::MenuItem("Material")) {

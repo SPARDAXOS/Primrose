@@ -193,7 +193,6 @@ private:
 	char m_TagInputBuffer[33];
 
 private: 
-	ImVec2 m_ContentBrowserWindowSize;
 	ImVec2 m_DetailsWindowSize;
 	ImVec2 m_HierarchyWindowSize;
 	ImVec2 m_DirectoryExplorerWindowSize;
@@ -202,12 +201,10 @@ private:
 
 	ImVec2 m_SpriteSelectorWindowSize;
 	
-	ImVec2 m_ContentBrowserWindowPosition;
+
 	ImVec2 m_DetailsWindowPosition;
 	ImVec2 m_HierarchyWindowPosition;
 		
-	ImVec2 m_ContentBrowserElementSize	{ 100.0f, 100.0f };
-	float m_ContentBrowserElementPadding = 50.0f;
 
 	ImVec2 m_SpriteSelectorElementSize	{ 100.0f, 100.0f };
 	float m_SpriteSelectorElementPadding = 50.0f;
@@ -217,17 +214,28 @@ private:
 	bool m_HeirarchyWindowOpened = true;
 	bool m_DirectoryExplorerWindowOpened = true;
 
-	bool m_ContentBrowserOpened = true;
 	bool m_DebugLogOpened = false;
 	bool m_SystemLogOpened = false;
 
 	bool m_SpriteSelectorOpened = false;
 
-	Asset* m_AssetEditMenuTarget	{ nullptr };
+private: //Content Browser
+	ImVec2 m_ContentBrowserWindowSize;
+	ImVec2 m_ContentBrowserWindowPosition;
+
+	ImVec2 m_ContentBrowserElementSize{ 100.0f, 100.0f };
+	float m_ContentBrowserElementPadding = 50.0f;
+
+	bool m_ContentBrowserOpened = true;
 	bool m_IsContentBrowserWindowHovered = false;
 	bool m_OpenContentBrowserEditMenu = false;
 
 	bool m_ContentBrowserWindowReset = true;
+
+	Asset* m_AssetEditMenuTarget{ nullptr };
+	Directory* m_FolderEditMenuTarget{ nullptr };
+
+private:
 	bool m_DebugLogWindowReset = true;
 	bool m_SystemLogWindowReset = true;
 

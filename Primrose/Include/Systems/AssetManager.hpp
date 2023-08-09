@@ -129,6 +129,8 @@ private:
 	inline bool RemoveAssetEntry(Asset& asset) {}
 	bool RemoveFolderEntry(Directory& folder);
 
+	[[nodiscard]] bool RemoveMaterialFromStorage(const Asset& asset);
+
 private:
 	std::vector<Directory*> m_ProjectDirectories;
 	std::vector<Directory*> m_EditorDirectories;

@@ -22,7 +22,7 @@ TextureStorage::~TextureStorage() {
 		m_EditorTexture2DStorage.clear();
 	}
 
-	m_CoreReference->SystemLog("[Exit] TextureStorage was exited successfully.");
+	//m_CoreReference->SystemLog("[Exit] TextureStorage was exited successfully.");
 }
 
 

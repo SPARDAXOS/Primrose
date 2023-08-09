@@ -2,13 +2,6 @@
 #include "Systems/Core.hpp"
 
 
-
-//NOTE: There is some includes weirdness going on cause texture storage had implemented filesystem before it was reworked
-//TextureStorage needs the Asset class and the Loading functions from here
-//This class needs a ref to TextureStorage for loading the assets and needs the class Asset
-//Asset should be in its own header! Maybe along with others like texture 2d and such
-
-
 AssetManager::AssetManager(Core& core) noexcept
 	: m_CoreReference(&core)
 {
@@ -100,14 +93,21 @@ bool AssetManager::CreateMaterialAssetFile(Directory& location) {
 		return false;
 	}
 
-	//Add to assets list
+	//Add to materials list
 	m_MaterialStorage.emplace_back(NewMaterial);
+
+	//Add to assets list
+	m_MaterialAssets.emplace_back(NewAsset);
 
 	//Add to directory assets list
 	location.m_Assets.emplace_back(NewAsset);
 
+	m_CoreReference->SystemLog("Successfully created new [Material] asset [" + NewAsset->m_Name + "]"); //TODO: This is a user action message
+
 	return true;
 }
+
+
 
 template<>
 bool AssetManager::RemoveAssetEntry<Texture2D>(Asset& asset) {
@@ -139,15 +139,15 @@ bool AssetManager::RemoveAssetEntry<Material>(Asset& asset) {
 	m_CoreReference->SystemLog("Failed to find asset [Material] to delete at " + AssetPath.string());
 	return false;
 }
-
 bool AssetManager::RemoveFolderEntry(Directory& folder) {
 
 	auto FolderPath = folder.m_Path;
 	for (uint32 index = 0; index < m_ProjectDirectories.size(); index++) {
 		if (folder == *m_ProjectDirectories.at(index)) {
+			auto FolderName = folder.m_Name;
 			delete m_ProjectDirectories.at(index);
 			m_ProjectDirectories.erase(std::begin(m_ProjectDirectories) + index);
-			m_CoreReference->SystemLog("Successfully deleted folder [" + folder.m_Name + "]" + "at" + FolderPath.string());
+			m_CoreReference->SystemLog("Successfully deleted folder [" + FolderName + "]" + "at" + FolderPath.string());
 			return true;
 		}
 	}
@@ -190,7 +190,6 @@ bool AssetManager::RemoveAsset(Asset& asset) {
 	//Fix find texture by name to also consider the extension then! add comment to function too!
 
 
-
 	//Data -> Directory Entry -> Asset -> File
 	switch (asset.m_Type) {
 	case AssetType::TEXTURE: {
@@ -215,14 +214,8 @@ bool AssetManager::RemoveAsset(Asset& asset) {
 	}break;
 	case AssetType::MATERIAL: {
 
-		//Confusing!
-		for (uint32 index = 0; index < m_MaterialStorage.size(); index++) {
-			if (asset == *m_MaterialStorage.at(index)) {
-				delete m_MaterialStorage.at(index);
-				m_MaterialStorage.erase(std::begin(m_MaterialStorage) + index);
-				m_CoreReference->SystemLog("Successfully deleted Material [" + asset.m_Name +  "]" + "at " + asset.m_Path.string());
-			}
-		}
+		if (!RemoveMaterialFromStorage(asset))
+			return false;
 
 		if (!asset.m_Parent->RemoveAssetEntry(asset)) {
 			m_CoreReference->SystemLog("Failed to remove asset entry from directory  " + asset.m_Parent->m_Path.string());
@@ -252,25 +245,45 @@ bool AssetManager::RemoveAsset(Asset& asset) {
 }
 bool AssetManager::RemoveDirectory(Directory& directory) {
 
-	for (auto& folder : directory.m_Folders)
-		RemoveDirectory(*folder);
+	//IMPORTANT NOTE: For every loop that deletes and releases all elements.
+	//-free memory then deleting pointer then go for next element will access out of range since the range changed!
+	//-I dont think this would happen in any of the lambdas cause i use begin and end, however, any loop with numbers will break for sure!
 
-	for (auto& asset : directory.m_Assets)
-		RemoveAsset(*asset);
+	while (directory.m_Folders.size() > 0)
+		RemoveDirectory(*directory.m_Folders.at(0));
+
+	while (directory.m_Assets.size() > 0)
+		RemoveAsset(*directory.m_Assets.at(0));
 
 	if (!directory.m_Parent->RemoveFolderEntry(directory)) {
-		m_CoreReference->SystemLog("Failed to remove directory entry from parent entries.");
+		m_CoreReference->SystemLog("Failed to remove directory entry from parent entries."); //TODO: Doesnt need to be here if logger was in core
 		return false;
 	}
 	auto FolderPath = directory.m_Path;
 	if (!RemoveFolderEntry(directory))
 		return false;
 
-	if (!m_SerializerReference->DeleteFile(FolderPath))
+	if (!m_SerializerReference->DeleteFolder(FolderPath))
 		return false;
 
 	return true;
 }
+
+
+bool AssetManager::RemoveMaterialFromStorage(const Asset& asset) {
+
+	for (uint32 index = 0; index < m_MaterialStorage.size(); index++) {
+		if (asset == m_MaterialStorage.at(index)->GetAsset()) {
+			delete m_MaterialStorage.at(index);
+			m_MaterialStorage.erase(std::begin(m_MaterialStorage) + index);
+			m_CoreReference->SystemLog("Successfully removed Material [" + asset.m_Name + "]" + " from materials storage.");
+			return true;;
+		}
+	}
+	m_CoreReference->SystemLog("Failed to remove Material [" + asset.m_Name + "]" + " from materials storage.");
+	return false;
+}
+
 
 bool AssetManager::CheckForNecessaryDirectories() {
 
@@ -335,12 +348,6 @@ bool AssetManager::SetupEditorDirectories() {
 	m_CoreReference->SystemLog("Failed to scan for editor assets.");
 	return false;
 }
-
-//Material serialization - Material file - Sprites are instead saved as names. If not found on loading then default is put instead
-//Add Asset menu to content browser for adding assets like the material
-//Need so storage for materials. MaterialsStorage?
-//Maybe thats where shaders end up in the future. Toggle bool to enable feature and shader is decided on those enables bools
-
 
 
 void AssetManager::ScanDirectory(Directory& parent, bool editorDirectory) {
