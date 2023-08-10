@@ -12,6 +12,7 @@ class Serializer;
 class TextureStorage;
 class Core;
 class Material;
+class Texture2D;
 
 class AssetManager final {
 public:
@@ -95,6 +96,8 @@ public:
 		buffer = TargetFileData;
 		return true;
 	}
+
+	[[nodiscard]] bool RequestTexture2D(const std::string_view& name, Texture2D*& ptr) const noexcept;
 
 	//TODO: Send extension to function along with newasset pointer to determine asset type! and set it !
 	//TODO: Add opening file at spot functionality

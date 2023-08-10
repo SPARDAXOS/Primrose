@@ -84,7 +84,7 @@ bool AssetManager::CreateMaterialAssetFile(Directory& location) {
 	}
 
 	//Create material using the asset
-	Material* NewMaterial = new Material(*NewAsset);
+	Material* NewMaterial = new Material(*NewAsset, *this);
 
 	//Create file
 	if (!m_SerializerReference->CreateFile(*NewMaterial)) {
@@ -101,6 +101,32 @@ bool AssetManager::CreateMaterialAssetFile(Directory& location) {
 
 	//Add to directory assets list
 	location.m_Assets.emplace_back(NewAsset);
+
+
+	Texture2D* tex;
+	if (m_TextureStorageReference->GetTexture2DByName("Crate", tex))
+		NewMaterial->m_Diffuse = tex;
+
+	Texture2D* tex2;
+	if (m_TextureStorageReference->GetTexture2DByName("CrateAmbient", tex2))
+		NewMaterial->m_Ambient = tex2;
+
+	Texture2D* tex3;
+	if (m_TextureStorageReference->GetTexture2DByName("CrateSpecular", tex3))
+		NewMaterial->m_Specular = tex3;
+
+	NewMaterial->m_AmbientStrength = 69.69f;
+	NewMaterial->m_SpecularShininess = 128;
+	NewMaterial->m_SpecularStrength = 12.0f;
+
+	m_SerializerReference->TestSerializeToFile(*NewMaterial);
+
+	NewMaterial->m_AmbientStrength = 0.0f;
+	NewMaterial->m_SpecularShininess = 0;
+	NewMaterial->m_SpecularStrength = 0.0f;
+
+	if (m_SerializerReference->TestSerializeFromFile(*NewMaterial))
+		m_CoreReference->SystemLog("Pep");
 
 	m_CoreReference->SystemLog("Successfully created new [Material] asset [" + NewAsset->m_Name + "]"); //TODO: This is a user action message
 
@@ -270,6 +296,12 @@ bool AssetManager::RemoveDirectory(Directory& directory) {
 }
 
 
+bool AssetManager::RequestTexture2D(const std::string_view& name, Texture2D*& ptr) const noexcept {
+
+	return m_TextureStorageReference->GetTexture2DByName(name, ptr);
+}
+
+
 bool AssetManager::RemoveMaterialFromStorage(const Asset& asset) {
 
 	for (uint32 index = 0; index < m_MaterialStorage.size(); index++) {
@@ -422,7 +454,7 @@ bool AssetManager::LoadProjectAssets() {
 	//	Materials
 	//////////
 	for (auto& MaterialAsset : m_MaterialAssets) {
-		Material* NewMaterial = new Material(*MaterialAsset);
+		Material* NewMaterial = new Material(*MaterialAsset, *this);
 		m_MaterialStorage.emplace_back(NewMaterial);
 		m_CoreReference->SystemLog("Added asset entry successfully [Material] [" + MaterialAsset->m_Name + "] " + MaterialAsset->m_Path.string());
 	}

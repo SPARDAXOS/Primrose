@@ -6,8 +6,8 @@ class Material {
 public:
 
 	explicit Material() = delete;
-	Material(Asset& asset) 
-		: m_Asset(&asset)
+	Material(Asset& asset, AssetManager& assetManager) noexcept 
+		: m_Asset(&asset), m_AssetManagerReference(&assetManager)
 	{
 	}
 	~Material() = default;
@@ -82,6 +82,120 @@ public:
 	Asset& GetAsset() const noexcept { return *m_Asset; }
 
 public:
+	[[nodiscard]] inline bool SerializeToFile(char*& buffer, size_t& size) const {
+		
+		size_t Cursor = 0;
+
+		//IMPORTANT NOTE: This way, reordering the member variables wouldnt break things.
+		//-Just gotta make sure to deserialize the data in the same order as it gets serialized.
+		
+		//Diffuse
+		if (m_Diffuse != nullptr) {
+			std::string Name = m_Diffuse->GetName().data();
+			Name += "\n";
+			std::memcpy(buffer + Cursor, Name.data(), Name.size());
+			Cursor += Name.size();
+		}
+		else {
+			const char* test = "None\n";
+			std::memcpy(buffer, test, 5);
+			Cursor += 5;
+		}
+
+		//Ambient
+		if (m_Ambient != nullptr) {
+			std::string Name = m_Ambient->GetName().data();
+			Name += "\n";
+			std::memcpy(buffer + Cursor, Name.data(), Name.size());
+			Cursor += Name.size();
+		}
+		else {
+			std::memcpy(buffer + Cursor, "None\n", 5);
+			Cursor += 5;
+		}
+
+		//Specular
+		if (m_Specular != nullptr) {
+			std::string Name = m_Specular->GetName().data();
+			Name += "\n";
+			std::memcpy(buffer + Cursor, Name.data(), Name.size());
+			Cursor += Name.size();
+		}
+		else {
+			std::memcpy(buffer + Cursor, "None\n", 5);
+			Cursor += 5;
+		}
+
+		//NOTE: Unsure here cause it seems like there are 2 bytes that are skipped at the start or its fine!
+		std::memcpy(buffer + Cursor, &m_AmbientStrength, 4);
+		Cursor += 4;
+
+		std::memcpy(buffer + Cursor, &m_SpecularStrength, 4);
+		Cursor += 4;
+
+		std::memcpy(buffer + Cursor, &m_SpecularShininess, 4);
+		Cursor += 4;
+
+		size = Cursor;
+		return true;
+	}
+	[[nodiscard]] inline bool SerializeFromFile(char*& buffer) {
+
+		std::istringstream StringStream(buffer);
+
+		std::string TextureName;
+		Texture2D* Texture_ptr = nullptr;
+		size_t Cursor = 0;
+
+		//Diffuse
+		std::getline(StringStream, TextureName);
+		if (TextureName != "None") {
+			if (!m_AssetManagerReference->RequestTexture2D(TextureName, Texture_ptr)) {
+				//Print error message! Get it from asset manager or something?
+			}
+			m_Diffuse = Texture_ptr;
+			Cursor += TextureName.size();
+		}
+		else
+			Cursor += 4;
+
+		//Ambient
+		std::getline(StringStream, TextureName);
+		if (TextureName != "None") {
+			if (!m_AssetManagerReference->RequestTexture2D(TextureName, Texture_ptr)) {
+				//Print error message! Get it from asset manager or something?
+			}
+			m_Ambient = Texture_ptr;
+			Cursor += TextureName.size();
+		}
+		else
+			Cursor += 4;
+
+		//Specular
+		std::getline(StringStream, TextureName);
+		if (TextureName != "None") {
+			if (!m_AssetManagerReference->RequestTexture2D(TextureName, Texture_ptr)) {
+				//Print error message! Get it from asset manager or something?
+			}
+			m_Specular = Texture_ptr;
+			Cursor += TextureName.size();
+		}
+		else
+			Cursor += 4;
+
+		std::memcpy(&m_AmbientStrength, &buffer[0] + Cursor, 4);
+		Cursor += 4;
+
+		std::memcpy(&m_SpecularStrength, &buffer[0] + Cursor, 4);
+		Cursor += 4;
+
+		std::memcpy(&m_SpecularShininess, &buffer[0] + Cursor, 4);
+		Cursor += 4;
+
+		return true;
+	}
+
+public:
 	Texture2D* m_Diffuse	{ nullptr };
 	Texture2D* m_Ambient	{ nullptr };
 	Texture2D* m_Specular	{ nullptr };
@@ -92,5 +206,6 @@ public:
 	int32 m_SpecularShininess = 32;
 
 private:
-	Asset* m_Asset	{ nullptr };
+	Asset* m_Asset							{ nullptr };
+	AssetManager* m_AssetManagerReference	{ nullptr };
 };

@@ -66,7 +66,7 @@ void Core::Run() {
 
 	//IMPORTANT NOTE: This is temporary so this will leak memory in the meanwhile
 	Asset* TestAsset = new Asset();
-	Material* TestMaterial = new Material(*TestAsset);
+	Material* TestMaterial = new Material(*TestAsset, *m_AssetManager);
 	Component->SetMaterial(TestMaterial);
 
 	Texture2D* AmbientTexture = nullptr;

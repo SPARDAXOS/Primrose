@@ -61,7 +61,7 @@ public: //TODO: Add concepts?
 
 	//Prototypes
 	bool TestSerializeToFile(const Material& output) const;
-
+	bool TestSerializeFromFile(Material& input) const;
 
 private:
 	void AddHeader(std::ofstream& file, AssetType type) const;

@@ -202,7 +202,7 @@ bool Serializer::DeleteFile(const std::filesystem::path& path) const {
 }
 bool Serializer::DeleteFolder(const std::filesystem::path& path) const {
 
-	auto Results = std::filesystem::remove(path);
+	const auto Results = std::filesystem::remove(path);
 	if (!Results) {
 		m_CoreReference->SystemLog("Failed to delete folder at " + path.string());
 		return false;
@@ -213,29 +213,48 @@ bool Serializer::DeleteFolder(const std::filesystem::path& path) const {
 
 bool Serializer::TestSerializeToFile(const Material& output) const {
 
-
 	//Create or Open file
 	std::ofstream File(output.GetAsset().m_Path);
 	AddHeader(File, AssetType::MATERIAL);
 
-	auto Size = sizeof(output);
-	//Memcpy
-	auto PointerToData = &output;
-
-	unsigned char Buffer[512];
-
-	std::memcpy(&Buffer, PointerToData, Size);
-
-	std::cout << Size << std::endl;
-	std::cout << PointerToData << std::endl;
-
-	File << *Buffer;
-
-	//Note: Dont just copy binary. Copy it as text.
-	//Note: Make each class has its own serialization function? To handle cases like pointer, strings and such
-	//IMPORTANT NOTE: Serializer will crash the engine if a file has corrupt header data
-
+	char Buffer[512]; //Assumes the object is 512 or less. Unused bytes are cleaned before serialization to file.
+	char* ptr = Buffer;
+	size_t SerializedBytes;
+	if (!output.SerializeToFile(ptr, SerializedBytes)) {
+		m_CoreReference->SystemLog("Failed to serialize Material [" + output.GetAsset().m_Name + "]");
+		File.close();
+		return false;
+	}
+	File.write(ptr, SerializedBytes);
 	File.close();
+
+	return true;
+}
+bool Serializer::TestSerializeFromFile(Material& input) const {
+
+	//Check header!
+	const Asset* TargetAsset = &input.GetAsset();
+	if (!ValidateFileHeader(*TargetAsset)) {
+		m_CoreReference->SystemLog("Failed to serialize material from file [" + TargetAsset->m_Name + "]");
+		return false;
+	}
+
+	//NOTE: Im reading the whole file already during validation. This could be optimized away.
+	//IMPORTANT NOTE: Maybe a function to read file and skip header?
+	std::string Buffer;
+	if (!AssetManager::CRead(TargetAsset->m_Path.string(), Buffer)) {
+		return false;
+	}
+
+	//For now i just dont bother with the header. This is a temporary solution to skipping the header? not sure. Some parts could be reused here.
+	char Data[512];
+	char* ptr = Data;
+	std::memcpy(ptr, Buffer.data() + sizeof(MaterialFileHeader), Buffer.size() - sizeof(MaterialFileHeader));
+
+	if (!input.SerializeFromFile(ptr)) {
+		//?
+		return false;
+	}
 
 	return true;
 }
@@ -243,18 +262,16 @@ bool Serializer::TestSerializeToFile(const Material& output) const {
 
 AssetType Serializer::GetAssetTypeFromFile(const Asset& asset) const {
 
-	std::ifstream File;
-	File.open(asset.m_Path);
-	if (!File.is_open()) {
-		m_CoreReference->SystemLog("Failed to check asset type. Reason: Could not open file!");
+	std::string Buffer; //Dumping the whole file in a string is inefficient!
+	if (!AssetManager::CRead(asset.m_Path.string(), Buffer)) {
 		return AssetType::INVALID;
 	}
 
-	//First line is always type!
-	std::string Line;
-	getline(File, Line);
-	const auto Type = std::stoi(Line, nullptr);
-	return static_cast<AssetType>(Type);
+	MaterialFileHeader FileMarker;
+	MaterialFileHeader* ptr = &FileMarker;
+	std::memcpy(ptr, Buffer.data(), sizeof(MaterialFileHeader));
+
+	return FileMarker.m_Type;
 }
 
 
@@ -275,11 +292,12 @@ void Serializer::AddHeader(std::ofstream& file, AssetType type) const {
 		if (!file.is_open())
 			return;
 
-		const MaterialFileHeader NewHeader;
-		file << std::to_string(static_cast<uint32>(NewHeader.m_Type));
-		file << "\n";
-		file << std::to_string(NewHeader.m_Version);
-		file << "\n";
+		MaterialFileHeader NewHeader;
+		MaterialFileHeader* ptr = &NewHeader;
+		char Buffer[512];
+
+		std::memcpy(Buffer, ptr, sizeof(MaterialFileHeader));
+		file.write(Buffer, sizeof(MaterialFileHeader));
 
 		//TODO: Encrypt Header?
 
@@ -292,37 +310,34 @@ void Serializer::AddHeader(std::ofstream& file, AssetType type) const {
 	}
 
 }
+
+//IMPORTNAT NOTE: Should be templated!!!!!!
 bool Serializer::ValidateFileHeader(const Asset& asset) const {
 
-	std::ifstream File;
-	File.open(asset.m_Path);
-	if (!File.is_open())
+	std::string Buffer;
+	if (!AssetManager::CRead(asset.m_Path.string(), Buffer)) {
+		m_CoreReference->SystemLog("Failed to open file for header validation.");
 		return false;
+	}
+
+	MaterialFileHeader FileMarker;
+	MaterialFileHeader* ptr = &FileMarker;
+	std::memcpy(ptr, Buffer.data(), sizeof(MaterialFileHeader));
 
 	bool Results = false;
-
-	//First line is always type!
-	std::string Line;
-	getline(File, Line);
-	const auto Type = std::stoi(Line, nullptr);
-	if (static_cast<AssetType>(Type) == asset.m_Type)
+	if (FileMarker.m_Type == asset.m_Type)
 		Results = true;
 	else {
 		m_CoreReference->SystemLog("Discrepancy in asset type is detected between file and asset entry.");
 		Results = false;
 	}
 
-	//Version line comes second!
-	Line.clear();
-	getline(File, Line);
-	const auto Version = std::stoi(Line, nullptr);
-	if (Version == AssetFilesVersions::MATERIAL_FILE_VERSION)
+	if (FileMarker.m_Version == AssetFilesVersions::MATERIAL_FILE_VERSION)
 		Results = true;
 	else {
 		m_CoreReference->SystemLog("Discrepancy in asset version is detected between file and asset entry.");
 		Results = false;
 	}
 
-	File.close();
 	return Results;
 }
