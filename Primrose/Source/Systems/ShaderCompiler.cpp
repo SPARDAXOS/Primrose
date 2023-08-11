@@ -1,10 +1,11 @@
 #include "Systems/ShaderCompiler.hpp"
+#include "Systems/Serializer.hpp"
 
 
 [[nodiscard]] bool ShaderCompiler::LoadShader(const std::string_view& filePath, std::string& buffer) const {
     //TODO: Create some wrapper for shaders
 
-    return AssetManager::CRead(filePath, buffer);
+    return Serializer::CRead(filePath, buffer);
 }
 [[nodiscard]] bool ShaderCompiler::CompileShader(GLuint& ID, GLenum type, const std::string_view& source) const noexcept {
     ID = glCreateShader(type);

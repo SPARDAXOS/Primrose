@@ -221,7 +221,121 @@ struct Vector3f {
 	}
 };
 struct Vector4f {
-	float X, Y, Z, W;
+	float m_X, m_Y, m_Z, m_W;
+
+	Vector4f() noexcept
+		: m_X(0.0f), m_Y(0.0f), m_Z(0.0f), m_W(0.0f)
+	{
+	}
+	Vector4f(float value) noexcept
+		: m_X(value), m_Y(value), m_Z(value), m_W(value)
+	{
+	}
+	Vector4f(float x, float y, float z, float w) noexcept
+		: m_X(x), m_Y(y), m_Z(z), m_W(w)
+	{
+	}
+	Vector4f(glm::vec4 vector) noexcept
+		: m_X(vector.x), m_Y(vector.y), m_Z(vector.z), m_W(vector.w)
+	{
+	}
+
+	~Vector4f() = default;
+	Vector4f(const Vector4f& other) noexcept {
+		*this = other;
+	}
+	Vector4f& operator=(const Vector4f& other) noexcept {
+		if (*this == other) {
+			return *this;
+		}
+		else {
+			this->m_X = other.m_X;
+			this->m_Y = other.m_Y;
+			this->m_Z = other.m_Z;
+			this->m_W = other.m_W;
+			return *this;
+		}
+	}
+
+	Vector4f(Vector4f&& other) noexcept {
+		*this = std::move(other);
+	}
+	Vector4f& operator=(Vector4f&& other) noexcept {
+		if (*this == other) {
+			return *this;
+		}
+		else {
+			this->m_X = std::move(other.m_X);
+			this->m_Y = std::move(other.m_Y);
+			this->m_Z = std::move(other.m_Z);
+			this->m_W = std::move(other.m_W);
+			return *this;
+		}
+	}
+
+	Vector4f operator*(const Vector4f& other) noexcept {
+		return Vector4f(m_X * other.m_X, m_Y * other.m_Y, m_Z * other.m_Z, m_W * other.m_W);
+	}
+	Vector4f operator/(const Vector4f& other) noexcept {
+		return Vector4f(m_X / other.m_X, m_Y / other.m_Y, m_Z / other.m_Z, m_W / other.m_W);
+	}
+	Vector4f operator+(const Vector4f& other) noexcept {
+		return Vector4f(m_X + other.m_X, m_Y + other.m_Y, m_Z + other.m_Z, m_W + other.m_W);
+	}
+	Vector4f operator-(const Vector4f& other) noexcept {
+		return Vector4f(m_X - other.m_X, m_Y - other.m_Y, m_Z - other.m_Z, m_W - other.m_W);
+	}
+
+	Vector4f operator*(const float& other) noexcept {
+		return Vector4f(m_X * other, m_Y * other, m_Z * other, m_W * other);
+	}
+	Vector4f operator/(const float& other) noexcept {
+		return Vector4f(m_X / other, m_Y / other, m_Z / other, m_W / other);
+	}
+	Vector4f operator+(const float& other) noexcept {
+		return Vector4f(m_X + other, m_Y + other, m_Z + other, m_W + other);
+	}
+	Vector4f operator-(const float& other) noexcept {
+		return Vector4f(m_X - other, m_Y - other, m_Z - other, m_W - other);
+	}
+
+	void operator+=(const Vector4f& other) noexcept {
+		m_X += other.m_X;
+		m_Y += other.m_Y;
+		m_Z += other.m_Z;
+		m_W += other.m_W;
+	}
+
+	bool operator==(const Vector4f& other) const noexcept {
+		if (m_X != other.m_X)
+			return false;
+		else if (m_Y != other.m_Y)
+			return false;
+		else if (m_Z != other.m_Z)
+			return false;
+		else if (m_W != other.m_W)
+			return false;
+		else
+			return true;
+	}
+	bool operator!=(const Vector4f& other) const noexcept {
+		if (!(*this == other))
+			return true;
+		else
+			return false;
+	}
+
+
+	inline float Length() const noexcept {
+		return sqrtf(((m_X * m_X), (m_Y * m_Y), (m_Z * m_Z), (m_W * m_W)));
+	}
+	inline void Normalize() noexcept {
+		const float Length = this->Length();
+		m_X /= Length;
+		m_Y /= Length;
+		m_Z /= Length;
+		m_W /= Length;
+	}
 };
 
 //Move somewhere else!

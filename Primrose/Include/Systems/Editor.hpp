@@ -110,11 +110,6 @@ public:
 public:
 	void SaveEngineTexturesReferences();
 
-	void DebugLog(std::string message) noexcept;
-	void WarningLog(std::string message) noexcept;
-	void ErrorLog(std::string message) noexcept;
-	void SystemLog(std::string message) noexcept;
-
 private:
 	void Render();
 	void StartFrame() const;
@@ -280,10 +275,9 @@ private:
 
 private:
 	EditorRedStyle m_EditorStyle;
-	Logger m_Logger{ *m_TimeReference };
 
 private:
-	Core* m_CoreReference							{ nullptr };
+	Core* m_CoreReference						{ nullptr };
 	Window* m_WindowReference					{ nullptr };
 	EntityComponentSystem* m_ECSReference		{ nullptr };
 	TextureStorage* m_TextureStorageReference	{ nullptr };
@@ -291,6 +285,7 @@ private:
 	Input* m_InputReference						{ nullptr };
 	Time* m_TimeReference						{ nullptr };
 	Serializer* m_SerializerReference			{ nullptr };
+	Logger* m_LoggerReference					{ nullptr };
 
 private:
 	ImGuiContext* m_GUIContext		{ nullptr };

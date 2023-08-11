@@ -16,7 +16,7 @@ Editor::Editor(Core& core)
 	m_InputReference = m_CoreReference->GetInput();
 	m_TimeReference = m_CoreReference->GetTime();
 	m_SerializerReference = m_CoreReference->GetSerializer();
-
+	m_LoggerReference = m_CoreReference->GetLogger();
 	//Get folder texture?
 
 	IMGUI_CHECKVERSION();
@@ -24,16 +24,15 @@ Editor::Editor(Core& core)
 	m_GUIViewport = ImGui::GetMainViewport();
 	//TODO: Throw if any of these dont work!
 
-	m_Logger.SetTimeReference(*m_TimeReference); //Since it will have nullptr on this class' construction
-	SystemLog("Dear IMGUI initialized.");
+	m_LoggerReference->SystemLog("Dear IMGUI initialized.");
 	std::string VersionMessage("Version: ");
 	VersionMessage.append(ImGui::GetVersion());
-	SystemLog(VersionMessage);
+	m_LoggerReference->SystemLog(VersionMessage);
 
 
 	m_ViewportCameraReference = &m_ECSReference->GetViewportCamera();
 	if (m_ViewportCameraReference == nullptr)
-		SystemLog("Failed to save viewport camera reference");
+		m_LoggerReference->SystemLog("Failed to save viewport camera reference");
 
 
 	m_IO = &ImGui::GetIO();
@@ -69,39 +68,34 @@ Editor::~Editor() {
 void Editor::SaveEngineTexturesReferences() {
 
 	if (!m_TextureStorageReference->GetEditorTexture2DByName("Folder", m_FolderTexture))
-		SystemLog("Failed to save reference to engine texture [Folder]");
+		m_LoggerReference->SystemLog("Failed to save reference to engine texture [Folder]");
 
 	if (!m_TextureStorageReference->GetEditorTexture2DByName("Debug", m_DebugTexture))
-		SystemLog("Failed to save reference to engine texture [Debug]");
+		m_LoggerReference->SystemLog("Failed to save reference to engine texture [Debug]");
 
 	if (!m_TextureStorageReference->GetEditorTexture2DByName("Warning", m_WarningTexture))
-		SystemLog("Failed to save reference to engine texture [Warning]");
+		m_LoggerReference->SystemLog("Failed to save reference to engine texture [Warning]");
 
 	if (!m_TextureStorageReference->GetEditorTexture2DByName("Error", m_ErrorTexture))
-		SystemLog("Failed to save reference to engine texture [Error]");
+		m_LoggerReference->SystemLog("Failed to save reference to engine texture [Error]");
 
-}
-void Editor::DebugLog(std::string message) noexcept {
-	m_Logger.DebugLog(message);
-}
-void Editor::WarningLog(std::string message) noexcept {
-	m_Logger.WarningLog(message);
-}
-void Editor::ErrorLog(std::string message) noexcept {
-	m_Logger.ErrorLog(message);
-}
-void Editor::SystemLog(std::string message) noexcept {
-	m_Logger.SystemLog(message);
 }
 
 void Editor::Render() {
 
 	StartFrame();
 	m_IsAnyWindowHovered = false;
-	m_Logger.NewFrame();
+	m_LoggerReference->NewFrame();
 
 	UpdateWindowPositions(); //NOTE: Currently updates sizes and positions
 	m_EditorStyle.Apply();
+
+	//Testing!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	Physics* m_Physics = m_CoreReference->GetPhysics();
+	Vector3f Test 
+		= m_Physics->ScreenToWorld(Vector2f(static_cast<float>(m_InputReference->CursorX), static_cast<float>(m_InputReference->CursorY)), 0.0f);
+
+	std::cout << "X: " << Test.m_X << " Y: " << Test.m_Y << " Z: " << Test.m_Z << std::endl;
 
 
 	//Main Docking Space
@@ -282,7 +276,7 @@ void Editor::RenderDirectoryExplorer() {
 
 	auto ProjectRoot = m_AssetManagerReference->GetProjectRoot();
 	if (ProjectRoot == nullptr) {
-		SystemLog("m_AssetManagerReference->GetProjectRoot() returned null! - RenderDirectoryExplorer()");
+		m_LoggerReference->SystemLog("m_AssetManagerReference->GetProjectRoot() returned null! - RenderDirectoryExplorer()");
 		return;
 	}
 	if (m_SelectedDirectory == nullptr) //Set default directory if not set
@@ -295,7 +289,7 @@ void Editor::RenderDirectoryExplorer() {
 	if (m_DirectoryExplorerEditorFilter) {
 		auto EditorRoot = m_AssetManagerReference->GetEditorRoot();
 		if (EditorRoot == nullptr) {
-			SystemLog("m_AssetManagerReference->GetEditorRoot() returned null! - RenderDirectoryExplorer()");
+			m_LoggerReference->SystemLog("m_AssetManagerReference->GetEditorRoot() returned null! - RenderDirectoryExplorer()");
 			return;
 		}
 		AddFileExplorerEntry(EditorRoot);
@@ -959,10 +953,10 @@ void Editor::RenderDebugLog() {
 			const ImVec2 ClearSize = ImGui::CalcTextSize("Clear");
 			const ImVec2 AutoScrollSize = ImGui::CalcTextSize("AutoScroll");
 			if (ImGui::Selectable("Clear", &ClearSelected, 0, ClearSize)) {
-				m_Logger.ClearDebugLog();
+				m_LoggerReference->ClearDebugLog();
 			}
-			if (ImGui::Selectable("AutoScroll", m_Logger.GetDebugLogAutoScroll(), 0, AutoScrollSize)) {
-				m_Logger.ToggleDebugLogAutoScroll();
+			if (ImGui::Selectable("AutoScroll", m_LoggerReference->GetDebugLogAutoScroll(), 0, AutoScrollSize)) {
+				m_LoggerReference->ToggleDebugLogAutoScroll();
 			}
 
 			//TODO: Implement a function that checks for an engine texture. 
@@ -984,18 +978,18 @@ void Editor::RenderDebugLog() {
 			}
 
 			//Color
-			if (!m_Logger.GetShowErrorMessages())
+			if (!m_LoggerReference->GetShowErrorMessages())
 				IconColor = ImVec4(0.3f, 0.3f, 0.3f, 1.0f);
 
 
 			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 30.0f, ImGui::GetCursorPosY())); //Manual offset by +2
 			if (ImGui::ImageButton("##ErrorLog", TextureID, ImVec2(15.0f, 15.0f), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0.0f, 0.0f, 0.0f, 0.0f), IconColor))
-				m_Logger.ToggleShowErrorMessages();
+				m_LoggerReference->ToggleShowErrorMessages();
 			if (m_ErrorTexture != nullptr)
 				m_ErrorTexture->Unbind();
 
 			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 5.0f, ImGui::GetCursorPosY()));
-			ImGui::Text("%d", m_Logger.GetErrorMessagesCount());
+			ImGui::Text("%d", m_LoggerReference->GetErrorMessagesCount());
 			IconColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 
 
@@ -1006,17 +1000,17 @@ void Editor::RenderDebugLog() {
 			}
 
 			//Color
-			if (!m_Logger.GetShowWarningMessages())
+			if (!m_LoggerReference->GetShowWarningMessages())
 				IconColor = ImVec4(0.3f, 0.3f, 0.3f, 1.0f);
 
 			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 80.0f, ImGui::GetCursorPosY())); //Manual offset by +2
 			if (ImGui::ImageButton("##WarningLog", TextureID, ImVec2(15.0f, 15.0f), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0.0f, 0.0f, 0.0f, 0.0f), IconColor))
-				m_Logger.ToggleShowWarningMessages();
+				m_LoggerReference->ToggleShowWarningMessages();
 			if (m_WarningTexture != nullptr)
 				m_WarningTexture->Unbind();
 
 			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 55.0f, ImGui::GetCursorPosY()));
-			ImGui::Text("%d", m_Logger.GetWarningMessagesCount());
+			ImGui::Text("%d", m_LoggerReference->GetWarningMessagesCount());
 			IconColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 
 
@@ -1027,17 +1021,17 @@ void Editor::RenderDebugLog() {
 			}
 
 			//Color
-			if (!m_Logger.GetShowDebugMessages())
+			if (!m_LoggerReference->GetShowDebugMessages())
 				IconColor = ImVec4(0.3f, 0.3f, 0.3f, 1.0f);
 
 			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 130.0f, ImGui::GetCursorPosY())); //Manual offset by +2
 			if (ImGui::ImageButton("##DebugLog", TextureID, ImVec2(15.0f, 15.0f), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0.0f, 0.0f, 0.0f, 0.0f), IconColor))
-				m_Logger.ToggleShowDebugMessages();
+				m_LoggerReference->ToggleShowDebugMessages();
 			if (m_DebugTexture != nullptr)
 				m_DebugTexture->Unbind();
 
 			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 105.0f, ImGui::GetCursorPosY()));
-			ImGui::Text("%d", m_Logger.GetDebugMessagesCount());
+			ImGui::Text("%d", m_LoggerReference->GetDebugMessagesCount());
 			IconColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 
 
@@ -1048,23 +1042,23 @@ void Editor::RenderDebugLog() {
 
 			ImGui::EndMenuBar();
 		}
-		if (m_Logger.GetLoggedMessagesCount() > 0) {
+		if (m_LoggerReference->GetLoggedMessagesCount() > 0) {
 
-			while (!m_Logger.IsLoggedBufferLooped()) {
+			while (!m_LoggerReference->IsLoggedBufferLooped()) {
 
-				const Message* NewMessage = m_Logger.GetNextLoggedMessage();
+				const Message* NewMessage = m_LoggerReference->GetNextLoggedMessage();
 				if (NewMessage == nullptr)
 					continue;
 
 				const MessageType Type = NewMessage->GetType();
-				if (Type == MessageType::DEBUG && !m_Logger.GetShowDebugMessages())
+				if (Type == MessageType::DEBUG && !m_LoggerReference->GetShowDebugMessages())
 					continue;
-				if (Type == MessageType::WARNING && !m_Logger.GetShowWarningMessages())
+				if (Type == MessageType::WARNING && !m_LoggerReference->GetShowWarningMessages())
 					continue;
-				if (Type == MessageType::ERROR && !m_Logger.GetShowErrorMessages())
+				if (Type == MessageType::ERROR && !m_LoggerReference->GetShowErrorMessages())
 					continue;
 				if (Type == MessageType::SYSTEM) {
-					m_Logger.ErrorLog("System type message was saved in the logged messages buffer");
+					m_LoggerReference->ErrorLog("System type message was saved in the logged messages buffer");
 					continue;
 				}
 
@@ -1091,7 +1085,7 @@ void Editor::RenderDebugLog() {
 				AddSeparators(1);
 
 				//AutoScroll
-				if (ImGui::GetScrollY() <= ImGui::GetScrollMaxY() && m_Logger.GetDebugLogAutoScroll())
+				if (ImGui::GetScrollY() <= ImGui::GetScrollMaxY() && m_LoggerReference->GetDebugLogAutoScroll())
 					ImGui::SetScrollHereY(1.0f);
 			}
 		}
@@ -1138,19 +1132,19 @@ void Editor::RenderSystemLog() {
 			const ImVec2 ClearSize = ImGui::CalcTextSize("Clear");
 			const ImVec2 AutoScrollSize = ImGui::CalcTextSize("AutoScroll");
 			if (ImGui::Selectable("Clear", &ClearSelected, 0, ClearSize))
-				m_Logger.ClearSystemLog();
-			if (ImGui::Selectable("AutoScroll", m_Logger.GetSystemLogAutoScroll(), 0, AutoScrollSize))
-				m_Logger.ToggleSystemLogAutoScroll();
+				m_LoggerReference->ClearSystemLog();
+			if (ImGui::Selectable("AutoScroll", m_LoggerReference->GetSystemLogAutoScroll(), 0, AutoScrollSize))
+				m_LoggerReference->ToggleSystemLogAutoScroll();
 
 
 
 			ImGui::EndMenuBar();
 		}
-		if (m_Logger.GetSystemMessagesCount() > 0) {
+		if (m_LoggerReference->GetSystemMessagesCount() > 0) {
 
-			while (!m_Logger.IsSystemBufferLooped()) {
+			while (!m_LoggerReference->IsSystemBufferLooped()) {
 
-				const Message* NewMessage = m_Logger.GetNextSystemMessage();
+				const Message* NewMessage = m_LoggerReference->GetNextSystemMessage();
 				if (NewMessage == nullptr)
 					continue;
 
@@ -1161,7 +1155,7 @@ void Editor::RenderSystemLog() {
 
 				//TODO: Moving the scroll manually disables auto scroll
 				//AutoScroll debug log
-				if (ImGui::GetScrollY() <= ImGui::GetScrollMaxY() && m_Logger.GetSystemLogAutoScroll())
+				if (ImGui::GetScrollY() <= ImGui::GetScrollMaxY() && m_LoggerReference->GetSystemLogAutoScroll())
 					ImGui::SetScrollHereY(1.0f);
 			}
 		}

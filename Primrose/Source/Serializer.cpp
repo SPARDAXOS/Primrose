@@ -18,51 +18,26 @@ template<typename T>
 	m_CoreReference->SystemLog("Asset type was not identified.");
 	m_CoreReference->SystemLog("Failed to serialize to file");
 }
-
 template<>
 bool Serializer::SerializeToFile<Material>(const Material& output) const {
-
-	//Layout
-	/*
-		Texture2D* m_Diffuse;
-		Texture2D* m_Ambient;
-		Texture2D* m_Specular;
-
-		float m_AmbientStrength;
-
-		float m_SpecularStrength;
-		int32 m_SpecularShininess;
-	*/
 
 	//Create or Open file
 	std::ofstream File(output.GetAsset().m_Path);
 	AddHeader(File, AssetType::MATERIAL);
 
-	//This is a material and i havent decided what no texture is for materials. I want to avoid looking for NONE texture since it doesnt exist! unnecessary look up.
-	if (output.m_Diffuse != nullptr)
-		File << output.m_Diffuse->GetName() << "\n";
-	else
-		File << "None" << "\n"; //Make sure its same text as what the details menu names it if there is no sprite!
-
-	if (output.m_Ambient != nullptr)
-		File << output.m_Ambient->GetName() << "\n";
-	else
-		File << "None" << "\n"; //Make sure its same text as what the details menu names it if there is no sprite!
-
-	if (output.m_Specular != nullptr)
-		File << output.m_Specular->GetName() << "\n";
-	else
-		File << "None" << "\n"; //Make sure its same text as what the details menu names it if there is no sprite!
-
-
-	File << std::to_string(output.m_AmbientStrength) << "\n";
-	File << std::to_string(output.m_SpecularStrength) << "\n";
-	File << std::to_string(output.m_SpecularShininess) << "\n";
-
+	char Buffer[512]; //Assumes the object is 512 or less. Unused bytes are cleaned before serialization to file.
+	char* ptr = Buffer;
+	size_t SerializedBytes;
+	if (!output.SerializeToFile(ptr, SerializedBytes)) {
+		m_CoreReference->SystemLog("Failed to serialize Material [" + output.GetAsset().m_Name + "]");
+		File.close();
+		return false;
+	}
+	File.write(ptr, SerializedBytes);
 	File.close();
+
 	return true;
 }
-
 
 
 
@@ -78,83 +53,28 @@ template<typename T>
 template<>
 bool Serializer::SerializeFromFile<Material>(Material& input) const {
 
-	//Layout
-	/* 
-		Texture2D* m_Diffuse;
-		Texture2D* m_Ambient;
-		Texture2D* m_Specular;
-		
-		float m_AmbientStrength;
-		
-		float m_SpecularStrength;
-		int32 m_SpecularShininess;
-	*/
-
+	//Check header!
 	const Asset* TargetAsset = &input.GetAsset();
 	if (!ValidateFileHeader(*TargetAsset)) {
-		m_CoreReference->SystemLog("Failed to serialize material from file [" + TargetAsset->m_Name + "] - Header validation failed.");
+		m_CoreReference->SystemLog("Failed to serialize material from file [" + TargetAsset->m_Name + "]");
 		return false;
 	}
 
-
-	std::ifstream File;
-	File.open(TargetAsset->m_Path);
-	if (!File.is_open()) {
-		m_CoreReference->SystemLog("Failed to serialize material from file [" + TargetAsset->m_Name + "] - Could not open file.");
+	//NOTE: Im reading the whole file already during validation. This could be optimized away.
+	//IMPORTANT NOTE: Maybe a function to read file and skip header?
+	std::string Buffer;
+	if (!CRead(TargetAsset->m_Path.string(), Buffer)) {
 		return false;
 	}
 
+	//For now i just dont bother with the header. This is a temporary solution to skipping the header? not sure. Some parts could be reused here.
+	char Data[512];
+	char* ptr = Data;
+	std::memcpy(ptr, Buffer.data() + sizeof(MaterialFileHeader), Buffer.size() - sizeof(MaterialFileHeader));
 
-	//Terrible...
-	//This whole thing needs to be reworked later.
-	//Better way is to check how the memeory is laid out for an object.
-	//Load that memory as is to a file + header
-	//Get it from file and give its data to a variable or something.
-
-	std::string CurrentLine;
-	uint32 CurrentLineCount = 0;
-	while (getline(File, CurrentLine)) {
-		CurrentLineCount++;
-		//Skip header elements
-		if (CurrentLineCount == 1 || CurrentLineCount == 2)
-			continue;
-
-		if (CurrentLineCount == 3) {
-			if (CurrentLine == "None")
-				continue;
-
-			Texture2D* Diffuse;
-			if (m_TextureStorageReference->GetTexture2DByName(CurrentLine, Diffuse))
-				input.m_Diffuse = Diffuse;
-		}
-		else if (CurrentLineCount == 4) {
-			if (CurrentLine == "None")
-				continue;
-
-			Texture2D* Ambient;
-			if (m_TextureStorageReference->GetTexture2DByName(CurrentLine, Ambient))
-				input.m_Ambient = Ambient;
-		}
-		else if (CurrentLineCount == 5) {
-			if (CurrentLine == "None")
-				continue;
-
-			Texture2D* Specular;
-			if (m_TextureStorageReference->GetTexture2DByName(CurrentLine, Specular))
-				input.m_Specular = Specular;
-		}
-		else if (CurrentLineCount == 6) {
-			const auto Data = std::stof(CurrentLine, nullptr);
-			input.m_AmbientStrength = Data;
-		}
-		else if (CurrentLineCount == 7) {
-			const auto Data = std::stof(CurrentLine, nullptr);
-			input.m_SpecularStrength = Data;
-		}
-		else if (CurrentLineCount == 8) {
-			const auto Data = std::stoi(CurrentLine, nullptr);
-			input.m_SpecularShininess = Data;
-		}
+	if (!input.SerializeFromFile(ptr)) {
+		m_CoreReference->SystemLog("Material failed to serialize data from buffer.");
+		return false;
 	}
 
 	return true;
@@ -171,24 +91,20 @@ template<typename T>
 	m_CoreReference->SystemLog("Asset type was not identified.");
 	m_CoreReference->SystemLog("Failed to create file.");
 };
-
 template<>
 bool Serializer::CreateFile<Material>(const Material& material) const {
 
+	//? Creating a file and serializing (to file) it are pretty much the same? 
+	//I guess its because open can also create files.
+	//This is also saving then?
 	const Asset* TargetAsset = &material.GetAsset();
-
-	std::ofstream File;
-
-	File.open(TargetAsset->m_Path);
-	AddHeader(File, TargetAsset->m_Type);
-	File.close();
-
 	if (!SerializeToFile(material)) {
 		DeleteFile(TargetAsset->m_Path);
 		return false;
 	}
 	return true;
 }
+
 
 
 bool Serializer::DeleteFile(const std::filesystem::path& path) const {
@@ -211,59 +127,12 @@ bool Serializer::DeleteFolder(const std::filesystem::path& path) const {
 	return Results;
 }
 
-bool Serializer::TestSerializeToFile(const Material& output) const {
-
-	//Create or Open file
-	std::ofstream File(output.GetAsset().m_Path);
-	AddHeader(File, AssetType::MATERIAL);
-
-	char Buffer[512]; //Assumes the object is 512 or less. Unused bytes are cleaned before serialization to file.
-	char* ptr = Buffer;
-	size_t SerializedBytes;
-	if (!output.SerializeToFile(ptr, SerializedBytes)) {
-		m_CoreReference->SystemLog("Failed to serialize Material [" + output.GetAsset().m_Name + "]");
-		File.close();
-		return false;
-	}
-	File.write(ptr, SerializedBytes);
-	File.close();
-
-	return true;
-}
-bool Serializer::TestSerializeFromFile(Material& input) const {
-
-	//Check header!
-	const Asset* TargetAsset = &input.GetAsset();
-	if (!ValidateFileHeader(*TargetAsset)) {
-		m_CoreReference->SystemLog("Failed to serialize material from file [" + TargetAsset->m_Name + "]");
-		return false;
-	}
-
-	//NOTE: Im reading the whole file already during validation. This could be optimized away.
-	//IMPORTANT NOTE: Maybe a function to read file and skip header?
-	std::string Buffer;
-	if (!AssetManager::CRead(TargetAsset->m_Path.string(), Buffer)) {
-		return false;
-	}
-
-	//For now i just dont bother with the header. This is a temporary solution to skipping the header? not sure. Some parts could be reused here.
-	char Data[512];
-	char* ptr = Data;
-	std::memcpy(ptr, Buffer.data() + sizeof(MaterialFileHeader), Buffer.size() - sizeof(MaterialFileHeader));
-
-	if (!input.SerializeFromFile(ptr)) {
-		//?
-		return false;
-	}
-
-	return true;
-}
 
 
 AssetType Serializer::GetAssetTypeFromFile(const Asset& asset) const {
 
 	std::string Buffer; //Dumping the whole file in a string is inefficient!
-	if (!AssetManager::CRead(asset.m_Path.string(), Buffer)) {
+	if (!CRead(asset.m_Path.string(), Buffer)) {
 		return AssetType::INVALID;
 	}
 
@@ -273,8 +142,6 @@ AssetType Serializer::GetAssetTypeFromFile(const Asset& asset) const {
 
 	return FileMarker.m_Type;
 }
-
-
 void Serializer::AddHeader(std::ofstream& file, AssetType type) const {
 
 	
@@ -311,11 +178,11 @@ void Serializer::AddHeader(std::ofstream& file, AssetType type) const {
 
 }
 
-//IMPORTNAT NOTE: Should be templated!!!!!!
+//IMPORTNAT NOTE: Should be templated!!!!!! Is this function even needed? Getting the asset type is enough?
 bool Serializer::ValidateFileHeader(const Asset& asset) const {
 
 	std::string Buffer;
-	if (!AssetManager::CRead(asset.m_Path.string(), Buffer)) {
+	if (!CRead(asset.m_Path.string(), Buffer)) {
 		m_CoreReference->SystemLog("Failed to open file for header validation.");
 		return false;
 	}

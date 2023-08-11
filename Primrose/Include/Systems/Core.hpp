@@ -16,6 +16,9 @@
 #include "Input.hpp"
 #include "Editor.hpp"
 #include "Serializer.hpp"
+#include "Physics.h"
+
+#include "Tools/Logger.hpp"
 
 
 #pragma warning(push, 0)
@@ -43,6 +46,8 @@ public:
 	[[nodiscard]] inline Input* GetInput() const noexcept { return m_Input.get(); }
 	[[nodiscard]] inline Editor* GetEditor() const noexcept { return m_Editor.get(); }
 	[[nodiscard]] inline Serializer* GetSerializer() const noexcept { return m_Serializer.get(); }
+	[[nodiscard]] inline Logger* GetLogger() const noexcept { return m_Logger.get(); }
+	[[nodiscard]] inline Physics* GetPhysics() const noexcept { return m_Physics.get(); }
 
 public:
 	void DebugLog(std::string message) noexcept;
@@ -56,10 +61,6 @@ public:
 
 private:
 	void SetupCore();
-
-
-	//TODO: Rule of 6 - define special member functions 
-
 	void UpdateSystems();
 
 private:
@@ -85,4 +86,6 @@ private:
 	std::unique_ptr<Input> m_Input;
 	std::unique_ptr<Editor> m_Editor;
 	std::unique_ptr<Serializer> m_Serializer;
+	std::unique_ptr<Logger> m_Logger;
+	std::unique_ptr<Physics> m_Physics;
 };

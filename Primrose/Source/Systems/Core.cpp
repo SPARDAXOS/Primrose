@@ -7,6 +7,8 @@ Core::Core() noexcept {
 
 	//Order matters
 	m_Time = std::make_unique<Time>();
+	m_Logger = std::make_unique<Logger>(*m_Time);
+
 	m_Window = std::make_unique<Window>(*this);
 	m_TextureStorage = std::make_unique<TextureStorage>(*this);
 	m_Serializer = std::make_unique<Serializer>(*this);
@@ -15,6 +17,7 @@ Core::Core() noexcept {
 	m_Input = std::make_unique<Input>(*m_Window);
 	m_Editor = std::make_unique<Editor>(*this);
 	m_Renderer = std::make_unique<Renderer>(*this);
+	m_Physics = std::make_unique<Physics>(*this);
 }
 void Core::SetupCore() { // Sounds like 2 step initialization.
 
@@ -133,9 +136,6 @@ void Core::Run() {
 	GameObjectTransform2->m_Position = Vector3f(-5.0f, 0.0f, 0.0f);
 	GameObjectTransform2->m_Rotation = Vector3f(0.0f, 0.0f, 0.0f);
 	GameObjectTransform2->m_Scale = Vector3f(1.5f, 1.5f, 1.5f);
-
-
-
 	
 	//GameObject* InstansiatedGameObject = &m_ECS->Instantiate(*GameObjectTest);
 	//SpriteRenderer* NewSpriteRenderer 
@@ -206,16 +206,16 @@ void Core::UpdateSystems() {
 
 
 void Core::DebugLog(std::string message) noexcept {
-	m_Editor->DebugLog(message);
+	m_Logger->DebugLog(message);
 }
 void Core::WarningLog(std::string message) noexcept {
-	m_Editor->WarningLog(message);
+	m_Logger->WarningLog(message);
 }
 void Core::ErrorLog(std::string message) noexcept {
-	m_Editor->ErrorLog(message);
+	m_Logger->ErrorLog(message);
 }
 void Core::SystemLog(std::string message) noexcept {
-	m_Editor->SystemLog(message);
+	m_Logger->SystemLog(message);
 }
 
 void Core::RegisterExitMessage(std::string message) noexcept {

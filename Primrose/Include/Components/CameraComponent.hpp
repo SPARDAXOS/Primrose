@@ -24,11 +24,11 @@ public:
 
 public:
 	glm::mat4 GetViewMatrix() noexcept { 
-		UpdateViewMatrix();
+		UpdateViewMatrix(); //Terrible
 		return m_ViewMatrix; 
 	};
 	glm::mat4 GetProjectionMatrix() noexcept { 
-		UpdateProjectionMatrix();
+		UpdateProjectionMatrix(); //Terrible
 		return m_ProjectionMatrix; 
 	};
 

@@ -154,10 +154,10 @@ public:
 				//Print error message! Get it from asset manager or something?
 			}
 			m_Diffuse = Texture_ptr;
-			Cursor += TextureName.size();
+			Cursor += TextureName.size() + 1; // 4 Characters + 1 byte for "\n"
 		}
 		else
-			Cursor += 4;
+			Cursor += 5; // 4 Characters + 1 byte for "\n"
 
 		//Ambient
 		std::getline(StringStream, TextureName);
@@ -166,10 +166,10 @@ public:
 				//Print error message! Get it from asset manager or something?
 			}
 			m_Ambient = Texture_ptr;
-			Cursor += TextureName.size();
+			Cursor += TextureName.size() + 1;
 		}
 		else
-			Cursor += 4;
+			Cursor += 5;
 
 		//Specular
 		std::getline(StringStream, TextureName);
@@ -178,18 +178,18 @@ public:
 				//Print error message! Get it from asset manager or something?
 			}
 			m_Specular = Texture_ptr;
-			Cursor += TextureName.size();
+			Cursor += TextureName.size() + 1;
 		}
 		else
-			Cursor += 4;
+			Cursor += 5;
 
-		std::memcpy(&m_AmbientStrength, &buffer[0] + Cursor, 4);
+		std::memcpy(&m_AmbientStrength, buffer + Cursor, 4);
 		Cursor += 4;
 
-		std::memcpy(&m_SpecularStrength, &buffer[0] + Cursor, 4);
+		std::memcpy(&m_SpecularStrength, buffer + Cursor, 4);
 		Cursor += 4;
 
-		std::memcpy(&m_SpecularShininess, &buffer[0] + Cursor, 4);
+		std::memcpy(&m_SpecularShininess, buffer + Cursor, 4);
 		Cursor += 4;
 
 		return true;

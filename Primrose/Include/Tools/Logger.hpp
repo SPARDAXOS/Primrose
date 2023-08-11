@@ -217,6 +217,7 @@ private:
 	Time* m_TimeReference = nullptr;
 	//I dont like the differnciation between debug and system especially since they both are the same struct and the enum encompasses both
 	//NOTE: Maybe seperate them into 2 message types that each inherit from a base message and has only different types as unique member variable
+	//NOTE: User and Engine
 	std::vector<Message> m_DebugLog;
 	std::vector<Message> m_SystemLog;
 };
