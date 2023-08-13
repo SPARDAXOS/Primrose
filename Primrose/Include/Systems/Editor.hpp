@@ -18,6 +18,7 @@ class Serializer;
 class GameObject;
 class Directory;
 class Texture2D;
+class Material;
 class SpriteRenderer;
 class Asset;
 class Camera;
@@ -30,7 +31,7 @@ enum class SourceBlendMode;
 enum class DestinationBlendMode;
 
 
-
+//TODO: Rework this and make and editor for the user to use.
 class EditorStyle {
 public:
 	virtual void Apply() = 0;
@@ -132,6 +133,8 @@ private:
 	void RenderContentBrowser();
 	void RenderDebugLog();
 	void RenderSystemLog();
+	void RenderSpriteSelector();
+	void RenderMaterialEditor();
 
 
 private:
@@ -164,7 +167,7 @@ private:
 	void AddSeparators(uint32 count);
 	void SetSelectedGameObject(GameObject* object) noexcept;
 	void SetSelectedDirectory(Directory* directory) noexcept;
-	inline void SetSpriteRendererEditTarget(SpriteRenderer* target) noexcept { m_SpriteRendererEditTarget = target; }
+	inline void SetSpriteRendererEditTarget(SpriteRenderer* target) noexcept { m_SpriteSelectorTarget = target; }
 	void CheckForHoveredWindows();
 	Texture2D* GetIconTexture(const Asset& asset) noexcept;
 
@@ -174,14 +177,13 @@ private:
 	void UpdateWindowPositions();
 
 	bool IsPointInBoundingBox(ImVec2 point, ImVec2 position, ImVec2 size) const noexcept;
-	inline ImVec2 GetContentWindowStartPosition(ImVec2 windowSize) const noexcept {
+	inline ImVec2 GetUniqueScreenCenterPoint(ImVec2 windowSize) const noexcept {
 		return ImVec2(m_GUIViewport->Size.x / 2 - windowSize.x / 2, m_GUIViewport->Size.y / 2 - windowSize.y / 2);
 	}
 
 private:
 	GameObject* m_SelectedGameObject			{ nullptr };
 	Directory* m_SelectedDirectory				{ nullptr };
-	SpriteRenderer* m_SpriteRendererEditTarget	{ nullptr };
 
 	bool m_IsAnyWindowHovered					{ false };
 	char m_NameInputBuffer[33];
@@ -193,16 +195,10 @@ private:
 	ImVec2 m_DirectoryExplorerWindowSize;
 	ImVec2 m_MainMenuBarSize;
 	ImVec2 m_NewContentWindowSize;
-
-	ImVec2 m_SpriteSelectorWindowSize;
 	
 
 	ImVec2 m_DetailsWindowPosition;
 	ImVec2 m_HierarchyWindowPosition;
-		
-
-	ImVec2 m_SpriteSelectorElementSize	{ 100.0f, 100.0f };
-	float m_SpriteSelectorElementPadding = 50.0f;
 	
 
 	bool m_DetailsWindowOpened = true;
@@ -212,7 +208,19 @@ private:
 	bool m_DebugLogOpened = false;
 	bool m_SystemLogOpened = false;
 
+
+	//Sprite Selector
 	bool m_SpriteSelectorOpened = false;
+	ImVec2 m_SpriteSelectorWindowSize;
+	ImVec2 m_SpriteSelectorElementSize{ 100.0f, 100.0f };
+	float m_SpriteSelectorElementPadding = 50.0f;
+	SpriteRenderer* m_SpriteSelectorTarget{ nullptr };
+
+	//Material Editor
+	bool m_MaterialEditorOpened = false;
+	ImVec2 m_MaterialEditorWindowSize;
+	bool m_MaterialEditorWindowReset = true;
+	Material* m_MaterialEditorTarget	{ nullptr };
 
 private: //Content Browser
 	ImVec2 m_ContentBrowserWindowSize;

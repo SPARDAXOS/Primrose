@@ -39,6 +39,10 @@ public:
 	inline Directory* GetProjectRoot() const noexcept { return m_ProjectRoot; }
 	inline Directory* GetEditorRoot() const noexcept { return m_EditorRoot; }
 
+
+	//Temporary until ref is added to asset.
+	Material* GetMaterial(const Asset& asset) const noexcept;
+
 public:
 	[[nodiscard]] bool RequestTexture2D(const std::string_view& name, Texture2D*& ptr) const noexcept;
 

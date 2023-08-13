@@ -462,6 +462,7 @@ void Editor::RenderSpriteRendererDetails() {
 			ImGuiWindowFlags Flags = 0;
 			Flags |= ImGuiWindowFlags_AlwaysVerticalScrollbar;
 
+			//Consider Moving this out!
 			if (ImGui::BeginPopupModal("Sprite Selector", &m_SpriteSelectorOpened, Flags)) {
 				CheckForHoveredWindows();
 				SetSpriteRendererEditTarget(SelectedSpriteRenderer);
@@ -472,7 +473,7 @@ void Editor::RenderSpriteRendererDetails() {
 				ImGui::EndPopup();
 			}
 			else {
-				if (m_SpriteRendererEditTarget != nullptr)
+				if (m_SpriteSelectorTarget != nullptr)
 					SetSpriteRendererEditTarget(nullptr);
 				m_SpriteSelectorOpened = false; 
 			}
@@ -853,11 +854,14 @@ void Editor::RenderViewportWindow() {
 	ImGui::End();
 }
 void Editor::RenderContentWindows() {
+	//Change Names? 
 
 	RenderContentBrowser();
 	RenderDebugLog();
 	RenderSystemLog();
 
+	//Doesnt scale according to the rest of the windows
+	RenderMaterialEditor();
 }
 
 void Editor::RenderContentBrowser() {
@@ -885,7 +889,7 @@ void Editor::RenderContentBrowser() {
 			ImGui::SetNextWindowSize(m_ContentBrowserWindowSize);
 		}
 		else {
-			ImGui::SetNextWindowPos(GetContentWindowStartPosition(m_NewContentWindowSize));
+			ImGui::SetNextWindowPos(GetUniqueScreenCenterPoint(m_NewContentWindowSize));
 			ImGui::SetNextWindowSize(m_NewContentWindowSize);
 		}
 	}
@@ -937,7 +941,7 @@ void Editor::RenderDebugLog() {
 		}
 		else {
 			ImGui::SetNextWindowSize(m_NewContentWindowSize);
-			ImGui::SetNextWindowPos(GetContentWindowStartPosition(m_NewContentWindowSize));
+			ImGui::SetNextWindowPos(GetUniqueScreenCenterPoint(m_NewContentWindowSize));
 		}
 	}
 
@@ -1115,7 +1119,7 @@ void Editor::RenderSystemLog() {
 		}
 		else {
 			ImGui::SetNextWindowSize(m_NewContentWindowSize);
-			ImGui::SetNextWindowPos(GetContentWindowStartPosition(m_NewContentWindowSize));
+			ImGui::SetNextWindowPos(GetUniqueScreenCenterPoint(m_NewContentWindowSize));
 		}
 	}
 
@@ -1160,6 +1164,53 @@ void Editor::RenderSystemLog() {
 			}
 		}
 
+	}
+	ImGui::End();
+}
+void Editor::RenderSpriteSelector() {
+
+
+
+
+
+
+}
+void Editor::RenderMaterialEditor() {
+
+	if (!m_MaterialEditorOpened || m_MaterialEditorTarget == nullptr)
+		return;
+
+	ImGuiWindowFlags Flags = 0;
+	Flags |= ImGuiWindowFlags_NoCollapse;
+	Flags |= ImGuiWindowFlags_NoSavedSettings;
+
+
+	if (m_MaterialEditorWindowReset) {
+		m_MaterialEditorWindowReset = false;
+		ImGui::SetNextWindowSize(m_MaterialEditorWindowSize);
+		ImGui::SetNextWindowPos(GetUniqueScreenCenterPoint(m_MaterialEditorWindowSize));
+	}
+
+
+	if (ImGui::Begin("Material Editor", &m_MaterialEditorOpened, Flags)) {
+		//Style for texture selectors
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(m_EditorStyle.m_MainColor.m_R * 0.2f, 0.0f, 0.0f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(m_EditorStyle.m_MainColor.m_R * 0.3f, 0.0f, 0.0f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(m_EditorStyle.m_MainColor.m_R * 0.4f, 0.0f, 0.0f, 1.0f));
+
+		ImGui::Text("Diffuse");
+		ImGui::SameLine(200.0f);
+		if (ImGui::Button(m_MaterialEditorTarget->m_Diffuse->GetName().data())) {
+
+		}
+
+
+
+		ImGui::PopStyleVar();
+		ImGui::PopStyleColor(3);
+
+		m_MaterialEditorWindowSize = ImGui::GetWindowSize();
 	}
 	ImGui::End();
 }
@@ -1569,7 +1620,12 @@ void Editor::UpdateContentBrowserAssetEntries() {
 			//Select
 			if (m_SelectedContentElement == Asset) {
 				m_SelectedContentElement = nullptr;
-				//OPEN WHATEVER!
+				//OPEN WHATEVER! - TODO: Make custom function
+				if (Asset->m_Type == AssetType::MATERIAL) {
+					m_MaterialEditorOpened = true;
+					m_MaterialEditorWindowReset = true;
+					m_MaterialEditorTarget = m_AssetManagerReference->GetMaterial(*Asset);
+				}
 			}
 			else
 				m_SelectedContentElement = Asset;
@@ -1693,7 +1749,7 @@ void Editor::UpdateSpriteSelectorEntries() {
 			if (m_SelectedSpriteSelectorElement == Texture) {
 				m_SelectedSpriteSelectorElement = nullptr;
 
-				m_SpriteRendererEditTarget->SetSprite(Texture);
+				m_SpriteSelectorTarget->SetSprite(Texture);
 				SetSpriteRendererEditTarget(nullptr); //Hmmmmm, should i keep track of when this should get unset?
 
 				ImGui::CloseCurrentPopup();
@@ -1825,7 +1881,7 @@ void Editor::SetSelectedGameObject(GameObject* object) noexcept {
 		strcpy_s(m_NameInputBuffer, m_SelectedGameObject->GetName().c_str());
 		strcpy_s(m_TagInputBuffer, m_SelectedGameObject->GetTag().c_str());
 	}
-	if (m_SpriteRendererEditTarget != nullptr)
+	if (m_SpriteSelectorTarget != nullptr)
 		SetSpriteRendererEditTarget(nullptr);
 }
 void Editor::SetSelectedDirectory(Directory* directory) noexcept {
@@ -1928,6 +1984,10 @@ void Editor::UpdateWindowPositions() {
 
 	if (!m_SpriteSelectorOpened)
 		m_SpriteSelectorWindowSize = ImVec2(m_GUIViewport->Size.x * 0.2f, m_GUIViewport->Size.y * 0.6f);
+
+	//Unsure about this one
+	if (!m_MaterialEditorOpened)
+		m_MaterialEditorWindowSize = ImVec2(m_GUIViewport->Size.x * 0.6f, m_GUIViewport->Size.y * 0.6f);
 
 	m_ContentBrowserWindowPosition = ImVec2(m_DirectoryExplorerWindowSize.x, m_GUIViewport->Size.y - m_ContentBrowserWindowSize.y);
 	m_DetailsWindowPosition = ImVec2(m_GUIViewport->Size.x - m_DetailsWindowSize.x, m_MainMenuBarSize.y);

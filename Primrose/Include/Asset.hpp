@@ -74,7 +74,7 @@ public:
 	}
 
 
-	Directory* m_Parent;
+	Directory* m_Parent		{ nullptr };
 	std::filesystem::path m_Path;
 	std::string m_Extension;
 	std::string m_Name;

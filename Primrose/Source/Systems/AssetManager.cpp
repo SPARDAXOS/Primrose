@@ -55,6 +55,16 @@ bool AssetManager::CreateAsset(AssetType type, Directory& location) {
 	}
 }
 
+
+//TEMPORARY
+Material* AssetManager::GetMaterial(const Asset& asset) const noexcept {
+	for (auto& Material : m_MaterialStorage) {
+		if (Material->GetAsset().m_Path == asset.m_Path)
+			return Material;
+	}
+	return nullptr;
+}
+
 /// <summary>
 /// Creates a new material asset and file at directory.
 /// </summary>
