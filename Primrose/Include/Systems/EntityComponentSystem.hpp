@@ -4,14 +4,15 @@
 #include "Components/DirectionalLightComponent.hpp"
 #include <vector>
 
+class Core;
 class GameObject;
-
 
 constexpr int INVALID_OBJECT_ID = -1;
 
 class EntityComponentSystem final {
 public:
-	EntityComponentSystem() noexcept;
+	EntityComponentSystem() = delete;
+	EntityComponentSystem(Core& core) noexcept;
 	~EntityComponentSystem();
 
 	EntityComponentSystem(const EntityComponentSystem&) = delete;
@@ -234,6 +235,7 @@ private:
 private:
 	std::string m_LastExitMessage;
 
+	Core* m_CoreReference	{ nullptr };
 
 	//Created or loaded later on
 	GameObject* m_MainScene; 

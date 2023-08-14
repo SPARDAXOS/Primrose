@@ -34,6 +34,7 @@ uniform Material uMaterial;
 
 uniform mat3 uNormalMatrix;
 uniform vec3 uViewCameraPosition;
+uniform vec4 uLightDirection; //If w is 0 then use direction otherwise use position for direction
 uniform vec3 uLightPosition;
 uniform vec4 uLightColor;
 uniform vec4 uTint;
@@ -44,11 +45,20 @@ void main() {
 	//Ambient
     vec4 Ambient = vec4(texture(uMaterial.Ambient, oCoords).xyz * uMaterial.AmbientStrength, 1.0) * uTint;  //? Does the texture only have 3 comps?
 
+
 	//Diffuse
 	vec3 Normal = normalize(uNormalMatrix * oNormal);
-	vec3 LightDirection = normalize(uLightPosition - oFragPosition);  
+	vec3 LightDirection;
+	if (uLightDirection.w == 0.0f) {
+		LightDirection = normalize(uLightDirection.xyz);		
+	}
+	else if (uLightDirection.w == 1.0f) {
+		LightDirection = normalize(uLightPosition.xyz - oFragPosition);  
+	}
+	
 	float LightDotNormal = max(dot(Normal, LightDirection), 0.0);
 	vec4 Diffuse = texture(uMaterial.Diffuse, oCoords) * LightDotNormal * uLightColor * uTint;
+
 
 	//Specular
 	vec3 ViewDirection = normalize(uViewCameraPosition - oFragPosition);

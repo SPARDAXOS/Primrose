@@ -119,6 +119,15 @@ public:
 			PrintMessages("Could not find requested uniform in shader program - Uniform: ", name.data());
 	}
 	template<>
+	void SetUniform<Vector4f>(const std::string_view& name, Vector4f value) {
+		const int UniformLocation = FindUniformLocation(name);
+		if (UniformLocation != -1) {
+			GLCall(glUniform4f(UniformLocation, value.m_X, value.m_Y, value.m_Z, value.m_W));
+		}
+		else
+			PrintMessages("Could not find requested uniform in shader program - Uniform: ", name.data());
+	}
+	template<>
 	void SetUniform<glm::mat4>(const std::string_view& name, glm::mat4 value) {
 		const int UniformLocation = FindUniformLocation(name);
 		if (UniformLocation != -1) {

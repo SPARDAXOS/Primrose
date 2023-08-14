@@ -81,11 +81,19 @@ public:
 	[[nodiscard]] bool Update() noexcept;
 
 public:
-	inline void SetWidth(int32 width) noexcept { m_Width = width; UpdateWindowSize(); }
-	inline void SetHeight(int32 height) noexcept {  m_Height = height; UpdateWindowSize(); }
+	inline void SetViewportWidth(int32 width) noexcept { m_ViewportWidth = width; UpdateViewport(); }
+	inline void SetViewportHeight(int32 height) noexcept { m_ViewportHeight = height; UpdateViewport(); }
+	inline void SetViewportSize(int32 width, int32 height) noexcept { m_ViewportWidth = width; m_ViewportHeight = height; UpdateViewport(); }
 
-	inline int32 GetWidth() const noexcept { return m_Width; }
-	inline int32 GetHeight() const noexcept { return m_Height; }
+	inline void SetViewportX(int32 x) noexcept { m_ViewportPositionX = x; UpdateViewport(); }
+	inline void SetViewportY(int32 y) noexcept { m_ViewportPositionY = y; UpdateViewport(); }
+	inline void SetViewportPosition(int32 x, int32 y) noexcept { m_ViewportPositionX = x; m_ViewportPositionY = y;  UpdateViewport(); }
+
+
+	inline int32 GetWidth() const noexcept { return m_WindowWidth; }
+	inline int32 GetHeight() const noexcept { return m_WindowHeight; }
+
+
 	[[nodiscard]] inline const GLFWwindow& GetWindowResource() const noexcept { return *m_Window.get()->m_Handle; }
 
 
@@ -110,14 +118,23 @@ private:
 	void SetupViewport() noexcept;
 
 private:
-	void UpdateWindowSize() noexcept;
+	void UpdateViewport() noexcept;
 
 private:
 	inline void RegisterExitMessage(std::string message) noexcept { m_LastExitMessage = message; }
 
 private:
-	int32 m_Width;
-	int32 m_Height;
+	int32 m_WindowWidth;
+	int32 m_WindowHeight;
+
+
+
+	int32 m_ViewportWidth;
+	int32 m_ViewportHeight;
+
+	int32 m_ViewportPositionX;
+	int32 m_ViewportPositionY;
+	
 	uint8 m_VSync = 1;
 	int32 m_RefreshRate = 144;
 

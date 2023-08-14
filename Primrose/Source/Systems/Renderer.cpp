@@ -4,11 +4,11 @@
 
 
 Renderer::Renderer(Core& core) noexcept
-    : m_EngineCore(&core)
+    : m_Core(&core)
 {
-    m_WindowReference = m_EngineCore->GetWindow();
-    m_TextureStorageReference = m_EngineCore->GetTextureStorage();
-    m_ECSReference = m_EngineCore->GetECS();
+    m_WindowReference = m_Core->GetWindow();
+    m_TextureStorageReference = m_Core->GetTextureStorage();
+    m_ECSReference = m_Core->GetECS();
 
     glEnable(GL_DEPTH_TEST); //TODO: move somewhere else
     glEnable(GL_BLEND); //TODO: move somewhere else
@@ -35,7 +35,7 @@ bool Renderer::Render2D() {
     ShaderProgramTest.AttachShader(VertexShader);
     ShaderProgramTest.AttachShader(FragmentShader);
     if (!ShaderProgramTest.LinkShaderProgram())
-        m_EngineCore->SystemLog("Renderer failed to link shader program");
+        m_Core->SystemLog("Renderer failed to link shader program");
     ShaderProgramTest.Bind();
 
 
@@ -70,19 +70,19 @@ bool Renderer::Render2D() {
 
 
 
+        //Directional Light
         GameObject* DirectionalLightGO = m_ECSReference->GetDirecitonalLightTEST();
         DirectionalLight* DirectionalLightComp = DirectionalLightGO->GetComponent<DirectionalLight>();
-        //DirectionalLightComp->m_Tint = Color(1.0f, 1.0f, 1.0f, 1.0f);
 
+        Vector4f LightDirection = DirectionalLightComp->GetDirection();
 
 
         ShaderProgramTest.SetUniform("uLightColor", DirectionalLightComp->m_Tint);
+        ShaderProgramTest.SetUniform("uLightDirection", LightDirection);
         ShaderProgramTest.SetUniform("uLightPosition", DirectionalLightGO->GetTransform().m_Position);
         
 
         //TODO: Add clearcolor to camera! It would require some restructuring
-
-
         Transform* TargetTransform = &TargetGameObject->GetTransform();
         glm::mat4* TargetMatrix = &TargetTransform->GetMatrix();
         //The target matrix could be improved upon even further. I could check if the target has moved for an example and not update it if thats the case
@@ -249,5 +249,5 @@ void Renderer::CheckRendererAPIVersion() {
     //TODO: Change depending on renderer API and make a function for all systems that need to be called at the start. 2 step init?
     std::string Version("OpenGL ");
     Version.append(reinterpret_cast<const char*>(convert));
-    m_EngineCore->SystemLog(Version);
+    m_Core->SystemLog(Version);
 }

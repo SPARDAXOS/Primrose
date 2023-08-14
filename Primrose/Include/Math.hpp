@@ -4,6 +4,7 @@
 #include "GLM/gtc/matrix_transform.hpp"
 #include "GLM/gtc/type_ptr.hpp"
 #include <math.h>
+#include <numbers>
 #pragma warning(pop)
 
 struct Vector2f {
@@ -337,6 +338,11 @@ struct Vector4f {
 		m_W /= Length;
 	}
 };
+
+
+constexpr double PI() { return std::numbers::pi; }
+
+
 
 //Move somewhere else!
 struct Color {

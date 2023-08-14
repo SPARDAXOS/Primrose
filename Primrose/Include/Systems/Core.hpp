@@ -56,8 +56,8 @@ public:
 	void SystemLog(std::string message) noexcept;
 
 public:
-	inline uint32 GetViewportWidth() const noexcept { return m_ViewportWidth; }
-	inline uint32 GetViewportHeight() const noexcept { return m_ViewportHeight; }
+	inline uint32 GetWindowWidth() const noexcept { return m_WindowWidth; }
+	inline uint32 GetWindowHeight() const noexcept { return m_WindowHeight; }
 
 private:
 	void SetupCore();
@@ -67,8 +67,8 @@ private:
 	void RegisterExitMessage(std::string message) noexcept;
 	void PrintExitMessage() noexcept;
 
-	int32 m_ViewportWidth = 1920;
-	int32 m_ViewportHeight = 1080;
+	int32 m_WindowWidth = 1920;
+	int32 m_WindowHeight = 1080;
 
 private:
 	std::string m_ExitMessage;

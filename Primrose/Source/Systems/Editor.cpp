@@ -91,11 +91,11 @@ void Editor::Render() {
 	m_EditorStyle.Apply();
 
 	//Testing!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	Physics* m_Physics = m_CoreReference->GetPhysics();
-	Vector3f Test 
-		= m_Physics->ScreenToWorld(Vector2f(static_cast<float>(m_InputReference->CursorX), static_cast<float>(m_InputReference->CursorY)), 0.0f);
+	//Physics* m_Physics = m_CoreReference->GetPhysics();
+	//Vector3f Test 
+	//	= m_Physics->ScreenToWorld(Vector2f(static_cast<float>(m_InputReference->CursorX), static_cast<float>(m_InputReference->CursorY)), 0.0f);
 
-	std::cout << "X: " << Test.m_X << " Y: " << Test.m_Y << " Z: " << Test.m_Z << std::endl;
+	//std::cout << "X: " << Test.m_X << " Y: " << Test.m_Y << " Z: " << Test.m_Z << std::endl;
 
 
 	//Main Docking Space
@@ -111,7 +111,7 @@ void Editor::Render() {
 	RenderHeirarchyMenu();
 	RenderAddGameObjectMenu();
 	RenderDirectoryExplorer();
-	RenderViewportWindow();
+	//RenderViewportWindow();
 	RenderMainMenuBar();
 	RenderContentWindows();
 
@@ -145,12 +145,17 @@ void Editor::RenderDetailsMenu() {
 	//TODO: Add the ability to reorder these one day
 
 
+	ImGuiWindowFlags Flags = 0;
+	Flags |= ImGuiWindowFlags_::ImGuiWindowFlags_NoCollapse;
+
+
+
 	//Render GUI
 	//Note: Will also lock position and size - Use any func without the next to free it
 	ImGui::SetNextWindowSize(m_DetailsWindowSize);
 	ImGui::SetNextWindowPos(m_DetailsWindowPosition);
 
-	ImGui::Begin("Details", &m_DetailsWindowOpened);
+	ImGui::Begin("Details", &m_DetailsWindowOpened, Flags);
 	CheckForHoveredWindows();
 
 	if (m_SelectedGameObject != nullptr) {
@@ -159,7 +164,7 @@ void Editor::RenderDetailsMenu() {
 		RenderInfoDetails();
 		RenderTransformDetails();
 		RenderSpriteRendererDetails();
-
+		RenderDirectionalLightDetails();
 
 		//Always at the bottom
 		RenderAddComponentMenu();
@@ -172,11 +177,14 @@ void Editor::RenderHeirarchyMenu() {
 	if (!m_HeirarchyWindowOpened)
 		return;
 
+	ImGuiWindowFlags Flags = 0;
+	Flags |= ImGuiWindowFlags_::ImGuiWindowFlags_NoCollapse;
+
 	ImGui::SetNextWindowSize(m_HierarchyWindowSize);
 	ImGui::SetNextWindowPos(m_HierarchyWindowPosition); 
 
 	//ImGuiWindowFlags_NoBringToFrontOnFocus
-	ImGui::Begin("Heirarchy", &m_HeirarchyWindowOpened);
+	ImGui::Begin("Heirarchy", &m_HeirarchyWindowOpened, Flags);
 
 	CheckForHoveredWindows();
 
@@ -426,7 +434,7 @@ void Editor::RenderSpriteRendererDetails() {
 
 	if (m_SelectedGameObject->HasComponent<SpriteRenderer>()) {
 		SpriteRenderer* SelectedSpriteRenderer = m_SelectedGameObject->GetComponent<SpriteRenderer>();
-		if (ImGui::CollapsingHeader("SpriteRenderer", ImGuiTreeNodeFlags_DefaultOpen)) {
+		if (ImGui::CollapsingHeader("Sprite Renderer", ImGuiTreeNodeFlags_DefaultOpen)) {
 			
 			//NOTE: These could be broken down into smaller functions as well
 
@@ -690,6 +698,23 @@ void Editor::RenderSpriteRendererDetails() {
 		}
 	}
 }
+void Editor::RenderDirectionalLightDetails() {
+
+	if (m_SelectedGameObject->HasComponent<DirectionalLight>()) {
+		DirectionalLight* SelectedDirectionalLight = m_SelectedGameObject->GetComponent<DirectionalLight>();
+		if (ImGui::CollapsingHeader("Directional Light", ImGuiTreeNodeFlags_DefaultOpen)) {
+
+			//NOTE: These could be broken down into smaller functions as well
+
+			//TINT
+			Color CurrentColor = SelectedDirectionalLight->GetTint();
+			if (ImGui::ColorEdit4("Tint", &CurrentColor.m_R, ImGuiColorEditFlags_NoInputs)) {
+				SelectedDirectionalLight->SetTint(CurrentColor);
+			}
+
+		}
+	}
+}
 void Editor::RenderAddComponentMenu() {
 
 	ImGui::Separator();
@@ -810,21 +835,38 @@ void Editor::RenderViewportWindow() {
 	//NOTE: The tabs code could be done easily by getting the payload nad checking if no window is hovered.
 
 	ImGuiWindowFlags ViewportFlags = 0;
-	ViewportFlags |= ImGuiWindowFlags_NoBackground;
-	ViewportFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
-	ViewportFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
+	//ViewportFlags |= ImGuiWindowFlags_NoBackground;
+	//ViewportFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
+	//ViewportFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
 	ViewportFlags |= ImGuiWindowFlags_NoSavedSettings;
-	ViewportFlags |= ImGuiWindowFlags_NoMove;
-	ViewportFlags |= ImGuiWindowFlags_NoTitleBar;
+	//ViewportFlags |= ImGuiWindowFlags_NoMove;
+	//ViewportFlags |= ImGuiWindowFlags_NoTitleBar;
 	ViewportFlags |= ImGuiWindowFlags_NoDocking;
 	bool Open = true; //? should i allow the viewport to be closable. Yes in the future.
+
+
+	//Once
+	static bool test = true;
+	if (test) {
+		ImGui::SetNextWindowSize(ImVec2(512, 512));
+		ImGui::SetNextWindowPos(ImVec2(990, 540));
+		test = false;
+	}
+
 	if (ImGui::Begin("ViewportWindow", &Open, ViewportFlags)) {
-		ImGui::SetWindowSize(m_GUIViewport->Size);
-		ImGui::SetWindowPos(ImVec2(0, 0));
 
 
 
+		m_ViewportSize = ImGui::GetWindowSize();
+		ImVec2 WindowPosition = ImGui::GetWindowPos();
+		std::cout << "X: " << WindowPosition.x << " Y: " << WindowPosition.y << std::endl;
 
+		//NOTE: This will be put on ice until framebuffers are implemented!
+
+		//m_CoreReference->GetWindow()->SetViewportSize(static_cast<int32>(m_ViewportSize.x), static_cast<int32>(m_ViewportSize.y));
+
+		//Size seems fine but position seems reversed or something - Y seems the problem
+		//m_CoreReference->GetWindow()->SetViewportPosition(static_cast<int32>(ImGui::GetWindowPos().x), -static_cast<int32>(ImGui::GetWindowPos().y));
 	}
 
 	ImGui::End();
@@ -864,6 +906,7 @@ void Editor::RenderContentBrowser() {
 		if (!m_IsOtherContentWindowOpened) {
 			ImGui::SetNextWindowPos(m_ContentBrowserWindowPosition);
 			ImGui::SetNextWindowSize(m_ContentBrowserWindowSize);
+			Flags |= ImGuiWindowFlags_NoMove; //Not working!!!
 		}
 		else {
 			ImGui::SetNextWindowPos(GetUniqueScreenCenterPoint(m_NewContentWindowSize));
@@ -1213,9 +1256,7 @@ void Editor::RenderMaterialEditor() {
 		ImVec2 TextureNameTextSize;
 		ImVec2 SpriteSelectorSize;
 		std::string TextureName;
-		ImVec2 NoneTextSize;
-
-		NoneTextSize = ImGui::CalcTextSize("None");
+		ImVec2 NoneTextSize = ImGui::CalcTextSize("None");
 
 		//TODO: When deleting materials. Check if it is selected!. Make general function for that stuff! 
 		//-It checks if it is a selected asset/material/gameobject then does the appropriate thing like closing an editor or something.

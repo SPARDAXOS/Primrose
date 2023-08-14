@@ -9,7 +9,6 @@ class GameObject;
 
 class LightComponentBase : public ComponentBase {
 public:
-
 	LightComponentBase() = delete;
 	LightComponentBase(GameObject& owner, uint64 ownerID);
 	~LightComponentBase() = default;
@@ -20,6 +19,12 @@ public:
 
 	LightComponentBase(LightComponentBase&& other) = delete;
 	LightComponentBase& operator=(LightComponentBase&& other) = delete;
+
+public:
+	void SetTint(Color color) noexcept { m_Tint = color; }
+
+public:
+	Color GetTint() const noexcept { return m_Tint; }
 
 public:
 	Color m_Tint = Colors::White;

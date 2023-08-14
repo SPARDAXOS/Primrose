@@ -127,6 +127,7 @@ private:
 	void RenderInfoDetails();
 	void RenderTransformDetails();
 	void RenderSpriteRendererDetails();
+	void RenderDirectionalLightDetails();
 	void RenderAddComponentMenu();
 
 	void RenderContentWindows();
@@ -214,6 +215,8 @@ private:
 
 	bool m_DebugLogOpened = false;
 	bool m_SystemLogOpened = false;
+
+	ImVec2 m_ViewportSize;
 
 
 	//Sprite Selector

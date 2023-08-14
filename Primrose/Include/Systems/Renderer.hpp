@@ -38,7 +38,7 @@ private:
 	std::string m_LastExitMessage;
 
 private:
-	Core* m_EngineCore							{ nullptr };
+	Core* m_Core							{ nullptr };
 	Window* m_WindowReference					{ nullptr };
 	TextureStorage* m_TextureStorageReference	{ nullptr };
 	EntityComponentSystem* m_ECSReference		{ nullptr };

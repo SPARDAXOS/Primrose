@@ -12,7 +12,7 @@ Core::Core() noexcept {
 	m_Window = std::make_unique<Window>(*this);
 	m_TextureStorage = std::make_unique<TextureStorage>(*this);
 	m_Serializer = std::make_unique<Serializer>(*this);
-	m_ECS = std::make_unique<EntityComponentSystem>();
+	m_ECS = std::make_unique<EntityComponentSystem>(*this);
 	m_AssetManager = std::make_unique<AssetManager>(*this);
 	m_Input = std::make_unique<Input>(*m_Window);
 	m_Editor = std::make_unique<Editor>(*this);
@@ -113,9 +113,6 @@ void Core::Run() {
 	SpriteRenderer* ComponentChildChild2 = GameObjectTestChildChild2->GetComponent<SpriteRenderer>();
 	ComponentChildChild2->SetSprite(CrateTexture);
 
-	m_ECS->CreateGameObject("GameObjectNoSprite");
-	//GameObjectTestNoSprite->AddComponent<SpriteRenderer>();
-
 	//TODO: It is important to decide what to do when it comes to multiple components of the same type and such
 
 	GameObjectTest->AddChild(GameObjectTestChild); //Add
@@ -137,17 +134,10 @@ void Core::Run() {
 	GameObjectTransform2->m_Rotation = Vector3f(0.0f, 0.0f, 0.0f);
 	GameObjectTransform2->m_Scale = Vector3f(1.5f, 1.5f, 1.5f);
 	
-	//GameObject* InstansiatedGameObject = &m_ECS->Instantiate(*GameObjectTest);
-	//SpriteRenderer* NewSpriteRenderer 
-		//= InstansiatedGameObject->AddComponent<SpriteRenderer>(); //Will not work cause the flags carried over but not actual components.
-	//NewSpriteRenderer->SetSprite(CreateTexture);
-	
-	//InstansiatedGameObject->GetTransform().m_Position.m_X *= -1;
+
 	
 	while (m_Running) {
 
-
-		//LIGHT NOTES: It kinda works but the small 0.5f cube behaves too weirdly. Scaling breaks the light and it breaks even when not scaled!
 		if (m_Input->GetKey(Keycode::R))
 			GameObjectTransform->m_Rotation.m_Y += 1.0f;
 

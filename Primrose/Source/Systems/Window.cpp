@@ -9,8 +9,8 @@ Window::Window(Core& core)
     : m_EngineCore(&core)
 {
 
-    m_Width = m_EngineCore->GetViewportWidth();
-    m_Height = m_EngineCore->GetViewportHeight();
+    m_WindowWidth = m_EngineCore->GetWindowWidth();
+    m_WindowHeight = m_EngineCore->GetWindowHeight();
 
     SetupGLFW();
     SetupOpenGLFlags();
@@ -47,10 +47,10 @@ bool Window::Update() noexcept {
 void Window::SetWindowMode(WindowMode mode) noexcept {
     switch (mode) {
     case WindowMode::WINDOWED: {
-        glfwSetWindowMonitor(m_Window->m_Handle, nullptr, 0, 0, m_Width, m_Height, m_RefreshRate);
+        glfwSetWindowMonitor(m_Window->m_Handle, nullptr, 0, 0, m_WindowWidth, m_WindowHeight, m_RefreshRate);
     }break;
     case WindowMode::FULLSCREEN: {
-        glfwSetWindowMonitor(m_Window->m_Handle, m_Window->m_Monitor, 0, 0, m_Width, m_Height, m_RefreshRate);
+        glfwSetWindowMonitor(m_Window->m_Handle, m_Window->m_Monitor, 0, 0, m_WindowWidth, m_WindowHeight, m_RefreshRate);
     }break;
     case WindowMode::BORDERLESS_FULLSCREEN: {
 
@@ -76,7 +76,7 @@ void Window::UnbindOpenGLContext() const noexcept {
 
 
 void Window::CreateWindow() {
-    m_Window = std::make_unique<WindowResource>(m_Width, m_Height, "Primrose", glfwGetPrimaryMonitor(), nullptr); //Uses main monitor
+    m_Window = std::make_unique<WindowResource>(m_WindowWidth, m_WindowHeight, "Primrose", glfwGetPrimaryMonitor(), nullptr); //Uses main monitor
     if (m_Window->m_Handle == nullptr) {
         glfwTerminate();
         throw std::runtime_error("GLFW failed to create window");
@@ -94,14 +94,16 @@ void Window::SetupGLAD() {
     m_GLAD = std::make_unique<GLADResource>();
 }
 void Window::SetupViewport() noexcept {
-    GLCall(glViewport(0, 0, m_Width, m_Height)); 
+    //????
+    GLCall(glViewport(m_ViewportPositionX, m_ViewportPositionY, m_ViewportWidth, m_ViewportHeight));
     auto FrameBufferSizeCallback = [](GLFWwindow* window, int width, int height) { GLCall(glViewport(0, 0, width, height)); };
-    glfwGetWindowSize(m_Window->m_Handle, &m_Width, &m_Height);
+    glfwGetWindowSize(m_Window->m_Handle, &m_WindowWidth, &m_WindowHeight); //?
     glfwSetFramebufferSizeCallback(m_Window->m_Handle, FrameBufferSizeCallback);
     
 }
 
 
-void Window::UpdateWindowSize() noexcept {
-    GLCall(glViewport(0, 0, m_Width, m_Height));
+void Window::UpdateViewport() noexcept {
+
+    GLCall(glViewport(m_ViewportPositionX, m_ViewportPositionY, m_ViewportWidth, m_ViewportHeight));
 }

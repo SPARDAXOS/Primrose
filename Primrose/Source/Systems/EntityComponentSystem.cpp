@@ -1,10 +1,11 @@
 #include "Systems/EntityComponentSystem.hpp"
+#include "Systems/Core.hpp"
 #include "GameObject.hpp"
 
 
-EntityComponentSystem::EntityComponentSystem() noexcept {
-
-
+EntityComponentSystem::EntityComponentSystem(Core& core) noexcept
+	:	m_CoreReference(&core)
+{
 	//TODO: Move these into functions that are called by the core or in intitialization if custom ctor is used
 
 	//Is this even necessary? I could just create a normal object using the function

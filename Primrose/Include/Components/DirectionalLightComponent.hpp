@@ -3,7 +3,6 @@
 
 class DirectionalLight final : public LightComponentBase {
 public:
-
 	DirectionalLight() = delete;
 	DirectionalLight(GameObject& owner, uint64 ownerID);
 	~DirectionalLight() = default;
@@ -15,6 +14,8 @@ public:
 	DirectionalLight(DirectionalLight&& other) = delete;
 	DirectionalLight& operator=(DirectionalLight&& other) = delete;
 
+public:
+	Vector4f GetDirection() const noexcept;
 
 
 };
