@@ -165,9 +165,16 @@ private:
 private:
 	void AddSpacings(uint32 count);
 	void AddSeparators(uint32 count);
+
+	//Inline?
 	void SetSelectedGameObject(GameObject* object) noexcept;
 	void SetSelectedDirectory(Directory* directory) noexcept;
-	inline void SetSpriteRendererEditTarget(SpriteRenderer* target) noexcept { m_SpriteSelectorTarget = target; }
+
+	inline void SetMaterialEditorTarget(Material* target) noexcept { m_MaterialEditorTarget = target; }
+	inline void SetSpriteSelectorTarget(Texture2D*& target) noexcept { m_SpriteSelectorTarget = &target; }
+
+	void OpenAsset(Asset& asset);
+
 	void CheckForHoveredWindows();
 	Texture2D* GetIconTexture(const Asset& asset) noexcept;
 
@@ -214,7 +221,7 @@ private:
 	ImVec2 m_SpriteSelectorWindowSize;
 	ImVec2 m_SpriteSelectorElementSize{ 100.0f, 100.0f };
 	float m_SpriteSelectorElementPadding = 50.0f;
-	SpriteRenderer* m_SpriteSelectorTarget{ nullptr };
+	Texture2D** m_SpriteSelectorTarget	{ nullptr };
 
 	//Material Editor
 	bool m_MaterialEditorOpened = false;

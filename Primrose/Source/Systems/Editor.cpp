@@ -441,10 +441,8 @@ void Editor::RenderSpriteRendererDetails() {
 
 			const ImVec2 CursorPosition = ImGui::GetCursorPos();
 			if (ImGui::Button("##SpriteNameButton", ImVec2(m_DetailsWindowSize.x * 0.3f, 15.0f))) {
-				ImGui::SetNextWindowPos(ImGui::GetMousePos());
-				ImGui::SetNextWindowSize(m_SpriteSelectorWindowSize);
 				m_SpriteSelectorOpened = true;
-				ImGui::OpenPopup("Sprite Selector");
+				SetSpriteSelectorTarget(SelectedSpriteRenderer->GetSpriteRef()); //Here instead
 			}
 			ImGui::SetCursorPos(CursorPosition);
 			const Texture2D* Sprite = SelectedSpriteRenderer->GetSprite();
@@ -456,30 +454,8 @@ void Editor::RenderSpriteRendererDetails() {
 			ImGui::PopStyleColor(3);
 			ImGui::PopStyleVar();
 
-			ImGui::PushStyleColor(ImGuiCol_ModalWindowDimBg, ImVec4(0.4f, 0.0f, 0.0f, 1.0f));
-			ImGui::PushStyleVar(ImGuiStyleVar_PopupRounding, 5.0f);
-			
-			ImGuiWindowFlags Flags = 0;
-			Flags |= ImGuiWindowFlags_AlwaysVerticalScrollbar;
+			//Add Material Selector
 
-			//Consider Moving this out!
-			if (ImGui::BeginPopupModal("Sprite Selector", &m_SpriteSelectorOpened, Flags)) {
-				CheckForHoveredWindows();
-				SetSpriteRendererEditTarget(SelectedSpriteRenderer);
-				UpdateSpriteSelectorEntries();
-
-				m_SpriteSelectorWindowSize = ImGui::GetWindowSize(); //This method is great but it requires that i keep track of the bool and edit it manually.
-				//-Which is not a problem.
-				ImGui::EndPopup();
-			}
-			else {
-				if (m_SpriteSelectorTarget != nullptr)
-					SetSpriteRendererEditTarget(nullptr);
-				m_SpriteSelectorOpened = false; 
-			}
-
-			ImGui::PopStyleColor();
-			ImGui::PopStyleVar();
 
 			AddSpacings(2);
 
@@ -861,6 +837,7 @@ void Editor::RenderContentWindows() {
 	RenderSystemLog();
 
 	//Doesnt scale according to the rest of the windows
+	RenderSpriteSelector();
 	RenderMaterialEditor();
 }
 
@@ -1169,11 +1146,42 @@ void Editor::RenderSystemLog() {
 }
 void Editor::RenderSpriteSelector() {
 
+	if (!m_SpriteSelectorOpened || m_SpriteSelectorTarget == nullptr)
+		return;
+
+	ImGui::PushStyleColor(ImGuiCol_ModalWindowDimBg, ImVec4(0.4f, 0.0f, 0.0f, 1.0f));
+	ImGui::PushStyleVar(ImGuiStyleVar_PopupRounding, 5.0f);
+
+	ImGuiWindowFlags Flags = 0;
+	Flags |= ImGuiWindowFlags_AlwaysVerticalScrollbar;
 
 
+	//Open Popup
+	if (m_SpriteSelectorOpened) {
+		if (!ImGui::IsPopupOpen("Sprite Selector")) {
+			ImGui::SetNextWindowPos(ImGui::GetMousePos());
+			ImGui::SetNextWindowSize(m_SpriteSelectorWindowSize);
+			ImGui::OpenPopup("Sprite Selector");
+		}
+	}
 
+	//Render Popup
+	if (ImGui::BeginPopupModal("Sprite Selector", &m_SpriteSelectorOpened, Flags)) {
+		CheckForHoveredWindows();
+		UpdateSpriteSelectorEntries();
 
+		m_SpriteSelectorWindowSize = ImGui::GetWindowSize(); //This method is great but it requires that i keep track of the bool and edit it manually.
+		//-Which is not a problem. ???
+		ImGui::EndPopup();
+	}
+	else {
+		if (m_SpriteSelectorTarget != nullptr)
+			m_SpriteSelectorTarget = nullptr;
+		m_SpriteSelectorOpened = false;
+	}
 
+	ImGui::PopStyleColor();
+	ImGui::PopStyleVar();
 }
 void Editor::RenderMaterialEditor() {
 
@@ -1193,18 +1201,127 @@ void Editor::RenderMaterialEditor() {
 
 
 	if (ImGui::Begin("Material Editor", &m_MaterialEditorOpened, Flags)) {
+		CheckForHoveredWindows();
+
 		//Style for texture selectors
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
 		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(m_EditorStyle.m_MainColor.m_R * 0.2f, 0.0f, 0.0f, 1.0f));
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(m_EditorStyle.m_MainColor.m_R * 0.3f, 0.0f, 0.0f, 1.0f));
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(m_EditorStyle.m_MainColor.m_R * 0.4f, 0.0f, 0.0f, 1.0f));
 
-		ImGui::Text("Diffuse");
-		ImGui::SameLine(200.0f);
-		if (ImGui::Button(m_MaterialEditorTarget->m_Diffuse->GetName().data())) {
+		ImVec2 TextureTypeTextSize;
+		ImVec2 TextureNameTextSize;
+		ImVec2 SpriteSelectorSize;
+		std::string TextureName;
+		ImVec2 NoneTextSize;
 
+		NoneTextSize = ImGui::CalcTextSize("None");
+
+		//TODO: When deleting materials. Check if it is selected!. Make general function for that stuff! 
+		//-It checks if it is a selected asset/material/gameobject then does the appropriate thing like closing an editor or something.
+
+
+		//////////
+		//Diffuse
+		//////////
+
+		//Texture
+		ImGui::SetCursorPos(ImVec2(m_MaterialEditorWindowSize.x * 0.05f, ImGui::GetCursorPos().y));
+		TextureTypeTextSize = ImGui::CalcTextSize("Diffuse");
+		ImGui::Text("Diffuse");
+		ImGui::SameLine(TextureTypeTextSize.x + (m_MaterialEditorWindowSize.x * 0.1f));
+		if (m_MaterialEditorTarget->m_Diffuse != nullptr) {
+			TextureName = m_MaterialEditorTarget->m_Diffuse->GetName();
+			TextureNameTextSize = ImGui::CalcTextSize(TextureName.data());
+		}
+		else {
+			TextureName = "None";
+			TextureNameTextSize = NoneTextSize;
 		}
 
+		SpriteSelectorSize = ImVec2(TextureNameTextSize.x + (m_MaterialEditorWindowSize.x * 0.2f), 20.0f);
+		if (ImGui::Button(TextureName.data(), SpriteSelectorSize)) {
+			m_SpriteSelectorOpened = true;
+			SetSpriteSelectorTarget(m_MaterialEditorTarget->m_Diffuse);
+		}
+		ImGui::Separator();
+
+
+		//////////
+		//Ambient
+		//////////
+		
+		//Texture
+		ImGui::SetCursorPos(ImVec2(m_MaterialEditorWindowSize.x * 0.05f, ImGui::GetCursorPos().y));
+		TextureTypeTextSize = ImGui::CalcTextSize("Ambient");
+		ImGui::Text("Ambient");
+		ImGui::SameLine(TextureTypeTextSize.x + (m_MaterialEditorWindowSize.x * 0.1f));
+		if (m_MaterialEditorTarget->m_Ambient != nullptr) {
+			TextureName = m_MaterialEditorTarget->m_Ambient->GetName();
+			TextureNameTextSize = ImGui::CalcTextSize(TextureName.data());
+		}
+		else {
+			TextureName = "None";
+			TextureNameTextSize = NoneTextSize;
+		}
+
+		SpriteSelectorSize = ImVec2(TextureNameTextSize.x + (m_MaterialEditorWindowSize.x * 0.2f), 20.0f);
+		if (ImGui::Button(TextureName.data(), SpriteSelectorSize)) {
+			m_SpriteSelectorOpened = true;
+			SetSpriteSelectorTarget(m_MaterialEditorTarget->m_Ambient);
+		}
+
+		//Strength
+		ImGui::SetCursorPos(ImVec2(m_MaterialEditorWindowSize.x * 0.05f, ImGui::GetCursorPos().y));
+		ImGui::Text("Strength");
+		ImGui::SameLine(ImGui::CalcTextSize("Strength").x + (m_MaterialEditorWindowSize.x * 0.1f));
+		ImGui::SetNextItemWidth(TextureNameTextSize.x + (m_MaterialEditorWindowSize.x * 0.2f));
+		ImGui::InputFloat("##AmbientStrength", &m_MaterialEditorTarget->m_AmbientStrength);
+		ImGui::Separator();
+
+
+		//NOTE: Check what flags i get.
+
+
+		//////////
+		//Specular
+		//////////
+		
+		//Texture
+		ImGui::SetCursorPos(ImVec2(m_MaterialEditorWindowSize.x * 0.05f, ImGui::GetCursorPos().y));
+		TextureTypeTextSize = ImGui::CalcTextSize("Specular");
+		ImGui::Text("Specular");
+		ImGui::SameLine(TextureTypeTextSize.x + (m_MaterialEditorWindowSize.x * 0.1f));
+		if (m_MaterialEditorTarget->m_Specular != nullptr) {
+			TextureName = m_MaterialEditorTarget->m_Specular->GetName();
+			TextureNameTextSize = ImGui::CalcTextSize(TextureName.data());
+		}
+		else {
+			TextureName = "None";
+			TextureNameTextSize = NoneTextSize;
+		}
+
+
+		SpriteSelectorSize = ImVec2(TextureNameTextSize.x + (m_MaterialEditorWindowSize.x * 0.2f), 20.0f);
+		if (ImGui::Button(TextureName.data(), SpriteSelectorSize)) {
+			m_SpriteSelectorOpened = true;
+			SetSpriteSelectorTarget(m_MaterialEditorTarget->m_Specular);
+		}
+
+		//Strength
+		ImGui::SetCursorPos(ImVec2(m_MaterialEditorWindowSize.x * 0.05f, ImGui::GetCursorPos().y));
+		ImGui::Text("Strength");
+		ImGui::SameLine(ImGui::CalcTextSize("Strength").x + (m_MaterialEditorWindowSize.x * 0.1f));
+		ImGui::SetNextItemWidth(TextureNameTextSize.x + (m_MaterialEditorWindowSize.x * 0.2f));
+		ImGui::InputFloat("##AmbientStrength", &m_MaterialEditorTarget->m_SpecularStrength);
+
+		//Shininess
+		ImGui::SetCursorPos(ImVec2(m_MaterialEditorWindowSize.x * 0.05f, ImGui::GetCursorPos().y));
+		ImGui::Text("Shininess");
+		ImGui::SameLine(ImGui::CalcTextSize("Shininess").x + (m_MaterialEditorWindowSize.x * 0.1f));
+		ImGui::SetNextItemWidth(TextureNameTextSize.x + (m_MaterialEditorWindowSize.x * 0.2f));
+		ImGui::InputInt("##Shininess", &m_MaterialEditorTarget->m_SpecularShininess);
+		ImGui::Separator();
 
 
 		ImGui::PopStyleVar();
@@ -1233,17 +1350,25 @@ void Editor::CheckInput() {
 		if (m_SelectedContentElement != nullptr && ImGui::IsMouseReleased(ImGuiMouseButton_Left))
 			m_SelectedContentElement = nullptr;
 
-		if (ImGui::IsMouseReleased(ImGuiMouseButton_Right))
+		if (ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
+			m_CoreReference->ErrorLog("Released");
+			//Short afterimage when deleting!
 			m_OpenContentBrowserEditMenu = true;
+		}
 	}
 
 
 	//Delete selected from hieracrchy
 	if (ImGui::IsKeyReleased(ImGuiKey_Delete)) {
+		
+		//if (m_SelectedContentElement != nullptr) {
+		//	//Shit...
+		//}
 		if (m_SelectedGameObject != nullptr) {
 			m_SelectedGameObject->Destroy();
 			SetSelectedGameObject(nullptr);
 		}
+		
 	}
 }
 void Editor::UpdateViewportControls() {
@@ -1562,9 +1687,7 @@ void Editor::UpdateContentBrowserFolderEntries() {
 			ImGui::SetNextWindowSize(ImVec2(200.0f, 100.0f));
 			if (ImGui::BeginPopup(m_FolderEditMenuTarget->m_Name.data())) {
 
-				ImGui::Text(std::string("Edit: " + Folder->m_Name).data());
-				ImGui::Separator();
-
+				ImGui::SeparatorText(std::string("Edit: " + Folder->m_Name).data());
 				if (ImGui::MenuItem("Rename")) {
 
 				}
@@ -1620,12 +1743,7 @@ void Editor::UpdateContentBrowserAssetEntries() {
 			//Select
 			if (m_SelectedContentElement == Asset) {
 				m_SelectedContentElement = nullptr;
-				//OPEN WHATEVER! - TODO: Make custom function
-				if (Asset->m_Type == AssetType::MATERIAL) {
-					m_MaterialEditorOpened = true;
-					m_MaterialEditorWindowReset = true;
-					m_MaterialEditorTarget = m_AssetManagerReference->GetMaterial(*Asset);
-				}
+				OpenAsset(*Asset);
 			}
 			else
 				m_SelectedContentElement = Asset;
@@ -1659,14 +1777,14 @@ void Editor::UpdateContentBrowserAssetEntries() {
 			ImGui::SetNextWindowSize(ImVec2(200.0f, 100.0f));
 			if (ImGui::BeginPopup(m_AssetEditMenuTarget->m_Name.data())) {
 
-				ImGui::Text(std::string("Edit: " + Asset->m_Name).data());
-				ImGui::Separator();
-
+				ImGui::SeparatorText(std::string("Edit: " + Asset->m_Name).data());
 				if (ImGui::MenuItem("Rename")) {
 
 				}
 				if (ImGui::MenuItem("Delete"))
 					m_AssetManagerReference->RemoveAsset(*Asset);
+
+				//TODO: Clean up to avoid after image
 
 				ImGui::EndPopup();
 			}
@@ -1697,6 +1815,20 @@ void Editor::FlushContentTexts() {
 
 	m_QueuedContentTexts.clear();
 	AddSpacings(3);
+}
+
+
+void Editor::OpenAsset(Asset& asset) {
+
+	//Add more types here!
+	if (asset.m_Type == AssetType::MATERIAL) {
+		m_MaterialEditorOpened = true;
+		m_MaterialEditorWindowReset = true;
+		SetMaterialEditorTarget(m_AssetManagerReference->GetMaterial(asset));
+	}
+
+
+
 }
 
 void Editor::UpdateSpriteSelectorEntries() {
@@ -1749,8 +1881,8 @@ void Editor::UpdateSpriteSelectorEntries() {
 			if (m_SelectedSpriteSelectorElement == Texture) {
 				m_SelectedSpriteSelectorElement = nullptr;
 
-				m_SpriteSelectorTarget->SetSprite(Texture);
-				SetSpriteRendererEditTarget(nullptr); //Hmmmmm, should i keep track of when this should get unset?
+				*m_SpriteSelectorTarget = Texture;
+				m_SpriteSelectorTarget = nullptr;
 
 				ImGui::CloseCurrentPopup();
 			}
@@ -1784,13 +1916,11 @@ void Editor::UpdateContentBrowserMenu() {
 	//Render Popup
 	if (ImGui::BeginPopup("##ContentBrowserMenu")) {
 
-		if (ImGui::MenuItem("NewFolder")) {
+		ImGui::SeparatorText("Add new...");
+		if (ImGui::MenuItem("New folder")) {
 			m_AssetManagerReference->CreateNewFolder(*m_SelectedDirectory);
 		}
-		ImGui::Text("Add New...");
-		ImGui::Separator();
-
-		if (ImGui::MenuItem("Material")) {
+		else if (ImGui::MenuItem("Material")) {
 			m_AssetManagerReference->CreateAsset(AssetType::MATERIAL, *m_SelectedDirectory);
 		}
 
@@ -1882,7 +2012,7 @@ void Editor::SetSelectedGameObject(GameObject* object) noexcept {
 		strcpy_s(m_TagInputBuffer, m_SelectedGameObject->GetTag().c_str());
 	}
 	if (m_SpriteSelectorTarget != nullptr)
-		SetSpriteRendererEditTarget(nullptr);
+		m_SpriteSelectorTarget = nullptr;
 }
 void Editor::SetSelectedDirectory(Directory* directory) noexcept {
 
@@ -1985,9 +2115,8 @@ void Editor::UpdateWindowPositions() {
 	if (!m_SpriteSelectorOpened)
 		m_SpriteSelectorWindowSize = ImVec2(m_GUIViewport->Size.x * 0.2f, m_GUIViewport->Size.y * 0.6f);
 
-	//Unsure about this one
 	if (!m_MaterialEditorOpened)
-		m_MaterialEditorWindowSize = ImVec2(m_GUIViewport->Size.x * 0.6f, m_GUIViewport->Size.y * 0.6f);
+		m_MaterialEditorWindowSize = ImVec2(m_GUIViewport->Size.x * 0.2f, m_GUIViewport->Size.y * 0.6f);
 
 	m_ContentBrowserWindowPosition = ImVec2(m_DirectoryExplorerWindowSize.x, m_GUIViewport->Size.y - m_ContentBrowserWindowSize.y);
 	m_DetailsWindowPosition = ImVec2(m_GUIViewport->Size.x - m_DetailsWindowSize.x, m_MainMenuBarSize.y);
