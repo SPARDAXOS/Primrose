@@ -169,6 +169,14 @@ int32 EntityComponentSystem::FindDirectionalLight(uint64 objectID) const noexcep
 	}
 	return INVALID_OBJECT_ID;
 }
+int32 EntityComponentSystem::FindPointLight(uint64 objectID) const noexcept {
+	for (uint32 index = 0; index < m_PointLights.size(); index++) {
+		if (m_PointLights.at(index)->GetOwnerID() == objectID) {
+			return index;
+		}
+	}
+	return INVALID_OBJECT_ID;
+}
 
 bool EntityComponentSystem::IsReserved(uint64 objectID) const noexcept {
 	if (objectID == MAIN_SCENE_OBJECT_ID)
@@ -180,4 +188,12 @@ bool EntityComponentSystem::IsReserved(uint64 objectID) const noexcept {
 }
 
 
+//DELETE THESE AFTER PROPER LIGHT MANAGEMENT IS IMPLEMENTED!
 GameObject* EntityComponentSystem::GetDirecitonalLightTEST() const noexcept { return m_DirectionalLightTest; }
+GameObject* EntityComponentSystem::GetPointLightTEST() const noexcept { 
+
+	if (m_PointLights.size() > 0)
+		return m_PointLights.at(0)->GetOwner(); 
+
+	return nullptr;
+}

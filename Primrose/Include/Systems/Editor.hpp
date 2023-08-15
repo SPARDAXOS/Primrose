@@ -75,6 +75,9 @@ public:
 		ImGui::PushStyleColor(ImGuiCol_TabUnfocused, ImVec4(0.2f, 0.0f, 0.0f, 1.0f));
 		ImGui::PushStyleColor(ImGuiCol_TabUnfocusedActive, ImVec4(0.6f, 0.0f, 0.0f, 1.0f));
 
+		ImGui::PushStyleColor(ImGuiCol_SliderGrab, ImVec4(0.2f, 0.0f, 0.0f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, ImVec4(0.6f, 0.0f, 0.0f, 1.0f));
+
 		ImGui::PushStyleColor(ImGuiCol_DockingPreview, ImVec4(0.3f, 0.0f, 0.0f, 1.0f));
 		ImGui::PushStyleColor(ImGuiCol_DockingEmptyBg, ImVec4(0.2f, 0.0f, 0.0f, 1.0f));
 
@@ -83,7 +86,7 @@ public:
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10.0f);
 	}
 	void Clear() override {
-		ImGui::PopStyleColor(21);
+		ImGui::PopStyleColor(23);
 		ImGui::PopStyleVar(2);
 	}
 
@@ -128,6 +131,7 @@ private:
 	void RenderTransformDetails();
 	void RenderSpriteRendererDetails();
 	void RenderDirectionalLightDetails();
+	void RenderPointLightDetails();
 	void RenderAddComponentMenu();
 
 	void RenderContentWindows();

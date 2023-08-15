@@ -15,8 +15,9 @@ public:
 	PointLight& operator=(PointLight&& other) = delete;
 
 public:
-	float m_Attenuation;
-	float m_SourceRadius;
+	float m_Intensity = 1.0f;
+	float m_Attenuation = 0.09f;
+	float m_SourceRadius = 0.032f;
 
 
 };

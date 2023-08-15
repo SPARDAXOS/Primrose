@@ -165,6 +165,7 @@ void Editor::RenderDetailsMenu() {
 		RenderTransformDetails();
 		RenderSpriteRendererDetails();
 		RenderDirectionalLightDetails();
+		RenderPointLightDetails();
 
 		//Always at the bottom
 		RenderAddComponentMenu();
@@ -715,6 +716,48 @@ void Editor::RenderDirectionalLightDetails() {
 		}
 	}
 }
+void Editor::RenderPointLightDetails() {
+
+	if (m_SelectedGameObject->HasComponent<PointLight>()) {
+		PointLight* SelectedPointLight = m_SelectedGameObject->GetComponent<PointLight>();
+		if (ImGui::CollapsingHeader("Point Light", ImGuiTreeNodeFlags_DefaultOpen)) {
+
+			ImVec2 ElementTextSize;
+
+			//TODO: Test this after making the details window size dynamic.
+
+			//Tint
+			ImGui::Text("Tint");
+			ElementTextSize = ImGui::CalcTextSize("Tint");
+			ImGui::SameLine(ElementTextSize.x + (m_DetailsWindowSize.x * 0.05f));
+			Color CurrentColor = SelectedPointLight->GetTint();
+			if (ImGui::ColorEdit4("##TintPicker", &CurrentColor.m_R, ImGuiColorEditFlags_NoInputs)) {
+				SelectedPointLight->SetTint(CurrentColor);
+			}
+
+			//Intensity
+			ImGui::SetNextItemWidth(m_DetailsWindowSize.x * 0.4f);
+			ImGui::Text("Intensity");
+			ElementTextSize = ImGui::CalcTextSize("Intensity");
+			ImGui::SameLine(ElementTextSize.x + (m_DetailsWindowSize.x * 0.05f));
+			ImGui::SliderFloat("##Intensity", &SelectedPointLight->m_Intensity, 0.0f, 10.0f);
+
+			//Attenuation
+			ImGui::SetNextItemWidth(m_DetailsWindowSize.x * 0.4f);
+			ImGui::Text("Attenuation");
+			ElementTextSize = ImGui::CalcTextSize("Attenuation");
+			ImGui::SameLine(ElementTextSize.x + (m_DetailsWindowSize.x * 0.05f));
+			ImGui::SliderFloat("##Attenuation", &SelectedPointLight->m_Attenuation, 0.0f, 1.0f);
+
+			//SourceRadius
+			ImGui::SetNextItemWidth(m_DetailsWindowSize.x * 0.4f);
+			ImGui::Text("Source Radius");
+			ElementTextSize = ImGui::CalcTextSize("Source Radius");
+			ImGui::SameLine(ElementTextSize.x + (m_DetailsWindowSize.x * 0.05f));
+			ImGui::SliderFloat("##Source Radius", &SelectedPointLight->m_SourceRadius, 0.0f, 1.0f);
+		}
+	}
+}
 void Editor::RenderAddComponentMenu() {
 
 	ImGui::Separator();
@@ -733,6 +776,12 @@ void Editor::RenderAddComponentMenu() {
 		}
 		else if (ImGui::Selectable("Camera", false, 0, ImVec2(150, 20))) {
 			m_SelectedGameObject->AddComponent<Camera>();
+		}
+		else if (ImGui::Selectable("DirectionalLight", false, 0, ImVec2(150, 20))) {
+			m_SelectedGameObject->AddComponent<DirectionalLight>();
+		}
+		else if (ImGui::Selectable("PointLight", false, 0, ImVec2(150, 20))) {
+			m_SelectedGameObject->AddComponent<PointLight>();
 		}
 
 		ImGui::EndPopup();

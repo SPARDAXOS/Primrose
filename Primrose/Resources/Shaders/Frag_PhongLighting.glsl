@@ -34,9 +34,18 @@ uniform Material uMaterial;
 
 uniform mat3 uNormalMatrix;
 uniform vec3 uViewCameraPosition;
+
+
 uniform vec4 uLightDirection; //If w is 0 then use direction otherwise use position for direction
 uniform vec3 uLightPosition;
 uniform vec4 uLightColor;
+
+//For point lights
+uniform float uIntensity;
+uniform float uAttenuation;
+uniform float uSourceRadius;
+
+
 uniform vec4 uTint;
 
 
@@ -48,12 +57,17 @@ void main() {
 
 	//Diffuse
 	vec3 Normal = normalize(uNormalMatrix * oNormal);
+
+
 	vec3 LightDirection;
+	float Result = 1.0;
 	if (uLightDirection.w == 0.0f) {
 		LightDirection = normalize(uLightDirection.xyz);		
 	}
 	else if (uLightDirection.w == 1.0f) {
 		LightDirection = normalize(uLightPosition.xyz - oFragPosition);  
+		float Distance = length(uLightPosition.xyz - oFragPosition);
+		Result = 1.0f / (uIntensity + (uAttenuation * Distance) + (uSourceRadius * (Distance * Distance)));
 	}
 	
 	float LightDotNormal = max(dot(Normal, LightDirection), 0.0);
@@ -65,6 +79,11 @@ void main() {
 	vec3 ReflectDirection = reflect(-LightDirection, Normal);
 	float SpecularValue = pow(max(dot(ViewDirection, ReflectDirection), 0.0), uMaterial.SpecularShininess);
 	vec4 Specular = texture(uMaterial.Specular, oCoords) * uMaterial.SpecularStrength * SpecularValue * uLightColor * uTint;  
+
+
+	Diffuse.xyz *= Result;
+	Ambient.xyz *= Result;
+	Specular.xyz *= Result;
 
 
 	FragColor = (Ambient + Diffuse + Specular) * uTint;

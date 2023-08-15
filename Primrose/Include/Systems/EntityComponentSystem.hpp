@@ -2,6 +2,8 @@
 #include "Components/SpriteRendererComponent.hpp"
 #include "Components/CameraComponent.hpp"
 #include "Components/DirectionalLightComponent.hpp"
+#include "Components/PointLightComponent.hpp"
+
 #include <vector>
 
 class Core;
@@ -36,7 +38,6 @@ public:
 public:
 	template<typename T>
 	T* AddComponent(uint64 objectID);
-
 	template<>
 	SpriteRenderer* AddComponent<SpriteRenderer>(uint64 objectID) {
 		static_assert(std::is_base_of_v<ComponentBase, SpriteRenderer>); //Makes more sense for the custom components
@@ -51,7 +52,6 @@ public:
 		m_SpriteRenderers.push_back(NewSpriteRenderer);
 		return NewSpriteRenderer;
 	}
-
 	template<>
 	Camera* AddComponent<Camera>(uint64 objectID) {
 		static_assert(std::is_base_of_v<ComponentBase, Camera>); //Makes more sense for the custom components
@@ -66,7 +66,6 @@ public:
 		m_Cameras.push_back(NewCamera);
 		return NewCamera;
 	}
-
 	template<>
 	DirectionalLight* AddComponent<DirectionalLight>(uint64 objectID) {
 		static_assert(std::is_base_of_v<ComponentBase, DirectionalLight>); //Makes more sense for the custom components
@@ -81,11 +80,23 @@ public:
 		m_DirectionalLights.push_back(NewDirectionalLight);
 		return NewDirectionalLight;
 	}
+	template<>
+	PointLight* AddComponent<PointLight>(uint64 objectID) {
+		static_assert(std::is_base_of_v<ComponentBase, PointLight>); //Makes more sense for the custom components
+		GameObject* ptr = FindGameObject(objectID);
+		if (ptr == nullptr)
+			return nullptr;
+
+		//Check limit on components? Maybe Gameobject side instead. one sounds logical
+
+		PointLight* NewPointLight = new PointLight(*ptr, objectID); //Add index in ? //Latest note. There are a lot of search optimizations that could be done!
+		m_PointLights.push_back(NewPointLight);
+		return NewPointLight;
+	}
 
 
 	template<typename T>
 	void RemoveComponent(uint64 objectID);
-
 	template<>
 	void RemoveComponent<SpriteRenderer>(uint64 objectID) noexcept {
 		if (FindGameObject(objectID) == nullptr)
@@ -97,7 +108,6 @@ public:
 
 		m_SpriteRenderers.erase(std::begin(m_SpriteRenderers) + TargetIndex);
 	}
-
 	template<>
 	void RemoveComponent<Camera>(uint64 objectID) noexcept {
 		if (FindGameObject(objectID) == nullptr)
@@ -109,7 +119,6 @@ public:
 
 		m_Cameras.erase(std::begin(m_Cameras) + TargetIndex);
 	}
-
 	template<>
 	void RemoveComponent<DirectionalLight>(uint64 objectID) noexcept {
 		if (FindGameObject(objectID) == nullptr)
@@ -121,6 +130,17 @@ public:
 
 		m_DirectionalLights.erase(std::begin(m_DirectionalLights) + TargetIndex);
 	}
+	template<>
+	void RemoveComponent<PointLight>(uint64 objectID) noexcept {
+		if (FindGameObject(objectID) == nullptr)
+			return;
+
+		const int32 TargetIndex = FindPointLight(objectID);
+		if (TargetIndex == INVALID_OBJECT_ID)
+			return;
+
+		m_PointLights.erase(std::begin(m_PointLights) + TargetIndex);
+	}
 
 
 	template<typename T>
@@ -131,34 +151,43 @@ public:
 			return nullptr;
 
 		const int32 TargetIndex = FindSpriteRenderer(objectID);
-		if (TargetIndex == INVALID_OBJECT_ID) //Maybe define some macro for this instead of -1
+		if (TargetIndex == INVALID_OBJECT_ID)
 			return nullptr;
 
 		return m_SpriteRenderers.at(TargetIndex);
 	}
-
 	template<>
 	Camera* GetComponent<Camera>(uint64 objectID) {
 		if (FindGameObject(objectID) == nullptr)
 			return nullptr;
 
 		const int32 TargetIndex = FindCamera(objectID);
-		if (TargetIndex == INVALID_OBJECT_ID) //Maybe define some macro for this instead of -1
+		if (TargetIndex == INVALID_OBJECT_ID)
 			return nullptr;
 
 		return m_Cameras.at(TargetIndex);
 	}
-
 	template<>
 	DirectionalLight* GetComponent<DirectionalLight>(uint64 objectID) {
 		if (FindGameObject(objectID) == nullptr)
 			return nullptr;
 
 		const int32 TargetIndex = FindDirectionalLight(objectID);
-		if (TargetIndex == INVALID_OBJECT_ID) //Maybe define some macro for this instead of -1
+		if (TargetIndex == INVALID_OBJECT_ID)
 			return nullptr;
 
 		return m_DirectionalLights.at(TargetIndex);
+	}
+	template<>
+	PointLight* GetComponent<PointLight>(uint64 objectID) {
+		if (FindGameObject(objectID) == nullptr)
+			return nullptr;
+
+		const int32 TargetIndex = FindPointLight(objectID);
+		if (TargetIndex == INVALID_OBJECT_ID)
+			return nullptr;
+
+		return m_PointLights.at(TargetIndex);
 	}
 
 public:
@@ -205,6 +234,7 @@ public:
 
 
 	GameObject* GetDirecitonalLightTEST() const noexcept;
+	GameObject* GetPointLightTEST() const noexcept;
 
 
 	GameObject* FindGameObject(uint64 ObjectID) const noexcept;
@@ -218,6 +248,7 @@ private:
 	int32 FindSpriteRenderer(uint64 objectID) const noexcept;
 	int32 FindCamera(uint64 objectID) const noexcept;
 	int32 FindDirectionalLight(uint64 objectID) const noexcept;
+	int32 FindPointLight(uint64 objectID) const noexcept;
 
 private:
 	inline void RegisterExitMessage(std::string message) noexcept { m_LastExitMessage = message; }
@@ -230,7 +261,9 @@ private:
 	std::vector<GameObject*> m_GameObjects;
 	std::vector<SpriteRenderer*> m_SpriteRenderers;
 	std::vector<Camera*> m_Cameras;
-	std::vector<DirectionalLight*> m_DirectionalLights;
+
+	std::vector<PointLight*> m_PointLights; //?????
+	std::vector<DirectionalLight*> m_DirectionalLights; //?????
 
 private:
 	std::string m_LastExitMessage;
@@ -263,6 +296,8 @@ namespace Components {
 	inline uint32 GetComponentID<Camera>() noexcept { return CAMERA_COMPONENT_ID; }
 	template<>
 	inline uint32 GetComponentID<DirectionalLight>() noexcept { return DIRECTIONAL_LIGHT_COMPONENT_ID; }
+	template<>
+	inline uint32 GetComponentID<PointLight>() noexcept { return POINT_LIGHT_COMPONENT_ID; }
 
 	//TODO: Add Custom Component which is basically a component with no code that can be customized.
 }

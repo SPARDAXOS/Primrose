@@ -73,13 +73,30 @@ bool Renderer::Render2D() {
         //Directional Light
         GameObject* DirectionalLightGO = m_ECSReference->GetDirecitonalLightTEST();
         DirectionalLight* DirectionalLightComp = DirectionalLightGO->GetComponent<DirectionalLight>();
-
         Vector4f LightDirection = DirectionalLightComp->GetDirection();
 
+        //Point Light!
+        GameObject* PointLightGO = m_ECSReference->GetPointLightTEST();
 
-        ShaderProgramTest.SetUniform("uLightColor", DirectionalLightComp->m_Tint);
-        ShaderProgramTest.SetUniform("uLightDirection", LightDirection);
-        ShaderProgramTest.SetUniform("uLightPosition", DirectionalLightGO->GetTransform().m_Position);
+
+        //IMPORTANT NOTE: Test that sourceRadius doesnt exceed attenuation. Maybe do that in editor? also here!
+       
+        if (PointLightGO != nullptr) {
+            PointLight* PointLightComponent = PointLightGO->GetComponent<PointLight>();
+
+            ShaderProgramTest.SetUniform("uLightPosition", PointLightGO->GetTransform().m_Position);
+            ShaderProgramTest.SetUniform("uLightDirection", Vector4f(0.0f, 0.0f, 0.0f, 1.0f)); //Weird
+            ShaderProgramTest.SetUniform("uIntensity", PointLightComponent->m_Intensity);
+            ShaderProgramTest.SetUniform("uAttenuation", PointLightComponent->m_Attenuation);
+            ShaderProgramTest.SetUniform("uSourceRadius", PointLightComponent->m_SourceRadius);
+            ShaderProgramTest.SetUniform("uLightColor", PointLightComponent->m_Tint);
+        }
+        else { //Directional Light!
+            ShaderProgramTest.SetUniform("uLightDirection", LightDirection);
+            ShaderProgramTest.SetUniform("uLightPosition", DirectionalLightGO->GetTransform().m_Position);
+            ShaderProgramTest.SetUniform("uLightColor", DirectionalLightComp->m_Tint);
+        }
+
         
 
         //TODO: Add clearcolor to camera! It would require some restructuring
