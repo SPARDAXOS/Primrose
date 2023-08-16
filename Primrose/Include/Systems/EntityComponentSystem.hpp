@@ -40,73 +40,15 @@ public:
 	template<typename T>
 	T* AddComponent(uint64 objectID);
 	template<>
-	SpriteRenderer* AddComponent<SpriteRenderer>(uint64 objectID) {
-		static_assert(std::is_base_of_v<ComponentBase, SpriteRenderer>); //Makes more sense for the custom components
-		GameObject* ptr = FindGameObject(objectID);
-		if (ptr == nullptr)
-			return nullptr;
-
-		//Check limit on components? Maybe Gameobject side instead. one sounds logical
-
-
-		SpriteRenderer* NewSpriteRenderer = new SpriteRenderer(*ptr, objectID); //Add index in 
-		m_SpriteRenderers.push_back(NewSpriteRenderer);
-		return NewSpriteRenderer;
-	}
+	SpriteRenderer*   AddComponent<SpriteRenderer>(uint64 objectID);
 	template<>
-	Camera* AddComponent<Camera>(uint64 objectID) {
-		static_assert(std::is_base_of_v<ComponentBase, Camera>); //Makes more sense for the custom components
-		GameObject* ptr = FindGameObject(objectID);
-		if (ptr == nullptr)
-			return nullptr;
-
-		//Check limit on components? Maybe Gameobject side instead. one sounds logical
-
-
-		Camera* NewCamera = new Camera(*ptr, objectID); //Add index in 
-		m_Cameras.push_back(NewCamera);
-		return NewCamera;
-	}
+	Camera*			  AddComponent<Camera>(uint64 objectID);
 	template<>
-	DirectionalLight* AddComponent<DirectionalLight>(uint64 objectID) {
-		static_assert(std::is_base_of_v<ComponentBase, DirectionalLight>); //Makes more sense for the custom components
-		GameObject* ptr = FindGameObject(objectID);
-		if (ptr == nullptr)
-			return nullptr;
-
-		//Check limit on components? Maybe Gameobject side instead. one sounds logical
-
-
-		DirectionalLight* NewDirectionalLight = new DirectionalLight(*ptr, objectID); //Add index in ? //Latest note. There are a lot of search optimizations that could be done!
-		m_DirectionalLights.push_back(NewDirectionalLight);
-		return NewDirectionalLight;
-	}
+	DirectionalLight* AddComponent<DirectionalLight>(uint64 objectID);
 	template<>
-	PointLight* AddComponent<PointLight>(uint64 objectID) {
-		static_assert(std::is_base_of_v<ComponentBase, PointLight>); //Makes more sense for the custom components
-		GameObject* ptr = FindGameObject(objectID);
-		if (ptr == nullptr)
-			return nullptr;
-
-		//Check limit on components? Maybe Gameobject side instead. one sounds logical
-
-		PointLight* NewPointLight = new PointLight(*ptr, objectID); //Add index in ? //Latest note. There are a lot of search optimizations that could be done!
-		m_PointLights.push_back(NewPointLight);
-		return NewPointLight;
-	}
+	PointLight*		  AddComponent<PointLight>(uint64 objectID);
 	template<>
-	SpotLight* AddComponent<SpotLight>(uint64 objectID) {
-		static_assert(std::is_base_of_v<ComponentBase, SpotLight>); //Makes more sense for the custom components
-		GameObject* ptr = FindGameObject(objectID);
-		if (ptr == nullptr)
-			return nullptr;
-
-		//Check limit on components? Maybe Gameobject side instead. one sounds logical
-
-		SpotLight* NewSpotLight = new SpotLight(*ptr, objectID);
-		m_SpotLights.push_back(NewSpotLight);
-		return NewSpotLight;
-	}
+	SpotLight*		  AddComponent<SpotLight>(uint64 objectID);
 
 
 	template<typename T>
@@ -138,11 +80,9 @@ public:
 		if (FindGameObject(objectID) == nullptr)
 			return;
 
-		const int32 TargetIndex = FindDirectionalLight(objectID);
-		if (TargetIndex == INVALID_OBJECT_ID)
-			return;
-
-		m_DirectionalLights.erase(std::begin(m_DirectionalLights) + TargetIndex);
+		//GameObject->RemoveComponent() checks if it has the component then it calls this so you can assume that it exists.
+		delete m_MainDirectionalLight;
+		m_MainDirectionalLight = nullptr;
 	}
 	template<>
 	void RemoveComponent<PointLight>(uint64 objectID) noexcept {
@@ -197,11 +137,8 @@ public:
 		if (FindGameObject(objectID) == nullptr)
 			return nullptr;
 
-		const int32 TargetIndex = FindDirectionalLight(objectID);
-		if (TargetIndex == INVALID_OBJECT_ID)
-			return nullptr;
-
-		return m_DirectionalLights.at(TargetIndex);
+		//GameObject->GetComponent() checks if it has the component then it calls this so you can assume that it exists.
+		return m_MainDirectionalLight;
 	}
 	template<>
 	PointLight* GetComponent<PointLight>(uint64 objectID) {
@@ -244,7 +181,8 @@ public:
 public: //TODO: maybe rework this to use lists? simply passes the vector?
 
 	inline std::vector<GameObject*> GetGameObjects() const noexcept { return m_GameObjects; }
-
+	inline std::vector<PointLight*> GetPointLights() const noexcept { return m_PointLights; }
+	inline std::vector<SpotLight*> GetSpotLights() const noexcept { return m_SpotLights; }
 
 	template<typename T>
 	T* GetComponentForUpdate();
@@ -266,15 +204,10 @@ public:
 
 	inline GameObject& GetCurrentScene() const noexcept { return *m_MainScene; }
 	inline Camera& GetViewportCamera() const noexcept { return *m_ViewportCamera; }
-
-	//Will all be deleted when multiple light casters are supported
-	GameObject* GetDirecitonalLightTEST() const noexcept;
-	GameObject* GetPointLightTEST() const noexcept;
-	GameObject* GetSpotLightTEST() const noexcept;
+	inline DirectionalLight* GetMainDirectionalLight() const noexcept { return m_MainDirectionalLight; }
 
 
 	GameObject* FindGameObject(uint64 ObjectID) const noexcept;
-
 	bool IsReserved(uint64 objectID) const noexcept;
 
 private:
@@ -283,7 +216,6 @@ private:
 private:
 	int32 FindSpriteRenderer(uint64 objectID) const noexcept;
 	int32 FindCamera(uint64 objectID) const noexcept;
-	int32 FindDirectionalLight(uint64 objectID) const noexcept; //It will only be 1
 	int32 FindPointLight(uint64 objectID) const noexcept;
 	int32 FindSpotLight(uint64 objectID) const noexcept;
 
@@ -298,10 +230,9 @@ private:
 	std::vector<GameObject*> m_GameObjects;
 	std::vector<SpriteRenderer*> m_SpriteRenderers;
 	std::vector<Camera*> m_Cameras;
-
+	
 	std::vector<PointLight*> m_PointLights;
 	std::vector<SpotLight*> m_SpotLights;
-	std::vector<DirectionalLight*> m_DirectionalLights; //????? It will only be allowed to be 1
 
 private:
 	std::string m_LastExitMessage;
@@ -312,9 +243,7 @@ private:
 	GameObject* m_MainScene; 
 	GameObject* m_ViewportCameraGO;
 	Camera* m_ViewportCamera;
-
-	//Temp
-	GameObject* m_DirectionalLightTest;
+	DirectionalLight* m_MainDirectionalLight;
 
 	uint64 m_CurrentObjectIDIndex = 1;
 };

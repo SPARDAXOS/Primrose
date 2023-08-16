@@ -147,7 +147,6 @@ public:
 	}
 
 
-
 private:
 	[[nodiscard]] int FindUniformLocation(const std::string_view& name) {
 		if (m_CachedUniforms.find(name) != m_CachedUniforms.end()) {

@@ -117,6 +117,84 @@ GameObject& EntityComponentSystem::Instantiate(const GameObject& object) {
 	return *NewGameObject;
 }
 
+
+
+//////////
+///	AddComponent()
+//////////
+template<>
+SpriteRenderer* EntityComponentSystem::AddComponent<SpriteRenderer>(uint64 objectID) {
+	static_assert(std::is_base_of_v<ComponentBase, SpriteRenderer>); //Makes more sense for the custom components
+	GameObject* ptr = FindGameObject(objectID);
+	if (ptr == nullptr)
+		return nullptr;
+
+	//Check limit on components? Maybe Gameobject side instead. one sounds logical
+
+
+	SpriteRenderer* NewSpriteRenderer = new SpriteRenderer(*ptr, objectID); //Add index in 
+	m_SpriteRenderers.push_back(NewSpriteRenderer);
+	return NewSpriteRenderer;
+}
+template<>
+Camera* EntityComponentSystem::AddComponent<Camera>(uint64 objectID) {
+	static_assert(std::is_base_of_v<ComponentBase, Camera>); //Makes more sense for the custom components
+	GameObject* ptr = FindGameObject(objectID);
+	if (ptr == nullptr)
+		return nullptr;
+
+	//Check limit on components? Maybe Gameobject side instead. one sounds logical
+
+
+	Camera* NewCamera = new Camera(*ptr, objectID); //Add index in 
+	m_Cameras.push_back(NewCamera);
+	return NewCamera;
+}
+template<>
+DirectionalLight* EntityComponentSystem::AddComponent<DirectionalLight>(uint64 objectID) {
+	static_assert(std::is_base_of_v<ComponentBase, DirectionalLight>); //Makes more sense for the custom components
+	GameObject* ptr = FindGameObject(objectID);
+	if (ptr == nullptr)
+		return nullptr;
+
+	//Limits amount to 1
+	if (m_MainDirectionalLight != nullptr) {
+		m_CoreReference->WarningLog("Unable to add a directional light component. Reason: a game object with a directional light component already exists!");
+		return nullptr;
+	}
+
+	m_MainDirectionalLight = new DirectionalLight(*ptr, objectID); //Add index in ? //Latest note. There are a lot of search optimizations that could be done!
+	return m_MainDirectionalLight;
+}
+template<>
+PointLight* EntityComponentSystem::AddComponent<PointLight>(uint64 objectID) {
+	static_assert(std::is_base_of_v<ComponentBase, PointLight>); //Makes more sense for the custom components
+	GameObject* ptr = FindGameObject(objectID);
+	if (ptr == nullptr)
+		return nullptr;
+
+	//Check limit on components? Maybe Gameobject side instead. one sounds logical
+
+	PointLight* NewPointLight = new PointLight(*ptr, objectID); //Add index in ? //Latest note. There are a lot of search optimizations that could be done!
+	m_PointLights.push_back(NewPointLight);
+	return NewPointLight;
+}
+template<>
+SpotLight* EntityComponentSystem::AddComponent<SpotLight>(uint64 objectID) {
+	static_assert(std::is_base_of_v<ComponentBase, SpotLight>); //Makes more sense for the custom components
+	GameObject* ptr = FindGameObject(objectID);
+	if (ptr == nullptr)
+		return nullptr;
+
+	//Check limit on components? Maybe Gameobject side instead. one sounds logical
+
+	SpotLight* NewSpotLight = new SpotLight(*ptr, objectID);
+	m_SpotLights.push_back(NewSpotLight);
+	return NewSpotLight;
+}
+
+
+
 void EntityComponentSystem::DestroyGameObject(uint64 objectID) {
 
 	for (uint32 index = 0; index < m_GameObjects.size(); index++) {
@@ -152,14 +230,6 @@ int32 EntityComponentSystem::FindCamera(uint64 objectID) const noexcept {
 	}
 	return INVALID_OBJECT_ID;
 }
-int32 EntityComponentSystem::FindDirectionalLight(uint64 objectID) const noexcept {
-	for (uint32 index = 0; index < m_DirectionalLights.size(); index++) {
-		if (m_DirectionalLights.at(index)->GetOwnerID() == objectID) {
-			return index;
-		}
-	}
-	return INVALID_OBJECT_ID;
-}
 int32 EntityComponentSystem::FindPointLight(uint64 objectID) const noexcept {
 	for (uint32 index = 0; index < m_PointLights.size(); index++) {
 		if (m_PointLights.at(index)->GetOwnerID() == objectID) {
@@ -184,22 +254,4 @@ bool EntityComponentSystem::IsReserved(uint64 objectID) const noexcept {
 		return true;
 
 	return false;
-}
-
-
-//DELETE THESE AFTER PROPER LIGHT MANAGEMENT IS IMPLEMENTED!
-GameObject* EntityComponentSystem::GetDirecitonalLightTEST() const noexcept { return m_DirectionalLightTest; }
-GameObject* EntityComponentSystem::GetPointLightTEST() const noexcept { 
-
-	if (m_PointLights.size() > 0)
-		return m_PointLights.at(0)->GetOwner(); 
-
-	return nullptr;
-}
-GameObject* EntityComponentSystem::GetSpotLightTEST() const noexcept {
-
-	if (m_SpotLights.size() > 0)
-		return m_SpotLights.at(0)->GetOwner();
-
-	return nullptr;
 }
