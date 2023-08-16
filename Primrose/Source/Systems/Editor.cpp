@@ -166,6 +166,7 @@ void Editor::RenderDetailsMenu() {
 		RenderSpriteRendererDetails();
 		RenderDirectionalLightDetails();
 		RenderPointLightDetails();
+		RenderSpotLightDetails();
 
 		//Always at the bottom
 		RenderAddComponentMenu();
@@ -705,13 +706,23 @@ void Editor::RenderDirectionalLightDetails() {
 		DirectionalLight* SelectedDirectionalLight = m_SelectedGameObject->GetComponent<DirectionalLight>();
 		if (ImGui::CollapsingHeader("Directional Light", ImGuiTreeNodeFlags_DefaultOpen)) {
 
-			//NOTE: These could be broken down into smaller functions as well
+			ImVec2 ElementTextSize;
 
-			//TINT
-			Color CurrentColor = SelectedDirectionalLight->GetTint();
-			if (ImGui::ColorEdit4("Tint", &CurrentColor.m_R, ImGuiColorEditFlags_NoInputs)) {
-				SelectedDirectionalLight->SetTint(CurrentColor);
+			//Tint
+			ImGui::Text("Tint");
+			ElementTextSize = ImGui::CalcTextSize("Tint");
+			ImGui::SameLine(ElementTextSize.x + (m_DetailsWindowSize.x * 0.05f));
+			Color CurrentColor = SelectedDirectionalLight->m_Tint;
+			if (ImGui::ColorEdit4("##TintPicker", &CurrentColor.m_R, ImGuiColorEditFlags_NoInputs)) {
+				SelectedDirectionalLight->m_Tint = CurrentColor;
 			}
+
+			//Intensity
+			ImGui::Text("Intensity");
+			ElementTextSize = ImGui::CalcTextSize("Intensity");
+			ImGui::SameLine(ElementTextSize.x + (m_DetailsWindowSize.x * 0.05f));
+			ImGui::SetNextItemWidth(m_DetailsWindowSize.x * 0.4f);
+			ImGui::SliderFloat("##Intensity", &SelectedDirectionalLight->m_Intensity, 0.0f, 10.0f);
 
 		}
 	}
@@ -730,33 +741,89 @@ void Editor::RenderPointLightDetails() {
 			ImGui::Text("Tint");
 			ElementTextSize = ImGui::CalcTextSize("Tint");
 			ImGui::SameLine(ElementTextSize.x + (m_DetailsWindowSize.x * 0.05f));
-			Color CurrentColor = SelectedPointLight->GetTint();
+			Color CurrentColor = SelectedPointLight->m_Tint;
 			if (ImGui::ColorEdit4("##TintPicker", &CurrentColor.m_R, ImGuiColorEditFlags_NoInputs)) {
-				SelectedPointLight->SetTint(CurrentColor);
+				SelectedPointLight->m_Tint = CurrentColor;
 			}
 
 			//Intensity
-			ImGui::SetNextItemWidth(m_DetailsWindowSize.x * 0.4f);
 			ImGui::Text("Intensity");
 			ElementTextSize = ImGui::CalcTextSize("Intensity");
 			ImGui::SameLine(ElementTextSize.x + (m_DetailsWindowSize.x * 0.05f));
+			ImGui::SetNextItemWidth(m_DetailsWindowSize.x * 0.4f);
 			ImGui::SliderFloat("##Intensity", &SelectedPointLight->m_Intensity, 0.0f, 10.0f);
 
 			//Attenuation
-			ImGui::SetNextItemWidth(m_DetailsWindowSize.x * 0.4f);
 			ImGui::Text("Attenuation");
 			ElementTextSize = ImGui::CalcTextSize("Attenuation");
 			ImGui::SameLine(ElementTextSize.x + (m_DetailsWindowSize.x * 0.05f));
-			ImGui::SliderFloat("##Attenuation", &SelectedPointLight->m_Attenuation, 0.0f, 1.0f);
+			ImGui::SetNextItemWidth(m_DetailsWindowSize.x * 0.4f);
+			ImGui::SliderFloat("##Attenuation", &SelectedPointLight->m_Attenuation, 0.0f, 10.0f);
 
 			//SourceRadius
-			ImGui::SetNextItemWidth(m_DetailsWindowSize.x * 0.4f);
 			ImGui::Text("Source Radius");
 			ElementTextSize = ImGui::CalcTextSize("Source Radius");
 			ImGui::SameLine(ElementTextSize.x + (m_DetailsWindowSize.x * 0.05f));
-			ImGui::SliderFloat("##Source Radius", &SelectedPointLight->m_SourceRadius, 0.0f, 1.0f);
+			ImGui::SetNextItemWidth(m_DetailsWindowSize.x * 0.4f);
+			ImGui::SliderFloat("##Source Radius", &SelectedPointLight->m_SourceRadius, 0.0f, 10.0f);
 		}
 	}
+}
+void Editor::RenderSpotLightDetails() {
+
+	if (m_SelectedGameObject->HasComponent<SpotLight>()) {
+		SpotLight* SelectedSpotLight = m_SelectedGameObject->GetComponent<SpotLight>();
+		if (ImGui::CollapsingHeader("Spot Light", ImGuiTreeNodeFlags_DefaultOpen)) {
+
+			ImVec2 ElementTextSize;
+
+			//Tint
+			ImGui::Text("Tint");
+			ElementTextSize = ImGui::CalcTextSize("Tint");
+			ImGui::SameLine(ElementTextSize.x + (m_DetailsWindowSize.x * 0.05f));
+			Color CurrentColor = SelectedSpotLight->m_Tint;
+			if (ImGui::ColorEdit4("##TintPicker", &CurrentColor.m_R, ImGuiColorEditFlags_NoInputs)) {
+				SelectedSpotLight->m_Tint = CurrentColor;
+			}
+
+			//Intensity
+			ImGui::Text("Intensity");
+			ElementTextSize = ImGui::CalcTextSize("Intensity");
+			ImGui::SameLine(ElementTextSize.x + (m_DetailsWindowSize.x * 0.05f));
+			ImGui::SetNextItemWidth(m_DetailsWindowSize.x * 0.4f);
+			ImGui::SliderFloat("##Intensity", &SelectedSpotLight->m_Intensity, 0.0f, 10.0f);
+
+			//Inner Cutoff Angle
+			ImGui::Text("Inner Cutoff Angle");
+			ElementTextSize = ImGui::CalcTextSize("Inner Cutoff Angle");
+			ImGui::SameLine(ElementTextSize.x + (m_DetailsWindowSize.x * 0.05f));
+			ImGui::SetNextItemWidth(m_DetailsWindowSize.x * 0.4f);
+			ImGui::SliderFloat("##Inner Cutoff Angle", &SelectedSpotLight->m_InnerCutoffAngle, 1.0f, 180.0f);
+
+			//Outer Cutoff Angle
+			ImGui::Text("Outer Cutoff Angle");
+			ElementTextSize = ImGui::CalcTextSize("Outer Cutoff Angle");
+			ImGui::SameLine(ElementTextSize.x + (m_DetailsWindowSize.x * 0.05f));
+			ImGui::SetNextItemWidth(m_DetailsWindowSize.x * 0.4f);
+			ImGui::SliderFloat("##Outer Cutoff Angle", &SelectedSpotLight->m_OuterCutoffAngle, 1.0f, 180.0f);
+
+			//Attenuation
+			ImGui::Text("Attenuation");
+			ElementTextSize = ImGui::CalcTextSize("Attenuation");
+			ImGui::SameLine(ElementTextSize.x + (m_DetailsWindowSize.x * 0.05f));
+			ImGui::SetNextItemWidth(m_DetailsWindowSize.x * 0.4f);
+			ImGui::SliderFloat("##Attenuation", &SelectedSpotLight->m_Attenuation, 0.0f, 10.0f);
+
+			//SourceRadius
+			ImGui::Text("Source Radius");
+			ElementTextSize = ImGui::CalcTextSize("Source Radius");
+			ImGui::SameLine(ElementTextSize.x + (m_DetailsWindowSize.x * 0.05f));
+			ImGui::SetNextItemWidth(m_DetailsWindowSize.x * 0.4f);
+			ImGui::SliderFloat("##Source Radius", &SelectedSpotLight->m_SourceRadius, 0.0f, 10.0f);
+
+		}
+	}
+
 }
 void Editor::RenderAddComponentMenu() {
 
@@ -782,6 +849,9 @@ void Editor::RenderAddComponentMenu() {
 		}
 		else if (ImGui::Selectable("PointLight", false, 0, ImVec2(150, 20))) {
 			m_SelectedGameObject->AddComponent<PointLight>();
+		}
+		else if (ImGui::Selectable("SpotLight", false, 0, ImVec2(150, 20))) {
+			m_SelectedGameObject->AddComponent<SpotLight>();
 		}
 
 		ImGui::EndPopup();

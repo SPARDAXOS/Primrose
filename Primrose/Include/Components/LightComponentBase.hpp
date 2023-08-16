@@ -20,13 +20,9 @@ public:
 	LightComponentBase(LightComponentBase&& other) = delete;
 	LightComponentBase& operator=(LightComponentBase&& other) = delete;
 
-public:
-	void SetTint(Color color) noexcept { m_Tint = color; }
-
-public:
-	Color GetTint() const noexcept { return m_Tint; }
 
 public:
 	Color m_Tint = Colors::White;
+	float m_Intensity = 1.0f;
 
 };

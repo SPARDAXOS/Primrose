@@ -27,15 +27,6 @@ EntityComponentSystem::EntityComponentSystem(Core& core) noexcept
 	m_ViewportCameraGO->SetName("ViewportCamera");
 	m_GameObjects.push_back(m_ViewportCameraGO);
 	m_ViewportCamera = m_ViewportCameraGO->AddComponent<Camera>();
-
-
-	//This is temporary. Delete this after a more proper light sources are added.
-	m_DirectionalLightTest = new GameObject(*this, 27);
-	m_DirectionalLightTest->Awake();
-	m_DirectionalLightTest->SetName("DirectionalLight");
-	m_GameObjects.push_back(m_DirectionalLightTest);
-	m_DirectionalLightTest->AddComponent<DirectionalLight>()->m_Tint = Colors::White;
-
 }
 EntityComponentSystem::~EntityComponentSystem() {
 	//Clean all Gameobjects and Components
@@ -177,6 +168,14 @@ int32 EntityComponentSystem::FindPointLight(uint64 objectID) const noexcept {
 	}
 	return INVALID_OBJECT_ID;
 }
+int32 EntityComponentSystem::FindSpotLight(uint64 objectID) const noexcept {
+	for (uint32 index = 0; index < m_SpotLights.size(); index++) {
+		if (m_SpotLights.at(index)->GetOwnerID() == objectID) {
+			return index;
+		}
+	}
+	return INVALID_OBJECT_ID;
+}
 
 bool EntityComponentSystem::IsReserved(uint64 objectID) const noexcept {
 	if (objectID == MAIN_SCENE_OBJECT_ID)
@@ -194,6 +193,13 @@ GameObject* EntityComponentSystem::GetPointLightTEST() const noexcept {
 
 	if (m_PointLights.size() > 0)
 		return m_PointLights.at(0)->GetOwner(); 
+
+	return nullptr;
+}
+GameObject* EntityComponentSystem::GetSpotLightTEST() const noexcept {
+
+	if (m_SpotLights.size() > 0)
+		return m_SpotLights.at(0)->GetOwner();
 
 	return nullptr;
 }

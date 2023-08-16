@@ -72,12 +72,14 @@ bool Renderer::Render2D() {
 
         //Directional Light
         GameObject* DirectionalLightGO = m_ECSReference->GetDirecitonalLightTEST();
-        DirectionalLight* DirectionalLightComp = DirectionalLightGO->GetComponent<DirectionalLight>();
-        Vector4f LightDirection = DirectionalLightComp->GetDirection();
 
         //Point Light!
         GameObject* PointLightGO = m_ECSReference->GetPointLightTEST();
 
+        //Spot Light!
+        GameObject* SpotLightGO = m_ECSReference->GetSpotLightTEST();
+
+        Vector4f LightDirection;
 
         //IMPORTANT NOTE: Test that sourceRadius doesnt exceed attenuation. Maybe do that in editor? also here!
        
@@ -91,10 +93,35 @@ bool Renderer::Render2D() {
             ShaderProgramTest.SetUniform("uSourceRadius", PointLightComponent->m_SourceRadius);
             ShaderProgramTest.SetUniform("uLightColor", PointLightComponent->m_Tint);
         }
-        else { //Directional Light!
+        else if (SpotLightGO != nullptr) {
+            SpotLight* SpotLightComponent = SpotLightGO->GetComponent<SpotLight>();
+
+            LightDirection = SpotLightComponent->GetDirection();
+            float InnerCutoffAngleCosine = SpotLightComponent->GetInnerAngleCosine();
+            float OuterCutoffAngleCosine = SpotLightComponent->GetOuterAngleCosine();
+
+            //Take cutoff angle, turn it to radians and get its cos value
+            ShaderProgramTest.SetUniform("uLightDirection", LightDirection);
+            ShaderProgramTest.SetUniform("uLightPosition", SpotLightGO->GetTransform().m_Position);
+            ShaderProgramTest.SetUniform("uLightColor", SpotLightComponent->m_Tint);
+            ShaderProgramTest.SetUniform("uIntensity", SpotLightComponent->m_Intensity);
+
+            ShaderProgramTest.SetUniform("uAttenuation", SpotLightComponent->m_Attenuation);
+            ShaderProgramTest.SetUniform("uSourceRadius", SpotLightComponent->m_SourceRadius);
+            ShaderProgramTest.SetUniform("uInnerCutoffAngle", InnerCutoffAngleCosine);
+            ShaderProgramTest.SetUniform("uOuterCutoffAngle", OuterCutoffAngleCosine);
+
+            m_Core->DebugLog(std::to_string(InnerCutoffAngleCosine));
+        }
+        else if (DirectionalLightGO != nullptr) { //Directional Light!
+
+            DirectionalLight* DirectionalLightComp = DirectionalLightGO->GetComponent<DirectionalLight>();
+            LightDirection = DirectionalLightComp->GetDirection();
+
             ShaderProgramTest.SetUniform("uLightDirection", LightDirection);
             ShaderProgramTest.SetUniform("uLightPosition", DirectionalLightGO->GetTransform().m_Position);
             ShaderProgramTest.SetUniform("uLightColor", DirectionalLightComp->m_Tint);
+            ShaderProgramTest.SetUniform("uIntensity", DirectionalLightComp->m_Intensity);
         }
 
         

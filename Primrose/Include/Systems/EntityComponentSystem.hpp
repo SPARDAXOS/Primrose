@@ -3,6 +3,7 @@
 #include "Components/CameraComponent.hpp"
 #include "Components/DirectionalLightComponent.hpp"
 #include "Components/PointLightComponent.hpp"
+#include "Components/SpotLightComponent.hpp"
 
 #include <vector>
 
@@ -93,6 +94,19 @@ public:
 		m_PointLights.push_back(NewPointLight);
 		return NewPointLight;
 	}
+	template<>
+	SpotLight* AddComponent<SpotLight>(uint64 objectID) {
+		static_assert(std::is_base_of_v<ComponentBase, SpotLight>); //Makes more sense for the custom components
+		GameObject* ptr = FindGameObject(objectID);
+		if (ptr == nullptr)
+			return nullptr;
+
+		//Check limit on components? Maybe Gameobject side instead. one sounds logical
+
+		SpotLight* NewSpotLight = new SpotLight(*ptr, objectID);
+		m_SpotLights.push_back(NewSpotLight);
+		return NewSpotLight;
+	}
 
 
 	template<typename T>
@@ -140,6 +154,17 @@ public:
 			return;
 
 		m_PointLights.erase(std::begin(m_PointLights) + TargetIndex);
+	}
+	template<>
+	void RemoveComponent<SpotLight>(uint64 objectID) noexcept {
+		if (FindGameObject(objectID) == nullptr)
+			return;
+
+		const int32 TargetIndex = FindSpotLight(objectID);
+		if (TargetIndex == INVALID_OBJECT_ID)
+			return;
+
+		m_SpotLights.erase(std::begin(m_SpotLights) + TargetIndex);
 	}
 
 
@@ -189,16 +214,26 @@ public:
 
 		return m_PointLights.at(TargetIndex);
 	}
+	template<>
+	SpotLight* GetComponent<SpotLight>(uint64 objectID) {
+		if (FindGameObject(objectID) == nullptr)
+			return nullptr;
+
+		const int32 TargetIndex = FindSpotLight(objectID);
+		if (TargetIndex == INVALID_OBJECT_ID)
+			return nullptr;
+
+		return m_SpotLights.at(TargetIndex);
+	}
+
 
 public:
 	template<typename T>
 	uint32 GetComponentsAmount() const noexcept;
-
 	template<>
 	uint32 GetComponentsAmount<SpriteRenderer>() const noexcept{
 		return static_cast<uint32>(m_SpriteRenderers.size());
 	}
-
 	template<>
 	uint32 GetComponentsAmount<Camera>() const noexcept {
 		return static_cast<uint32>(m_Cameras.size());
@@ -232,9 +267,10 @@ public:
 	inline GameObject& GetCurrentScene() const noexcept { return *m_MainScene; }
 	inline Camera& GetViewportCamera() const noexcept { return *m_ViewportCamera; }
 
-
+	//Will all be deleted when multiple light casters are supported
 	GameObject* GetDirecitonalLightTEST() const noexcept;
 	GameObject* GetPointLightTEST() const noexcept;
+	GameObject* GetSpotLightTEST() const noexcept;
 
 
 	GameObject* FindGameObject(uint64 ObjectID) const noexcept;
@@ -247,8 +283,9 @@ private:
 private:
 	int32 FindSpriteRenderer(uint64 objectID) const noexcept;
 	int32 FindCamera(uint64 objectID) const noexcept;
-	int32 FindDirectionalLight(uint64 objectID) const noexcept;
+	int32 FindDirectionalLight(uint64 objectID) const noexcept; //It will only be 1
 	int32 FindPointLight(uint64 objectID) const noexcept;
+	int32 FindSpotLight(uint64 objectID) const noexcept;
 
 private:
 	inline void RegisterExitMessage(std::string message) noexcept { m_LastExitMessage = message; }
@@ -262,8 +299,9 @@ private:
 	std::vector<SpriteRenderer*> m_SpriteRenderers;
 	std::vector<Camera*> m_Cameras;
 
-	std::vector<PointLight*> m_PointLights; //?????
-	std::vector<DirectionalLight*> m_DirectionalLights; //?????
+	std::vector<PointLight*> m_PointLights;
+	std::vector<SpotLight*> m_SpotLights;
+	std::vector<DirectionalLight*> m_DirectionalLights; //????? It will only be allowed to be 1
 
 private:
 	std::string m_LastExitMessage;
@@ -298,6 +336,8 @@ namespace Components {
 	inline uint32 GetComponentID<DirectionalLight>() noexcept { return DIRECTIONAL_LIGHT_COMPONENT_ID; }
 	template<>
 	inline uint32 GetComponentID<PointLight>() noexcept { return POINT_LIGHT_COMPONENT_ID; }
+	template<>
+	inline uint32 GetComponentID<SpotLight>() noexcept { return SPOT_LIGHT_COMPONENT_ID; }
 
 	//TODO: Add Custom Component which is basically a component with no code that can be customized.
 }

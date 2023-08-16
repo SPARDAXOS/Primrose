@@ -163,6 +163,7 @@
     <ClCompile Include="Source\Components\DirectionalLightComponent.cpp" />
     <ClCompile Include="Source\Components\LightComponentBase.cpp" />
     <ClCompile Include="Source\Components\PointLightComponent.cpp" />
+    <ClCompile Include="Source\Components\SpotLightComponent.cpp" />
     <ClCompile Include="Source\Directory.cpp" />
     <ClCompile Include="Source\Serializer.cpp" />
     <ClCompile Include="Source\Shader.cpp" />
@@ -201,6 +202,7 @@
     <ClInclude Include="Include\Components\DirectionalLightComponent.hpp" />
     <ClInclude Include="Include\Components\LightComponentBase.hpp" />
     <ClInclude Include="Include\Components\PointLightComponent.hpp" />
+    <ClInclude Include="Include\Components\SpotLightComponent.hpp" />
     <ClInclude Include="Include\Directory.hpp" />
     <ClInclude Include="Include\Material.hpp" />
     <ClInclude Include="Include\Systems\Physics.h" />

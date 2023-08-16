@@ -49,7 +49,6 @@ void Core::Run() {
 		PrintMessage("It failed to load the texture!");
 
 	
-	//CreateTexture->Bind();
 	
 	//New Planned Features
 	//Materials - Some default ones like lit, unlit
@@ -57,8 +56,6 @@ void Core::Run() {
 	//Using the params, the parser will parse specific parts of shaders by shaking for markers ###Bloom Skip: X
 	//It will load parts of the shader depending on the params
 	//It will save it so next time something wants a shader with these params, it will look if they are saved and return that same shader
-	
-	//Renderer takes a material
 
 	
 	//ECS
