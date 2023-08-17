@@ -46,8 +46,6 @@ bool Renderer::Render2D() {
     //- think of.
     const uint32 Amount = m_ECSReference->GetComponentsAmount<SpriteRenderer>();
     for (uint32 index = 0; index < Amount; index++) {
-        //TODO: Check for nullness
-
 
         const SpriteRenderer* TargetComponent = m_ECSReference->GetComponentForUpdate<SpriteRenderer>();
         if (TargetComponent == nullptr)
@@ -62,65 +60,11 @@ bool Renderer::Render2D() {
 
 
         SetupMaterial(ShaderProgramTest, TargetComponent);
-
-
-        //Tasks for next time
-        //Simple window with text saying whats happening in the project
-        //When the project is fully loaded and ready, it opens the editor
+        RenderLightMap(ShaderProgramTest);
 
 
 
 
-
-
-        //IMPORTANT NOTE: Test that sourceRadius doesnt exceed attenuation. Maybe do that in editor? also here!
-
-        //Directional Light
-        DirectionalLight* DirectionalLightComp = m_ECSReference->GetMainDirectionalLight();
-        if (DirectionalLightComp != nullptr) { //Directional Light!
-
-            Vector4f LightDirection = DirectionalLightComp->GetDirection();
-
-            ShaderProgramTest.SetUniform("uDirectionalLight.LightDirection", LightDirection);
-            ShaderProgramTest.SetUniform("uDirectionalLight.LightColor", DirectionalLightComp->m_Tint);
-            ShaderProgramTest.SetUniform("uDirectionalLight.Intensity", DirectionalLightComp->m_Intensity);
-        }
-       
-        //PointLights
-        std::vector<PointLight*> AllPointLights = m_ECSReference->GetPointLights();
-        if (AllPointLights.size() > 0) {
-            ShaderProgramTest.SetUniform("uPointLightsCount", static_cast<int>(AllPointLights.size()));
-            for (uint32 LightIndex = 0; LightIndex < AllPointLights.size(); LightIndex++) {
-
-                auto Light = AllPointLights.at(LightIndex);
-                ShaderProgramTest.SetUniform(std::string("uPointLights[" + std::to_string(LightIndex) + "].LightPosition"), Light->GetOwner()->GetTransform().m_Position);
-                ShaderProgramTest.SetUniform("uPointLights[" + std::to_string(LightIndex) + "].LightColor", Light->m_Tint);
-                ShaderProgramTest.SetUniform("uPointLights[" + std::to_string(LightIndex) + "].Intensity", Light->m_Intensity);
-                ShaderProgramTest.SetUniform("uPointLights[" + std::to_string(LightIndex) + "].Attenuation", Light->m_Attenuation);
-                ShaderProgramTest.SetUniform("uPointLights[" + std::to_string(LightIndex) + "].SourceRadius", Light->m_SourceRadius);
-            }
-        }
-
-        //SpotLights
-        std::vector<SpotLight*> AllSpotLights = m_ECSReference->GetSpotLights();
-        if (AllSpotLights.size() > 0) {
-            ShaderProgramTest.SetUniform("uSpotLightsCount", static_cast<int>(AllSpotLights.size()));
-            for (uint32 LightIndex = 0; LightIndex < AllSpotLights.size(); LightIndex++) {
-
-                auto Light = AllSpotLights.at(LightIndex);
-                ShaderProgramTest.SetUniform(std::string("uSpotLights[" + std::to_string(LightIndex) + "].LightPosition"), Light->GetOwner()->GetTransform().m_Position);
-                ShaderProgramTest.SetUniform("uSpotLights[" + std::to_string(LightIndex) + "].LightColor", Light->m_Tint);
-                ShaderProgramTest.SetUniform("uSpotLights[" + std::to_string(LightIndex) + "].Intensity", Light->m_Intensity);
-                ShaderProgramTest.SetUniform("uSpotLights[" + std::to_string(LightIndex) + "].Attenuation", Light->m_Attenuation);
-                ShaderProgramTest.SetUniform("uSpotLights[" + std::to_string(LightIndex) + "].SourceRadius", Light->m_SourceRadius);
-                ShaderProgramTest.SetUniform("uSpotLights[" + std::to_string(LightIndex) + "].InnerCutoffAngle", Light->GetInnerAngleCosine());
-                ShaderProgramTest.SetUniform("uSpotLights[" + std::to_string(LightIndex) + "].OuterCutoffAngle", Light->GetOuterAngleCosine());
-            }
-        }
-
-
-
-        
 
         //TODO: Add clearcolor to camera! It would require some restructuring
         Transform* TargetTransform = &TargetGameObject->GetTransform();
@@ -169,11 +113,11 @@ bool Renderer::Render2D() {
 
         //Would probably be the main camera in case of play mode being on
         ShaderProgramTest.SetUniform("uViewCameraPosition", ViewportCamera->GetOwner()->GetTransform().m_Position);
+        ShaderProgramTest.SetUniform("uNormalMatrix", glm::mat3(glm::transpose(glm::inverse(*TargetMatrix)))); //Inverse operations are costly in shaders
 
         ShaderProgramTest.SetUniform("uMVP.Model", *TargetMatrix); //Construct matrix here instead of getting to apply the flipx anmd y?
         ShaderProgramTest.SetUniform("uMVP.View", ViewportCamera->GetViewMatrix());
         ShaderProgramTest.SetUniform("uMVP.Projection", ViewportCamera->GetProjectionMatrix());
-        ShaderProgramTest.SetUniform("uNormalMatrix", glm::mat3(glm::transpose(glm::inverse(*TargetMatrix)))); //Inverse operations are costly in shaders
         
         TargetComponent->GetVAO()->Bind();
         GLCall(glDrawElements(GL_TRIANGLES, TargetComponent->GetEBO()->GetCount(), GL_UNSIGNED_INT, nullptr));
@@ -186,6 +130,56 @@ bool Renderer::Render2D() {
 bool Renderer::Render3D() {
 
     return true;
+}
+void Renderer::RenderLightMap(ShaderProgram& program) {
+
+    //IMPORTANT NOTE: Test that sourceRadius doesnt exceed attenuation. Maybe do that in editor? also here!
+
+    //Directional Light
+    DirectionalLight* DirectionalLightComp = m_ECSReference->GetMainDirectionalLight();
+    if (DirectionalLightComp != nullptr) { //Directional Light!
+
+        Vector4f LightDirection = DirectionalLightComp->GetDirection();
+
+        program.SetUniform("uDirectionalLight.LightDirection", LightDirection);
+        program.SetUniform("uDirectionalLight.LightColor", DirectionalLightComp->m_Tint);
+        program.SetUniform("uDirectionalLight.Intensity", DirectionalLightComp->m_Intensity);
+    }
+
+    //PointLights
+    std::vector<PointLight*> AllPointLights = m_ECSReference->GetPointLights();
+    if (AllPointLights.size() > 0) {
+        program.SetUniform("uPointLightsCount", static_cast<int>(AllPointLights.size()));
+        for (uint32 LightIndex = 0; LightIndex < AllPointLights.size(); LightIndex++) {
+
+            auto Light = AllPointLights.at(LightIndex);
+            program.SetUniform(std::string("uPointLights[" + std::to_string(LightIndex) + "].LightPosition"), Light->GetOwner()->GetTransform().m_Position);
+            program.SetUniform("uPointLights[" + std::to_string(LightIndex) + "].LightColor", Light->m_Tint);
+            program.SetUniform("uPointLights[" + std::to_string(LightIndex) + "].Intensity", Light->m_Intensity);
+            program.SetUniform("uPointLights[" + std::to_string(LightIndex) + "].Attenuation", Light->m_Attenuation);
+            program.SetUniform("uPointLights[" + std::to_string(LightIndex) + "].SourceRadius", Light->m_SourceRadius);
+        }
+    }
+
+    //SpotLights
+    std::vector<SpotLight*> AllSpotLights = m_ECSReference->GetSpotLights();
+    if (AllSpotLights.size() > 0) {
+        program.SetUniform("uSpotLightsCount", static_cast<int>(AllSpotLights.size()));
+        for (uint32 LightIndex = 0; LightIndex < AllSpotLights.size(); LightIndex++) {
+
+            const auto Light = AllSpotLights.at(LightIndex);
+            const Vector4f LightDirection = Light->GetDirection();
+
+            program.SetUniform("uSpotLights[" + std::to_string(LightIndex) + "].LightPosition", Light->GetOwner()->GetTransform().m_Position);
+            program.SetUniform("uSpotLights[" + std::to_string(LightIndex) + "].LightDirection", LightDirection);
+            program.SetUniform("uSpotLights[" + std::to_string(LightIndex) + "].LightColor", Light->m_Tint);
+            program.SetUniform("uSpotLights[" + std::to_string(LightIndex) + "].Intensity", Light->m_Intensity);
+            program.SetUniform("uSpotLights[" + std::to_string(LightIndex) + "].Attenuation", Light->m_Attenuation);
+            program.SetUniform("uSpotLights[" + std::to_string(LightIndex) + "].SourceRadius", Light->m_SourceRadius);
+            program.SetUniform("uSpotLights[" + std::to_string(LightIndex) + "].InnerCutoffAngle", Light->GetInnerAngleCosine());
+            program.SetUniform("uSpotLights[" + std::to_string(LightIndex) + "].OuterCutoffAngle", Light->GetOuterAngleCosine());
+        }
+    }
 }
 
 void Renderer::SetupMaterial(ShaderProgram& program, const SpriteRenderer* component) {

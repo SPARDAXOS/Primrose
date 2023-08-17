@@ -26,6 +26,7 @@ struct PointLight {
 };
 struct SpotLight {
     vec3  LightPosition;
+	vec4  LightDirection;
 	vec4  LightColor;
 	float Intensity;
 
@@ -112,7 +113,7 @@ vec4 CalculateDirectionalLight(DirectionalLight light, Material material, vec3 n
 
 vec4 CalculatePointLight(PointLight light, Material material, vec3 normal, vec3 fragPosition, vec3 viewDirection) {
 	
-	vec3 LightDirection = normalize(light.LightPosition.xyz - fragPosition);
+	vec3 LightDirection = normalize(light.LightPosition.xyz - fragPosition); //Name this directiontofrag or something otherwise its confusing.
 
 	//Diffuse
 	float LightDotNormal = max(dot(normal, LightDirection), 0.0);
@@ -166,7 +167,7 @@ vec4 CalculateSpotLight(SpotLight light, Material material, vec3 normal, vec3 fr
 	Specular *= Attenuation;
 
 	//Fade
-	float theta = dot(LightDirection, normalize(-light.LightPosition.xyz));
+	float theta = dot(LightDirection, normalize(-light.LightDirection.xyz));
 	float epsilon = light.InnerCutoffAngle - light.OuterCutoffAngle;
 	float FadeOut = clamp((theta - light.OuterCutoffAngle) / epsilon, 0.0, 1.0);  
 

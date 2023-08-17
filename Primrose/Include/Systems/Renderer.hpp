@@ -26,6 +26,7 @@ public:
 private:
 	[[nodiscard]] bool Render2D();
 	[[nodiscard]] bool Render3D();
+	void RenderLightMap(ShaderProgram& program);
 
 private:
 	inline void RegisterExitMessage(std::string message) noexcept { m_LastExitMessage = message; };
