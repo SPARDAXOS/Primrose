@@ -5,20 +5,25 @@
 #include <memory>
 #include <thread>
 
-#include "Renderer.hpp"
-#include "Window.hpp"
-#include "AssetManager.hpp"
-#include "ShaderCompiler.hpp"
-#include "TextureStorage.hpp"
-#include "EntityComponentSystem.hpp"
-#include "GameObject.hpp"
-#include "Time.hpp"
-#include "Input.hpp"
-#include "Editor.hpp"
-#include "Serializer.hpp"
-#include "Physics.h"
+#include "Systems/Renderer.hpp"
+#include "Systems/Window.hpp"
+#include "Systems/AssetManager.hpp"
+#include "Systems/ShaderCompiler.hpp"
+#include "Systems/TextureStorage.hpp"
+#include "Systems/EntityComponentSystem.hpp"
+#include "GameObject.hpp" //??
+#include "Systems/Time.hpp"
+#include "Systems/Input.hpp"
+#include "Systems/Editor.hpp"
+#include "Systems/Serializer.hpp"
+#include "Systems/Physics.h"
 
 #include "Tools/Logger.hpp"
+
+//ASSIMP
+#include "ASSIMP/Importer.hpp"
+#include "ASSIMP/scene.h"
+#include "ASSIMP/postprocess.h"
 
 
 #pragma warning(push, 0)
