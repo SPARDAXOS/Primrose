@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <memory>
 #include <thread>
+#include <iostream>
 
 #include "Systems/Renderer.hpp"
 #include "Systems/Window.hpp"
@@ -19,7 +20,11 @@
 #include "Systems/Physics.h"
 
 #include "Tools/Logger.hpp"
+#include "Utility.hpp" //Tools?
 
+
+
+//External Libraries section
 //ASSIMP
 #include "ASSIMP/Importer.hpp"
 #include "ASSIMP/scene.h"
@@ -30,7 +35,6 @@
 #include "STB_Image/stb_image.h"
 #pragma warning(pop)
 
-#include "Utility.hpp"
 
 
 class Core final {

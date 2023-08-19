@@ -171,6 +171,7 @@
     <ClCompile Include="Source\Systems\AssetManager.cpp" />
     <ClCompile Include="Source\GameObject.cpp" />
     <ClCompile Include="Source\Components\SpriteRendererComponent.cpp" />
+    <ClCompile Include="Source\Systems\ModelLoader.cpp" />
     <ClCompile Include="Source\Systems\Physics.cpp" />
     <ClCompile Include="Source\Systems\TextureStorage.cpp" />
     <ClCompile Include="Source\Tools\Logger.cpp" />
@@ -205,7 +206,8 @@
     <ClInclude Include="Include\Components\SpotLightComponent.hpp" />
     <ClInclude Include="Include\Directory.hpp" />
     <ClInclude Include="Include\Material.hpp" />
-    <ClInclude Include="Include\Systems\Physics.h" />
+    <ClInclude Include="Include\Systems\ModelLoader.hpp" />
+    <ClInclude Include="Include\Systems\Physics.hpp" />
     <ClInclude Include="Include\Systems\Editor.hpp" />
     <ClInclude Include="Include\Systems\EntityComponentSystem.hpp" />
     <ClInclude Include="Include\Systems\AssetManager.hpp" />

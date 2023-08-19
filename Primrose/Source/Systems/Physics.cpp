@@ -1,4 +1,4 @@
-#include "Systems/Physics.h"
+#include "Systems/Physics.hpp"
 #include "Systems/Core.hpp"
 
 Physics::Physics(Core& core) noexcept 
