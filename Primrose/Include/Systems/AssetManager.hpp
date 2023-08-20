@@ -29,6 +29,11 @@ public:
 
 public:
 	bool LoadAssets();
+
+public:
+	[[nodiscard]] bool LoadModelTexture(const std::string_view& path, Texture2D*& texture, bool editorAsset = false);
+
+public:
 	//TODO: Template this instead!
 	bool CreateAsset(AssetType type, Directory& location);
 	bool CreateNewFolder(Directory& location);
@@ -51,7 +56,7 @@ public:
 	//TODO: Use main scene for the gameobjects heirarchy instead
 	//TODO: Changing names is gonna be hard to fix cause renaming affects it and creating new gameobjects does too.
 
-	//IMPORTANT NOTE: Turning this class into a massive storage of all asset types might not be a bad idea.
+	//IMPORTANT NOTE: Turning this class into a massive storage of all CUSTOM asset types might not be a bad idea.
 	//-The only weird thing would be the texture storage that loads and manages textures. However, it might not be bad since they require unique work.
 	//-Think about this and decided!
 
@@ -82,24 +87,35 @@ private:
 	[[nodiscard]] bool RemoveMaterialFromStorage(const Asset& asset);
 
 private:
+	[[nodiscard]] bool FindProjectDirectory(const std::string_view& path, Directory*& target) const noexcept;
+	[[nodiscard]] bool FindEditorDirectory(const std::string_view& path, Directory*& target) const noexcept;
+
+private:
 	std::vector<Directory*> m_ProjectDirectories;
 	std::vector<Directory*> m_EditorDirectories;
 
 	std::vector<Asset*> m_ProjectTextureAssets;
 	std::vector<Asset*> m_EditorTextureAssets;
 
-	//Create one for materials
-	std::vector<Asset*> m_MaterialAssets;
+	std::vector<Asset*> m_ProjectModelAssets;
+	std::vector<Asset*> m_EditorModelAssets;
+
+
+	std::vector<Asset*> m_MaterialAssets; //Materials arent used by the editor.
+
+
+
 	std::vector<Material*> m_MaterialStorage;
 
 
 	Directory* m_ProjectRoot	{ nullptr };
 	Directory* m_EditorRoot		{ nullptr };
 
-
-	Core* m_CoreReference;
-	TextureStorage* m_TextureStorageReference;
-	Serializer* m_SerializerReference;
+private:
+	Core* m_Core						{ nullptr };
+	TextureStorage* m_TextureStorage	{ nullptr };
+	ModelLoader* m_ModelLoader			{ nullptr };
+	Serializer* m_Serializer			{ nullptr };
 };
 
 

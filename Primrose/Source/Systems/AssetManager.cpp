@@ -3,10 +3,11 @@
 
 
 AssetManager::AssetManager(Core& core) noexcept
-	: m_CoreReference(&core)
+	: m_Core(&core)
 {
-	m_TextureStorageReference = m_CoreReference->GetTextureStorage();
-	m_SerializerReference = m_CoreReference->GetSerializer();
+	m_TextureStorage = m_Core->GetTextureStorage();
+	m_ModelLoader = m_Core->GetModelLoader();
+	m_Serializer = m_Core->GetSerializer();
 }
 
 bool AssetManager::LoadAssets() {
@@ -34,7 +35,69 @@ bool AssetManager::LoadAssets() {
 	if (!SerializeAssets())
 		return false;
 
-	m_CoreReference->SystemLog("AssetManager finished loading assets successfully!");
+	m_Core->SystemLog("AssetManager finished loading assets successfully!");
+	return true;
+}
+
+
+bool AssetManager::LoadModelTexture(const std::string_view& path, Texture2D*& texture, bool editorAsset = false) {
+
+	//Create Asset out of path - wait... name and extension could be in the path string... Needs testing.
+	//An asset would have been created already for the model if found!
+
+	//NOTE: I would need to get editorAsset somehow from the asset that was sent in to load as model!
+
+	Asset* NewAsset = new Asset;
+	NewAsset->m_Path = path;
+	std::filesystem::path ParentPath = path.substr(0, path.find_last_of("/"));
+	
+	//Find directory with this path then use it!
+	Directory* ParentDirectory = nullptr;
+	if (editorAsset) {
+		if (!FindEditorDirectory(ParentPath.string(), ParentDirectory)) {
+			m_Core->SystemLog("Error loading model texture. Reason: Could not find parent directory at " + ParentPath.string());
+			delete NewAsset;
+			return false;
+		}
+	}
+	else {
+		if (!FindProjectDirectory(ParentPath.string(), ParentDirectory)) {
+			m_Core->SystemLog("Error loading model texture. Reason: Could not find parent directory at " + ParentPath.string());
+			delete NewAsset; 
+			return false;
+		}
+	}
+	NewAsset->m_Parent = ParentDirectory;
+
+	//Add this asset to its parent directory!
+	ParentDirectory->m_Assets.emplace_back(NewAsset);
+
+	//This does the rest
+	SetupAsset(*NewAsset, editorAsset);
+
+	//Now load the texture and get it to set texture to it!
+	if (!m_TextureStorage->LoadTexture2D(*NewAsset))
+		m_Core->SystemLog("Model texture failed to load [" + NewAsset->m_Name + "] " + NewAsset->m_Path.string());
+	else
+		m_Core->SystemLog("Model texture was successfully loaded [" + NewAsset->m_Name + "] " + NewAsset->m_Path.string());
+
+	//TODO: Rework interface so you can optionally get the texture ref on loading it!
+	if (editorAsset) {
+		if (!m_TextureStorage->GetEditorTexture2DByPath(path, texture)) {
+			m_Core->SystemLog("Error getting model texture. Reason: Could not find it after loading it!" + ParentPath.string());
+			m_Core->SystemLog("Critical Error!" + ParentPath.string());
+			delete NewAsset;
+			return false;
+		}
+	}
+	else {
+		if (!m_TextureStorage->GetTexture2DByPath(path, texture)) {
+			m_Core->SystemLog("Error getting model texture. Reason: Could not find it after loading it!" + ParentPath.string());
+			m_Core->SystemLog("Critical Error!" + ParentPath.string());
+			delete NewAsset;
+			return false;
+		}
+	}
 	return true;
 }
 
@@ -97,7 +160,7 @@ bool AssetManager::CreateMaterialAssetFile(Directory& location) {
 	Material* NewMaterial = new Material(*NewAsset, *this);
 
 	//Create file
-	if (!m_SerializerReference->CreateFile(*NewMaterial)) {
+	if (!m_Serializer->CreateFile(*NewMaterial)) {
 		delete NewAsset;
 		delete NewMaterial;
 		return false;
@@ -112,7 +175,7 @@ bool AssetManager::CreateMaterialAssetFile(Directory& location) {
 	//Add to directory assets list
 	location.m_Assets.emplace_back(NewAsset);
 
-	m_CoreReference->SystemLog("Successfully created new [Material] asset [" + NewAsset->m_Name + "]"); //TODO: This is a user action message
+	m_Core->SystemLog("Successfully created new [Material] asset [" + NewAsset->m_Name + "]"); //TODO: This is a user action message
 
 	return true;
 }
@@ -127,11 +190,11 @@ bool AssetManager::RemoveAssetEntry<Texture2D>(Asset& asset) {
 		if (asset == *m_ProjectTextureAssets.at(index)) {
 			delete m_ProjectTextureAssets.at(index);
 			m_ProjectTextureAssets.erase(std::begin(m_ProjectTextureAssets) + index);
-			m_CoreReference->SystemLog("Successfully deleted asset [Texture2D] at " + AssetPath.string());
+			m_Core->SystemLog("Successfully deleted asset [Texture2D] at " + AssetPath.string());
 			return true;
 		}
 	}
-	m_CoreReference->SystemLog("Failed to find asset [Texture2D] to delete at " + AssetPath.string());
+	m_Core->SystemLog("Failed to find asset [Texture2D] to delete at " + AssetPath.string());
 	return false;
 }
 template<>
@@ -142,11 +205,11 @@ bool AssetManager::RemoveAssetEntry<Material>(Asset& asset) {
 		if (asset == *m_MaterialAssets.at(index)) {
 			delete m_MaterialAssets.at(index);
 			m_MaterialAssets.erase(std::begin(m_MaterialAssets) + index);
-			m_CoreReference->SystemLog("Successfully deleted asset [Material] at " + AssetPath.string());
+			m_Core->SystemLog("Successfully deleted asset [Material] at " + AssetPath.string());
 			return true;
 		}
 	}
-	m_CoreReference->SystemLog("Failed to find asset [Material] to delete at " + AssetPath.string());
+	m_Core->SystemLog("Failed to find asset [Material] to delete at " + AssetPath.string());
 	return false;
 }
 bool AssetManager::RemoveFolderEntry(Directory& folder) {
@@ -157,11 +220,11 @@ bool AssetManager::RemoveFolderEntry(Directory& folder) {
 			auto FolderName = folder.m_Name;
 			delete m_ProjectDirectories.at(index);
 			m_ProjectDirectories.erase(std::begin(m_ProjectDirectories) + index);
-			m_CoreReference->SystemLog("Successfully deleted folder [" + FolderName + "]" + "at" + FolderPath.string());
+			m_Core->SystemLog("Successfully deleted folder [" + FolderName + "]" + "at" + FolderPath.string());
 			return true;
 		}
 	}
-	m_CoreReference->SystemLog("Failed to find folder [" + folder.m_Name + "]" "to delete at " + FolderPath.string());
+	m_Core->SystemLog("Failed to find folder [" + folder.m_Name + "]" "to delete at " + FolderPath.string());
 	return false;
 }
 
@@ -191,7 +254,7 @@ bool AssetManager::CreateNewFolder(Directory& location) {
 bool AssetManager::RemoveAsset(Asset& asset) {
 
 	if (asset.m_Type == AssetType::INVALID) {
-		m_CoreReference->SystemLog("Attempted to delete asset with invalid type [" + asset.m_Name + "]");
+		m_Core->SystemLog("Attempted to delete asset with invalid type [" + asset.m_Name + "]");
 		return false;
 	}
 
@@ -204,11 +267,11 @@ bool AssetManager::RemoveAsset(Asset& asset) {
 	switch (asset.m_Type) {
 	case AssetType::TEXTURE: {
 
-		if (!m_TextureStorageReference->UnloadTexture2D(asset.m_Path.string()))
+		if (!m_TextureStorage->UnloadTexture2D(asset.m_Path.string()))
 			return false;
 
 		if (!asset.m_Parent->RemoveAssetEntry(asset)) {
-			m_CoreReference->SystemLog("Failed to remove asset entry from directory  " + asset.m_Parent->m_Path.string());
+			m_Core->SystemLog("Failed to remove asset entry from directory  " + asset.m_Parent->m_Path.string());
 			return false;
 		}
 
@@ -216,7 +279,7 @@ bool AssetManager::RemoveAsset(Asset& asset) {
 		if (!RemoveAssetEntry<Texture2D>(asset))
 			return false;
 
-		if (!m_SerializerReference->DeleteFile(AssetPath))
+		if (!m_Serializer->DeleteFile(AssetPath))
 			return false;
 
 		return true;
@@ -228,7 +291,7 @@ bool AssetManager::RemoveAsset(Asset& asset) {
 			return false;
 
 		if (!asset.m_Parent->RemoveAssetEntry(asset)) {
-			m_CoreReference->SystemLog("Failed to remove asset entry from directory  " + asset.m_Parent->m_Path.string());
+			m_Core->SystemLog("Failed to remove asset entry from directory  " + asset.m_Parent->m_Path.string());
 			return false;
 		}
 
@@ -236,15 +299,13 @@ bool AssetManager::RemoveAsset(Asset& asset) {
 		if (!RemoveAssetEntry<Material>(asset))
 			return false;
 
-		if (!m_SerializerReference->DeleteFile(AssetPath))
+		if (!m_Serializer->DeleteFile(AssetPath))
 			return false;
 
 		return true;
 
 	}break;
 	}
-
-
 
 
 	//Notes for later features!
@@ -266,14 +327,14 @@ bool AssetManager::RemoveDirectory(Directory& directory) {
 		RemoveAsset(*directory.m_Assets.at(0));
 
 	if (!directory.m_Parent->RemoveFolderEntry(directory)) {
-		m_CoreReference->SystemLog("Failed to remove directory entry from parent entries."); //TODO: Doesnt need to be here if logger was in core
+		m_Core->SystemLog("Failed to remove directory entry from parent entries."); //TODO: Doesnt need to be here if logger was in core
 		return false;
 	}
 	auto FolderPath = directory.m_Path;
 	if (!RemoveFolderEntry(directory))
 		return false;
 
-	if (!m_SerializerReference->DeleteFolder(FolderPath))
+	if (!m_Serializer->DeleteFolder(FolderPath))
 		return false;
 
 	return true;
@@ -282,7 +343,7 @@ bool AssetManager::RemoveDirectory(Directory& directory) {
 
 bool AssetManager::RequestTexture2D(const std::string_view& name, Texture2D*& ptr) const noexcept {
 
-	return m_TextureStorageReference->GetTexture2DByName(name, ptr);
+	return m_TextureStorage->GetTexture2DByName(name, ptr);
 }
 
 
@@ -292,11 +353,11 @@ bool AssetManager::RemoveMaterialFromStorage(const Asset& asset) {
 		if (asset == m_MaterialStorage.at(index)->GetAsset()) {
 			delete m_MaterialStorage.at(index);
 			m_MaterialStorage.erase(std::begin(m_MaterialStorage) + index);
-			m_CoreReference->SystemLog("Successfully removed Material [" + asset.m_Name + "]" + " from materials storage.");
+			m_Core->SystemLog("Successfully removed Material [" + asset.m_Name + "]" + " from materials storage.");
 			return true;;
 		}
 	}
-	m_CoreReference->SystemLog("Failed to remove Material [" + asset.m_Name + "]" + " from materials storage.");
+	m_Core->SystemLog("Failed to remove Material [" + asset.m_Name + "]" + " from materials storage.");
 	return false;
 }
 
@@ -313,7 +374,7 @@ bool AssetManager::CheckForNecessaryDirectories() {
 			m_ProjectRoot = NewDirectory;
 			m_ProjectDirectories.emplace_back(NewDirectory);
 
-			m_CoreReference->SystemLog("Content folder was located!");
+			m_Core->SystemLog("Content folder was located!");
 			ContentStatus = true;
 		}
 		else if (DirectoryPath.path().filename() == "Editor") {
@@ -322,7 +383,7 @@ bool AssetManager::CheckForNecessaryDirectories() {
 			m_EditorRoot = NewDirectory;
 			m_EditorDirectories.emplace_back(m_EditorRoot);
 
-			m_CoreReference->SystemLog("Editor folder was located!");
+			m_Core->SystemLog("Editor folder was located!");
 			EditorStatus = true;
 		}
 	}
@@ -330,11 +391,11 @@ bool AssetManager::CheckForNecessaryDirectories() {
 	//TODO: Implement proper error handling for this class
 	bool Results = true;
 	if (!ContentStatus) {
-		m_CoreReference->SystemLog("Content folder was not located!");
+		m_Core->SystemLog("Content folder was not located!");
 		Results = false;
 	}
 	if (!EditorStatus) {
-		m_CoreReference->SystemLog("Editor folder was not located!");
+		m_Core->SystemLog("Editor folder was not located!");
 		Results = false;
 	}
 
@@ -343,25 +404,25 @@ bool AssetManager::CheckForNecessaryDirectories() {
 bool AssetManager::SetupProjectDirectories() {
 
 	if (m_ProjectRoot != nullptr) {
-		m_CoreReference->SystemLog("Started scanning for project assets to load...");
+		m_Core->SystemLog("Started scanning for project assets to load...");
 		ScanDirectory(*m_ProjectRoot, false); //Sets up tree and Connections + Assets in each directory
-		m_CoreReference->SystemLog("Finished scanning for project assets to load.");
+		m_Core->SystemLog("Finished scanning for project assets to load.");
 		//NOTE: The tree and the directories keeping track of assets is good for reloading features since i just update a specific directory!
 		//TODO: Implement directory refreash functionality.
 		return true;
 	}
-	m_CoreReference->SystemLog("Failed to scan for project assets.");
+	m_Core->SystemLog("Failed to scan for project assets.");
 	return false;
 }
 bool AssetManager::SetupEditorDirectories() {
 
 	if (m_EditorRoot != nullptr) {
-		m_CoreReference->SystemLog("Started scanning for editor assets to load...");
+		m_Core->SystemLog("Started scanning for editor assets to load...");
 		ScanDirectory(*m_EditorRoot, true); //Sets up tree and Connections + Assets in each directory
-		m_CoreReference->SystemLog("Finished scanning for editor assets to load.");
+		m_Core->SystemLog("Finished scanning for editor assets to load.");
 		return true;
 	}
-	m_CoreReference->SystemLog("Failed to scan for editor assets.");
+	m_Core->SystemLog("Failed to scan for editor assets.");
 	return false;
 }
 
@@ -378,7 +439,7 @@ void AssetManager::ScanDirectory(Directory& parent, bool editorDirectory) {
 		}
 		else {
 
-			Directory* NewDirectory = new Directory(directory.path(), directory.path().filename().string());
+			Directory* NewDirectory = new Directory(directory.path(), directory.path().filename().string()); //TODO: Just give it the path and get the name in the constructor?
 			NewDirectory->m_Parent = &parent;
 			parent.m_Folders.emplace_back(NewDirectory);
 
@@ -408,8 +469,16 @@ void AssetManager::SetupAsset(Asset& asset, bool editorAsset) {
 		else
 			m_ProjectTextureAssets.emplace_back(&asset);
 	}
+	else if (Extension == ".obj" || Extension == ".fbx") {
+		asset.m_Type = AssetType::MODEL;
+
+		if (editorAsset)
+			m_EditorModelAssets.emplace_back(&asset);
+		else
+			m_ProjectModelAssets.emplace_back(&asset);
+	}
 	else if (Extension == ".rose") {
-		asset.m_Type = m_SerializerReference->GetAssetTypeFromFile(asset);
+		asset.m_Type = m_Serializer->GetAssetTypeFromFile(asset);
 		if (asset.m_Type == AssetType::MATERIAL)
 			m_MaterialAssets.emplace_back(&asset);
 
@@ -418,18 +487,16 @@ void AssetManager::SetupAsset(Asset& asset, bool editorAsset) {
 }
 bool AssetManager::LoadProjectAssets() {
 
-	m_CoreReference->SystemLog("Started loading project assets...");
+	m_Core->SystemLog("Started loading project assets...");
 
 	//////////
 	//	Texture2D
 	//////////
 	for (auto& TextureAsset : m_ProjectTextureAssets) {
-		if (!m_TextureStorageReference->LoadTexture2D(*TextureAsset)) {
-			m_CoreReference->SystemLog("Asset failed to load [Texture] [" + TextureAsset->m_Name + "] " + TextureAsset->m_Path.string());
-		}
-		else {
-			m_CoreReference->SystemLog("Asset loaded successfully [Texture] [" + TextureAsset->m_Name + "] " + TextureAsset->m_Path.string());
-		}
+		if (!m_TextureStorage->LoadTexture2D(*TextureAsset))
+			m_Core->SystemLog("Asset failed to load [Texture] [" + TextureAsset->m_Name + "] " + TextureAsset->m_Path.string());
+		else
+			m_Core->SystemLog("Asset loaded successfully [Texture] [" + TextureAsset->m_Name + "] " + TextureAsset->m_Path.string());
 	}
 
 
@@ -439,31 +506,56 @@ bool AssetManager::LoadProjectAssets() {
 	for (auto& MaterialAsset : m_MaterialAssets) {
 		Material* NewMaterial = new Material(*MaterialAsset, *this);
 		m_MaterialStorage.emplace_back(NewMaterial);
-		m_CoreReference->SystemLog("Added asset entry successfully [Material] [" + MaterialAsset->m_Name + "] " + MaterialAsset->m_Path.string());
+		m_Core->SystemLog("Added asset entry successfully [Material] [" + MaterialAsset->m_Name + "] " + MaterialAsset->m_Path.string());
 	}
 
 
-	m_CoreReference->SystemLog("Finished loading project assets successfully!");
+	//////////
+	//	Models
+	//////////
+	for (auto& ModelAsset : m_ProjectModelAssets) {
+		if (!m_ModelLoader->LoadModel(*ModelAsset))
+			m_Core->SystemLog("Asset failed to load [Model] [" + ModelAsset->m_Name + "] " + ModelAsset->m_Path.string());
+		else
+			m_Core->SystemLog("Asset loaded successfully [Model] [" + ModelAsset->m_Name + "] " + ModelAsset->m_Path.string());
+	}
+
+	m_Core->SystemLog("Finished loading project assets successfully!");
 	return true;
 }
 bool AssetManager::LoadEditorAssets() {
 
-	m_CoreReference->SystemLog("Started loading editor assets...");
+	m_Core->SystemLog("Started loading editor assets...");
+
+	//////////
+	//	Texture2D
+	//////////
 	for (auto& TextureAsset : m_EditorTextureAssets) {
-		if (!m_TextureStorageReference->LoadEditorTexture2D(*TextureAsset)) {
-			m_CoreReference->SystemLog("Asset failed to load [Texture] [" + TextureAsset->m_Name + "] " + TextureAsset->m_Path.string());
-		}
-		else {
-			m_CoreReference->SystemLog("Asset loaded successfully [Texture] [" + TextureAsset->m_Name + "] " + TextureAsset->m_Path.string());
-		}
+		if (!m_TextureStorage->LoadEditorTexture2D(*TextureAsset))
+			m_Core->SystemLog("Asset failed to load [Texture] [" + TextureAsset->m_Name + "] " + TextureAsset->m_Path.string());
+		else
+			m_Core->SystemLog("Asset loaded successfully [Texture] [" + TextureAsset->m_Name + "] " + TextureAsset->m_Path.string());
 	}
 
-	m_CoreReference->SystemLog("Finished loading editor assets successfully!");
+
+	//////////
+	//	Models
+	//////////
+	for (auto& ModelAsset : m_EditorModelAssets) {
+		if (!m_ModelLoader->LoadModel(*ModelAsset))
+			m_Core->SystemLog("Asset failed to load [Model] [" + ModelAsset->m_Name + "] " + ModelAsset->m_Path.string());
+		else
+			m_Core->SystemLog("Asset loaded successfully [Model] [" + ModelAsset->m_Name + "] " + ModelAsset->m_Path.string());
+	}
+
+
+
+	m_Core->SystemLog("Finished loading editor assets successfully!");
 	return true;
 }
 bool AssetManager::SerializeAssets() {
 
-	m_CoreReference->SystemLog("Started serializing project assets...");
+	m_Core->SystemLog("Started serializing project assets...");
 
 	//////////
 	//	Materials
@@ -471,20 +563,20 @@ bool AssetManager::SerializeAssets() {
 	for (uint32 index = 0; index < m_MaterialStorage.size(); index++) {
 		Material* MaterialAsset = m_MaterialStorage.at(index);
 		if (MaterialAsset == nullptr) {
-			m_CoreReference->SystemLog("Invalid material ptr was found in material storage while serializing assets.");
+			m_Core->SystemLog("Invalid material ptr was found in material storage while serializing assets.");
 			m_MaterialStorage.erase(std::begin(m_MaterialStorage) + index);
 			continue;
 		}
-		else if (!m_SerializerReference->SerializeFromFile<Material>(*MaterialAsset)) {
-			m_CoreReference->SystemLog("Error serializing asset [" + MaterialAsset->GetAsset().m_Name + "] from file.");
+		else if (!m_Serializer->SerializeFromFile<Material>(*MaterialAsset)) {
+			m_Core->SystemLog("Error serializing asset [" + MaterialAsset->GetAsset().m_Name + "] from file.");
 			delete MaterialAsset;
 			m_MaterialStorage.erase(std::begin(m_MaterialStorage) + index);
 		}
-		m_CoreReference->SystemLog("Asset serialized successfully [Material] [" + MaterialAsset->GetAsset().m_Name + "] " + MaterialAsset->GetAsset().m_Path.string());
+		m_Core->SystemLog("Asset serialized successfully [Material] [" + MaterialAsset->GetAsset().m_Name + "] " + MaterialAsset->GetAsset().m_Path.string());
 	}
 
 
-	m_CoreReference->SystemLog("Finished serializing project assets successfully!");
+	m_Core->SystemLog("Finished serializing project assets successfully!");
 	return true;
 }
 
@@ -506,6 +598,24 @@ void AssetManager::CleanUpAssets() noexcept {
 		std::for_each(std::begin(m_ProjectTextureAssets), std::end(m_ProjectTextureAssets), CleanUp);
 		m_ProjectTextureAssets.clear();
 	}
+	if (!m_EditorModelAssets.empty()) {
+		auto CleanUp = [](Asset* ptr) {
+			delete ptr;
+		};
+		std::for_each(std::begin(m_EditorModelAssets), std::end(m_EditorModelAssets), CleanUp);
+		m_EditorModelAssets.clear();
+	}
+	if (!m_ProjectModelAssets.empty()) {
+		auto CleanUp = [](Asset* ptr) {
+			delete ptr;
+		};
+		std::for_each(std::begin(m_ProjectModelAssets), std::end(m_ProjectModelAssets), CleanUp);
+		m_ProjectModelAssets.clear();
+	}
+
+
+
+
 	if (!m_MaterialAssets.empty()) {
 		auto CleanUp = [](Asset* ptr) {
 			delete ptr;
@@ -523,8 +633,6 @@ void AssetManager::CleanUpAssets() noexcept {
 		std::for_each(std::begin(m_MaterialStorage), std::end(m_MaterialStorage), CleanUp);
 		m_MaterialStorage.clear();
 	}
-
-
 }
 void AssetManager::CleanUpDirectories() noexcept {
 
@@ -542,4 +650,25 @@ void AssetManager::CleanUpDirectories() noexcept {
 		std::for_each(std::begin(m_ProjectDirectories), std::end(m_ProjectDirectories), CleanUp);
 		m_ProjectDirectories.clear();
 	}
+}
+
+bool AssetManager::FindProjectDirectory(const std::string_view& path, Directory*& target) const noexcept {
+
+	for (uint32 index = 0; index < m_ProjectDirectories.size(); index++) {
+		if (m_ProjectDirectories[index]->m_Path == path) {
+			target = m_ProjectDirectories[index];
+			return true;
+		}
+	}
+	return false;
+}
+bool AssetManager::FindEditorDirectory(const std::string_view& path, Directory*& target) const noexcept {
+
+	for (uint32 index = 0; index < m_EditorDirectories.size(); index++) {
+		if (m_EditorDirectories[index]->m_Path == path) {
+			target = m_EditorDirectories[index];
+			return true;
+		}
+	}
+	return false;
 }

@@ -6,7 +6,8 @@ enum class AssetType {
 	INVALID = 0,
 	TEXTURE = 1,
 	MATERIAL = 2,
-	SCENE = 3
+	MODEL = 3,
+	SCENE = 4
 };
 class Asset {
 public:

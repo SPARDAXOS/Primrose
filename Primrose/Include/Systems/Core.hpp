@@ -17,23 +17,12 @@
 #include "Systems/Input.hpp"
 #include "Systems/Editor.hpp"
 #include "Systems/Serializer.hpp"
-#include "Systems/Physics.h"
+#include "Systems/Physics.hpp"
+#include "Systems/ModelLoader.hpp"
 
 #include "Tools/Logger.hpp"
 #include "Utility.hpp" //Tools?
 
-
-
-//External Libraries section
-//ASSIMP
-#include "ASSIMP/Importer.hpp"
-#include "ASSIMP/scene.h"
-#include "ASSIMP/postprocess.h"
-
-
-#pragma warning(push, 0)
-#include "STB_Image/stb_image.h"
-#pragma warning(pop)
 
 
 
@@ -57,6 +46,8 @@ public:
 	[[nodiscard]] inline Serializer* GetSerializer() const noexcept { return m_Serializer.get(); }
 	[[nodiscard]] inline Logger* GetLogger() const noexcept { return m_Logger.get(); }
 	[[nodiscard]] inline Physics* GetPhysics() const noexcept { return m_Physics.get(); }
+	[[nodiscard]] inline ModelLoader* GetModelLoader() const noexcept { return m_ModelLoader.get(); }
+	
 
 public:
 	void DebugLog(std::string message) noexcept;
@@ -97,4 +88,5 @@ private:
 	std::unique_ptr<Serializer> m_Serializer;
 	std::unique_ptr<Logger> m_Logger;
 	std::unique_ptr<Physics> m_Physics;
+	std::unique_ptr<ModelLoader> m_ModelLoader;
 };

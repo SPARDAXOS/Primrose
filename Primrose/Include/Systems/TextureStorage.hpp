@@ -1,11 +1,16 @@
 #pragma once
+#pragma warning(push, 0)
+#include "STB_Image/stb_image.h"
+#pragma warning(pop)
+
+
+
 #include "AssetManager.hpp"
 #include "Texture2D.hpp"
 #include "Utility.hpp"
 #include <string>
 #include <string_view>
 #include <unordered_map>
-#include "STB_Image/STB_Image.h"
 #include "GLAD/glad/glad.h"
 #include "GLErrorHandling.hpp"
 #include <algorithm>

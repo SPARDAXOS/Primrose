@@ -12,6 +12,7 @@ Core::Core() noexcept {
 	m_TextureStorage = std::make_unique<TextureStorage>(*this);
 	m_Serializer = std::make_unique<Serializer>(*this);
 	m_ECS = std::make_unique<EntityComponentSystem>(*this);
+	m_ModelLoader = std::make_unique<ModelLoader>(*this);
 	m_AssetManager = std::make_unique<AssetManager>(*this);
 	m_Input = std::make_unique<Input>(*m_Window);
 	m_Editor = std::make_unique<Editor>(*this);
