@@ -20,8 +20,8 @@ bool Renderer::Update() {
 
     //This is kinda nonesense here
     bool RendererStatus = true;
-    //if (!Render2D())
-    //    RendererStatus = false;
+    if (!Render2D())
+        RendererStatus = false;
     if (!Render3D())
         RendererStatus = false;
 
@@ -127,7 +127,7 @@ bool Renderer::Render2D() {
         GLCall(glDrawElements(GL_TRIANGLES, TargetComponent->GetEBO()->GetCount(), GL_UNSIGNED_INT, nullptr));
 
         UnbindAllTextures(TargetComponent);
-        //TargetComponent->GetVAO()->Unbind();
+        TargetComponent->GetVAO()->Unbind();
     }
 
     return true;
@@ -171,7 +171,7 @@ bool Renderer::Render3D() {
         ShaderProgramTest.SetUniform("uViewCameraPosition", ViewportCamera->GetOwner()->GetTransform().m_Position);
         ShaderProgramTest.SetUniform("uNormalMatrix", glm::mat3(glm::transpose(glm::inverse(*TargetMatrix)))); //Inverse operations are costly in shaders
 
-        ShaderProgramTest.SetUniform("uMVP.Model", *TargetMatrix); //Construct matrix here instead of getting to apply the flipx anmd y?
+        ShaderProgramTest.SetUniform("uMVP.Model", *TargetMatrix);
         ShaderProgramTest.SetUniform("uMVP.View", ViewportCamera->GetViewMatrix());
         ShaderProgramTest.SetUniform("uMVP.Projection", ViewportCamera->GetProjectionMatrix());
 
@@ -193,24 +193,30 @@ bool Renderer::Render3D() {
 
             //Need to figure this out. How to know which is which
             //Activate -> Bind -> Activate Next -> Bind : Luckily its only one now
-            //m_TextureStorage->SetActiveTextureUnit(TextureUnit::TEXTURE0);
+            m_TextureStorage->SetActiveTextureUnit(TextureUnit::TEXTURE0);
             //for (auto& Texture : Mesh->m_Textures) {
             //    Texture->Bind();
             //}
-            //Mesh->m_Textures[0]->Bind();
-            //ShaderProgramTest.SetUniform("uMaterial.Diffuse", TextureType::DIFFUSE); //??
+            Mesh->m_Textures[0]->Bind();
+            ShaderProgramTest.SetUniform("uMaterial.Diffuse", TextureType::DIFFUSE); //??
             
-            //For every mesh of the model
-            //Render call
+            //Directional is kinda borked!
+            ShaderProgramTest.SetUniform("uMaterial.Ambient", TextureType::DIFFUSE);
+            ShaderProgramTest.SetUniform("uMaterial.Specular", TextureType::DIFFUSE);
+            ShaderProgramTest.SetUniform("uMaterial.AmbientStrength", 0.1f);
+            ShaderProgramTest.SetUniform("uMaterial.SpecularShininess", 32);
+            ShaderProgramTest.SetUniform("uMaterial.SpecularStrength", 0.5f);
+            ShaderProgramTest.SetUniform("uTint", Colors::White); //This! will lead to Alpha ending up as 0
+
             Mesh->m_VAO->Bind();
             GLCall(glDrawElements(GL_TRIANGLES, Mesh->m_EBO->GetCount(), GL_UNSIGNED_INT, nullptr));
-            //Unbind textures
-            //Same thing as bind. Activate -> Unbind
-            //m_TextureStorage->SetActiveTextureUnit(TextureUnit::TEXTURE0);
+
+
+            m_TextureStorage->SetActiveTextureUnit(TextureUnit::TEXTURE0);
            //for (auto& Texture : Mesh->m_Textures) {
            //    Texture->Unbind();
            //}
-            //Mesh->m_Textures[0]->Unbind();
+            Mesh->m_Textures[0]->Unbind();
             Mesh->m_VAO->Unbind();
         }
     }

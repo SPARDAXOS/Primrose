@@ -137,12 +137,12 @@ void Core::Run() {
 	SkeletalMesh* MeshComp = ModelTest->AddComponent<SkeletalMesh>();
 	MeshComp->SetModel(m_ModelStorage->GetModelStorage()[0]);
 	
-
+	
 	
 	while (m_Running) {
 
 		if (m_Input->GetKey(Keycode::R))
-			GameObjectTransform->m_Rotation.m_Y += 1.0f;
+			ModelTest->GetTransform().m_Rotation.m_Y += 1.0f;
 
 		UpdateSystems();
 	}

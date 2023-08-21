@@ -36,6 +36,8 @@ bool TextureStorage::LoadTexture2D(Asset& asset, bool flipped) {
 		stbi_set_flip_vertically_on_load(flipped);
 		if (LoadFromFile(asset, Buffer)) {
 			Texture2D* NewTexture2D = new Texture2D(asset, Buffer);
+			stbi_image_free(Buffer.m_Data);
+			Buffer.m_Data = nullptr; //Change name of member variable otherwise its weird!
 			m_Texture2DStorage.emplace_back(NewTexture2D);
 			return true;
 		}
@@ -53,6 +55,8 @@ bool TextureStorage::LoadEditorTexture2D(Asset& asset, bool flipped) {
 		stbi_set_flip_vertically_on_load(flipped);
 		if (LoadFromFile(asset, Buffer)) {
 			Texture2D* NewTexture2D = new Texture2D(asset, Buffer);
+			stbi_image_free(Buffer.m_Data);
+			Buffer.m_Data = nullptr;
 			m_EditorTexture2DStorage.emplace_back(NewTexture2D);
 			return true;
 		}

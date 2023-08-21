@@ -74,7 +74,7 @@ void main() {
 	vec3 Normal = normalize(uNormalMatrix * oNormal);
 	vec3 ViewDirection = normalize(uViewCameraPosition - oFragPosition);
 
-	vec4 Output = vec4(0.0f);
+	vec4 Output = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 	Output += CalculateDirectionalLight(uDirectionalLight, uMaterial, Normal, ViewDirection);
 
 	for (int i = 0; i < uPointLightsCount; i++) {
@@ -85,7 +85,7 @@ void main() {
 		Output += CalculateSpotLight(uSpotLights[i], uMaterial, Normal, oFragPosition, ViewDirection);
 	}
 
-
+	Output.a = 1.0f; //For testing
 	FragColor = Output;
 }
 

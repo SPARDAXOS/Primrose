@@ -266,8 +266,24 @@ public:
 		GLCall(glGenTextures(1, &m_ID));
 		if (m_ID != 0 && m_Asset != nullptr)
 			m_IsValid = true;
-		else
-			m_IsValid = false;
+		else {
+			m_IsValid = false; //Is this even necessary? not really.
+			return;
+		}
+		Bind();
+		int Channels = GL_RGBA;
+		if (GetColorChannelCount() == 1)
+			Channels = GL_RED;
+		else if (GetColorChannelCount() == 3)
+			Channels = GL_RGB;
+		else if (GetColorChannelCount() == 4)
+			Channels = GL_RGBA;
+
+		//THis mean it will copy the data every single frame again and again....
+		GLCall(glTexImage2D(GL_TEXTURE_2D, 0, Channels, m_Source.m_Width, m_Source.m_Height, 0, Channels, GL_UNSIGNED_BYTE, m_Source.m_Data));
+		GLCall(glGenerateMipmap(GL_TEXTURE_2D));
+
+		Unbind();
 	}
 	~Texture2D() {
 		if (m_IsValid) {
@@ -289,20 +305,6 @@ public:
 			return;
 		}
 		GLCall(glBindTexture(GL_TEXTURE_2D, m_ID));
-
-
-		//This all could be removed.
-		int Channels = GL_RGBA;
-		if (GetColorChannelCount() == 1)
-			Channels = GL_RED;
-		else if (GetColorChannelCount() == 3)
-			Channels = GL_RGB;
-		else if (GetColorChannelCount() == 4)
-			Channels = GL_RGBA; 
-
-		//THis mean it will copy the data every single frame again and again....
-		GLCall(glTexImage2D(GL_TEXTURE_2D, 0, Channels, m_Source.m_Width, m_Source.m_Height, 0, Channels, GL_UNSIGNED_BYTE, m_Source.m_Data));
-		GLCall(glGenerateMipmap(GL_TEXTURE_2D));
 	}
 	void Unbind() const noexcept {
 		if (!m_IsValid) {

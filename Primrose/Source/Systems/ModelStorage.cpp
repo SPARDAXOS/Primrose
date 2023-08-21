@@ -23,9 +23,10 @@ bool ModelStorage::LoadModel(Asset& asset) {
 
 	Assimp::Importer Importer;
 	unsigned int Flags = 0;
-	Flags |= aiProcess_FlipUVs;
+	//Flags |= aiProcess_FlipUVs; //Messes things up!
 	Flags |= aiProcess_Triangulate;
-
+	Flags |= aiProcess_OptimizeMeshes;
+	Flags |= aiProcess_GenNormals;
 
 	const aiScene* Scene = Importer.ReadFile(asset.m_Path.string(), Flags);
 	if (Scene == nullptr || Scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !Scene->mRootNode) {
@@ -125,6 +126,8 @@ void ModelStorage::ProcessMesh(Model& model, aiMesh* mesh, const aiScene* scene,
 	Mesh* NewMesh = new Mesh(*mesh, Vertices, Indicies, Textures);
 	model.AddMesh(NewMesh);
 }
+
+//Not needed
 void ModelStorage::LoadMeshTextures(Mesh& targetMesh, aiMesh* mesh, const aiScene* scene, bool editorAsset) {
 
 	//Loads textures and calls AssetManager to create assets for them. Own asset type? 
