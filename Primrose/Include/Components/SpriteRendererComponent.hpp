@@ -4,7 +4,6 @@
 #include "Systems/TextureStorage.hpp"
 #include "Material.hpp" //Currently here since there is no storage class
 
-class GameObject;
 
 class SpriteRenderer final : public ComponentBase {
 public:

@@ -18,7 +18,7 @@
 #include "Systems/Editor.hpp"
 #include "Systems/Serializer.hpp"
 #include "Systems/Physics.hpp"
-#include "Systems/ModelLoader.hpp"
+#include "Systems/ModelStorage.hpp"
 
 #include "Tools/Logger.hpp"
 #include "Utility.hpp" //Tools?
@@ -46,7 +46,7 @@ public:
 	[[nodiscard]] inline Serializer* GetSerializer() const noexcept { return m_Serializer.get(); }
 	[[nodiscard]] inline Logger* GetLogger() const noexcept { return m_Logger.get(); }
 	[[nodiscard]] inline Physics* GetPhysics() const noexcept { return m_Physics.get(); }
-	[[nodiscard]] inline ModelLoader* GetModelLoader() const noexcept { return m_ModelLoader.get(); }
+	[[nodiscard]] inline ModelStorage* GetModelStorage() const noexcept { return m_ModelStorage.get(); }
 	
 
 public:
@@ -88,5 +88,5 @@ private:
 	std::unique_ptr<Serializer> m_Serializer;
 	std::unique_ptr<Logger> m_Logger;
 	std::unique_ptr<Physics> m_Physics;
-	std::unique_ptr<ModelLoader> m_ModelLoader;
+	std::unique_ptr<ModelStorage> m_ModelStorage;
 };

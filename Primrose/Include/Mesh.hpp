@@ -8,8 +8,8 @@ struct aiMesh;
 class Mesh final {
 public:
 	Mesh() = delete;
-	Mesh(aiMesh& data) noexcept; //TODO: Maybe supply 3 vectors here? otherwise you create a broken mesh then fix it... Might be fine tho. nothing break really. Its empty mesh!
-	~Mesh() = default;
+	Mesh(aiMesh& data, std::vector<Vertex> vertices, std::vector<uint32> indicies, std::vector<Texture2D*> textures);
+	~Mesh();
 
 	Mesh(const Mesh&) = delete;
 	Mesh& operator=(const Mesh&) = delete;
@@ -18,16 +18,16 @@ public:
 	Mesh& operator=(Mesh&&) = delete;
 
 public:
-	//INTERNAL USE ONLY!
-	inline void AddVertex(Vertex vertex) { m_Vertices.push_back(vertex); }
-	//INTERNAL USE ONLY!
-	inline void AddIndex(uint32 index) { m_Indices.push_back(index); }
-	//INTERNAL USE ONLY!
-	inline void AddTexture(Texture2D* texture) { m_Textures.push_back(texture); }
 
+	//NOTE: Dont showcase the mdl file? in the content
 
-private:
-	aiMesh* m_Data	{ nullptr };
+public:
+	VAO* m_VAO  { nullptr };
+	VBO* m_VBO  { nullptr };
+	EBO* m_EBO	{ nullptr };
+
+public:
+	aiMesh* m_Source	{ nullptr };
 	std::vector<Vertex> m_Vertices;
 	std::vector<uint32> m_Indices;
 	std::vector<Texture2D*> m_Textures;

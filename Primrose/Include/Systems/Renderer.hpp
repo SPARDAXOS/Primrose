@@ -7,6 +7,7 @@
 class Core;
 class Window;
 class TextureStorage;
+class ModelStorage;
 class EntityComponentSystem;
 class SpriteRenderer;
 
@@ -26,7 +27,7 @@ public:
 private:
 	[[nodiscard]] bool Render2D();
 	[[nodiscard]] bool Render3D();
-	void RenderLightMap(ShaderProgram& program);
+	void SetupLightUniforms(ShaderProgram& program);
 
 private:
 	inline void RegisterExitMessage(std::string message) noexcept { m_LastExitMessage = message; };
@@ -39,8 +40,9 @@ private:
 	std::string m_LastExitMessage;
 
 private:
-	Core* m_Core							{ nullptr };
-	Window* m_WindowReference					{ nullptr };
-	TextureStorage* m_TextureStorageReference	{ nullptr };
-	EntityComponentSystem* m_ECSReference		{ nullptr };
+	Core* m_Core						{ nullptr };
+	Window* m_Window					{ nullptr };
+	TextureStorage* m_TextureStorage	{ nullptr };
+	ModelStorage* m_ModelStorage		{ nullptr };
+	EntityComponentSystem* m_ECS		{ nullptr };
 };

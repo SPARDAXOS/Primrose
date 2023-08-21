@@ -12,7 +12,7 @@ Core::Core() noexcept {
 	m_TextureStorage = std::make_unique<TextureStorage>(*this);
 	m_Serializer = std::make_unique<Serializer>(*this);
 	m_ECS = std::make_unique<EntityComponentSystem>(*this);
-	m_ModelLoader = std::make_unique<ModelLoader>(*this);
+	m_ModelStorage = std::make_unique<ModelStorage>(*this);
 	m_AssetManager = std::make_unique<AssetManager>(*this);
 	m_Input = std::make_unique<Input>(*m_Window);
 	m_Editor = std::make_unique<Editor>(*this);
@@ -45,8 +45,8 @@ void Core::Run() {
 
 
 	Texture2D* CrateTexture = nullptr; 
-	if (!m_TextureStorage->GetTexture2DByName("Crate", CrateTexture))
-		PrintMessage("It failed to load the texture!");
+	if (!m_TextureStorage->GetTexture2DByName("Crate.jpg", CrateTexture))
+		PrintMessage("It failed to load the texture! - Core!!!!");
 
 	
 	
@@ -130,6 +130,12 @@ void Core::Run() {
 	GameObjectTransform2->m_Position = Vector3f(-5.0f, 0.0f, 0.0f);
 	GameObjectTransform2->m_Rotation = Vector3f(0.0f, 0.0f, 0.0f);
 	GameObjectTransform2->m_Scale = Vector3f(1.5f, 1.5f, 1.5f);
+
+
+	//Temp
+	GameObject* ModelTest = &m_ECS->CreateGameObject("ModelTest");
+	SkeletalMesh* MeshComp = ModelTest->AddComponent<SkeletalMesh>();
+	MeshComp->SetModel(m_ModelStorage->GetModelStorage()[0]);
 	
 
 	

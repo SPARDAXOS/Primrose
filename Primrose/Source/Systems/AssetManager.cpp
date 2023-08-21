@@ -1,4 +1,5 @@
 #include "Systems/AssetManager.hpp"
+#include "Systems/ModelStorage.hpp"
 #include "Systems/Core.hpp"
 
 
@@ -6,7 +7,7 @@ AssetManager::AssetManager(Core& core) noexcept
 	: m_Core(&core)
 {
 	m_TextureStorage = m_Core->GetTextureStorage();
-	m_ModelLoader = m_Core->GetModelLoader();
+	m_ModelStorage = m_Core->GetModelStorage();
 	m_Serializer = m_Core->GetSerializer();
 }
 
@@ -40,7 +41,7 @@ bool AssetManager::LoadAssets() {
 }
 
 
-bool AssetManager::LoadModelTexture(const std::string_view& path, Texture2D*& texture, bool editorAsset = false) {
+bool AssetManager::LoadModelTexture(const std::string_view& path, Texture2D*& texture, bool editorAsset) {
 
 	//Create Asset out of path - wait... name and extension could be in the path string... Needs testing.
 	//An asset would have been created already for the model if found!
@@ -455,7 +456,7 @@ void AssetManager::ScanDirectory(Directory& parent, bool editorDirectory) {
 void AssetManager::SetupAsset(Asset& asset, bool editorAsset) {
 
 	auto Extension = asset.m_Path.extension();
-	auto Name = asset.m_Path.filename().replace_extension();
+	auto Name = asset.m_Path.filename();
 	asset.m_Extension = Extension.string();
 	asset.m_Name = Name.string();
 	asset.m_EditorAsset = editorAsset;
@@ -514,7 +515,7 @@ bool AssetManager::LoadProjectAssets() {
 	//	Models
 	//////////
 	for (auto& ModelAsset : m_ProjectModelAssets) {
-		if (!m_ModelLoader->LoadModel(*ModelAsset))
+		if (!m_ModelStorage->LoadModel(*ModelAsset))
 			m_Core->SystemLog("Asset failed to load [Model] [" + ModelAsset->m_Name + "] " + ModelAsset->m_Path.string());
 		else
 			m_Core->SystemLog("Asset loaded successfully [Model] [" + ModelAsset->m_Name + "] " + ModelAsset->m_Path.string());
@@ -542,7 +543,7 @@ bool AssetManager::LoadEditorAssets() {
 	//	Models
 	//////////
 	for (auto& ModelAsset : m_EditorModelAssets) {
-		if (!m_ModelLoader->LoadModel(*ModelAsset))
+		if (!m_ModelStorage->LoadModel(*ModelAsset))
 			m_Core->SystemLog("Asset failed to load [Model] [" + ModelAsset->m_Name + "] " + ModelAsset->m_Path.string());
 		else
 			m_Core->SystemLog("Asset loaded successfully [Model] [" + ModelAsset->m_Name + "] " + ModelAsset->m_Path.string());

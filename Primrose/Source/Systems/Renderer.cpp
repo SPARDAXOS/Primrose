@@ -6,9 +6,10 @@
 Renderer::Renderer(Core& core) noexcept
     : m_Core(&core)
 {
-    m_WindowReference = m_Core->GetWindow();
-    m_TextureStorageReference = m_Core->GetTextureStorage();
-    m_ECSReference = m_Core->GetECS();
+    m_Window = m_Core->GetWindow();
+    m_TextureStorage = m_Core->GetTextureStorage();
+    m_ModelStorage = m_Core->GetModelStorage();
+    m_ECS = m_Core->GetECS();
 
     glEnable(GL_DEPTH_TEST); //TODO: move somewhere else
     glEnable(GL_BLEND); //TODO: move somewhere else
@@ -17,8 +18,11 @@ Renderer::Renderer(Core& core) noexcept
 
 bool Renderer::Update() {
 
+    //This is kinda nonesense here
     bool RendererStatus = true;
-    if (!Render2D() && !Render3D())
+    //if (!Render2D())
+    //    RendererStatus = false;
+    if (!Render3D())
         RendererStatus = false;
 
     return RendererStatus;
@@ -44,23 +48,23 @@ bool Renderer::Render2D() {
     //TODO: Drop this approach and simply get a copy of the vector since its faster cause of something i forgot what it was called and its just a vector of ptrs
     //- This still might be faster tho since no copying is happening and im just getting them in order as defined by the ECS. There are definitely some implications to
     //- think of.
-    const uint32 Amount = m_ECSReference->GetComponentsAmount<SpriteRenderer>();
+    const uint32 Amount = m_ECS->GetComponentsAmount<SpriteRenderer>();
     for (uint32 index = 0; index < Amount; index++) {
 
-        const SpriteRenderer* TargetComponent = m_ECSReference->GetComponentForUpdate<SpriteRenderer>();
+        const SpriteRenderer* TargetComponent = m_ECS->GetComponentForUpdate<SpriteRenderer>();
         if (TargetComponent == nullptr)
             continue;
         if (!TargetComponent->GetEnabled())
             continue;
-        GameObject* TargetGameObject = m_ECSReference->FindGameObject(TargetComponent->GetOwnerID());
+        GameObject* TargetGameObject = m_ECS->FindGameObject(TargetComponent->GetOwnerID());
         if (TargetGameObject == nullptr)
             continue;
         if (!TargetGameObject->GetActiveInHeirarchy())
             continue;
 
 
-        SetupMaterial(ShaderProgramTest, TargetComponent);
-        RenderLightMap(ShaderProgramTest);
+        SetupMaterial(ShaderProgramTest, TargetComponent); //WORKS ONLY FOR SPRITERENDERES
+        SetupLightUniforms(ShaderProgramTest);
 
 
 
@@ -76,7 +80,7 @@ bool Renderer::Render2D() {
         //-i change its scale to 1 then it actually moves back to correct position. Idk if this is a bug or something im missing.
         //Scaling moves the thing for some reason, this really seems like a bug. Maybe i shoulnt have just multiplied the matrices but instead tranformed on top of it!
 
-        //Flipping - Needs to be done before MVP
+        //Flipping - Needs to be done before MVP - It changes to model matrix
         if (TargetComponent->GetFlipX() || TargetComponent->GetFlipY()) {
             float ScaleX = TargetTransform->m_Scale.m_X;
             float ScaleY = TargetTransform->m_Scale.m_Y;
@@ -109,7 +113,7 @@ bool Renderer::Render2D() {
 
 
         //MVP
-        Camera* ViewportCamera = &m_ECSReference->GetViewportCamera();
+        Camera* ViewportCamera = &m_ECS->GetViewportCamera();
 
         //Would probably be the main camera in case of play mode being on
         ShaderProgramTest.SetUniform("uViewCameraPosition", ViewportCamera->GetOwner()->GetTransform().m_Position);
@@ -123,20 +127,103 @@ bool Renderer::Render2D() {
         GLCall(glDrawElements(GL_TRIANGLES, TargetComponent->GetEBO()->GetCount(), GL_UNSIGNED_INT, nullptr));
 
         UnbindAllTextures(TargetComponent);
+        //TargetComponent->GetVAO()->Unbind();
     }
 
     return true;
 }
 bool Renderer::Render3D() {
 
+    //Shaders - Duplicated from Render2D. Consider cleaning this.
+    Shader VertexShader(GL_VERTEX_SHADER, "Resources/Shaders/Vertex.glsl");
+    Shader FragmentShader(GL_FRAGMENT_SHADER, "Resources/Shaders/Frag_PhongLighting.glsl");
+
+    ShaderProgram ShaderProgramTest;
+    ShaderProgramTest.AttachShader(VertexShader);
+    ShaderProgramTest.AttachShader(FragmentShader);
+    if (!ShaderProgramTest.LinkShaderProgram())
+        m_Core->SystemLog("Renderer failed to link shader program");
+    ShaderProgramTest.Bind();
+
+    auto SkeletalMeshes = m_ECS->GetSkeletalMeshes();
+    for (auto& SkeletalMesh : SkeletalMeshes) {
+        //This is pretty much standard for all types
+        if (SkeletalMesh == nullptr)
+            continue;
+        if (!SkeletalMesh->GetEnabled())
+            continue;
+        if (SkeletalMesh->GetModel() == nullptr)
+            continue;
+        GameObject* TargetGameObject = m_ECS->FindGameObject(SkeletalMesh->GetOwnerID());
+        if (TargetGameObject == nullptr)
+            continue;
+        if (!TargetGameObject->GetActiveInHeirarchy())
+            continue;
+
+        //Lights
+        SetupLightUniforms(ShaderProgramTest);
+
+        //MVP - This could be dumped down a bit into a function too. Those could be set once?
+        Transform* TargetTransform = &TargetGameObject->GetTransform();
+        glm::mat4* TargetMatrix = &TargetTransform->GetMatrix();
+        Camera* ViewportCamera = &m_ECS->GetViewportCamera();
+
+        ShaderProgramTest.SetUniform("uViewCameraPosition", ViewportCamera->GetOwner()->GetTransform().m_Position);
+        ShaderProgramTest.SetUniform("uNormalMatrix", glm::mat3(glm::transpose(glm::inverse(*TargetMatrix)))); //Inverse operations are costly in shaders
+
+        ShaderProgramTest.SetUniform("uMVP.Model", *TargetMatrix); //Construct matrix here instead of getting to apply the flipx anmd y?
+        ShaderProgramTest.SetUniform("uMVP.View", ViewportCamera->GetViewMatrix());
+        ShaderProgramTest.SetUniform("uMVP.Projection", ViewportCamera->GetProjectionMatrix());
+
+        //Texture Filtering/Sampling
+        GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (GLuint)SkeletalMesh->GetAddressingModeS()));
+        GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (GLuint)SkeletalMesh->GetAddressingModeT()));
+        GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (GLuint)SkeletalMesh->GetFilteringModeMin()));
+        GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (GLuint)SkeletalMesh->GetFilteringModeMag()));
+
+        //Blending
+        GLCall(glBlendFunc((GLuint)SkeletalMesh->GetSourceBlendMode(), (GLuint)SkeletalMesh->GetDestinationBlendMode()));
+        GLCall(glBlendEquation((GLuint)SkeletalMesh->GetBlendEquation()));
+
+        //Second loop over all the meshes in the model
+        auto Meshes = SkeletalMesh->m_Model->GetMeshes();
+        for (auto& Mesh : Meshes) {
+            if (Mesh == nullptr)
+                continue;
+
+            //Need to figure this out. How to know which is which
+            //Activate -> Bind -> Activate Next -> Bind : Luckily its only one now
+            //m_TextureStorage->SetActiveTextureUnit(TextureUnit::TEXTURE0);
+            //for (auto& Texture : Mesh->m_Textures) {
+            //    Texture->Bind();
+            //}
+            //Mesh->m_Textures[0]->Bind();
+            //ShaderProgramTest.SetUniform("uMaterial.Diffuse", TextureType::DIFFUSE); //??
+            
+            //For every mesh of the model
+            //Render call
+            Mesh->m_VAO->Bind();
+            GLCall(glDrawElements(GL_TRIANGLES, Mesh->m_EBO->GetCount(), GL_UNSIGNED_INT, nullptr));
+            //Unbind textures
+            //Same thing as bind. Activate -> Unbind
+            //m_TextureStorage->SetActiveTextureUnit(TextureUnit::TEXTURE0);
+           //for (auto& Texture : Mesh->m_Textures) {
+           //    Texture->Unbind();
+           //}
+            //Mesh->m_Textures[0]->Unbind();
+            Mesh->m_VAO->Unbind();
+        }
+    }
+
+
     return true;
 }
-void Renderer::RenderLightMap(ShaderProgram& program) {
+void Renderer::SetupLightUniforms(ShaderProgram& program) {
 
     //IMPORTANT NOTE: Test that sourceRadius doesnt exceed attenuation. Maybe do that in editor? also here!
 
     //Directional Light
-    DirectionalLight* DirectionalLightComp = m_ECSReference->GetMainDirectionalLight();
+    DirectionalLight* DirectionalLightComp = m_ECS->GetMainDirectionalLight();
     if (DirectionalLightComp != nullptr) { //Directional Light!
 
         Vector4f LightDirection = DirectionalLightComp->GetDirection();
@@ -147,7 +234,7 @@ void Renderer::RenderLightMap(ShaderProgram& program) {
     }
 
     //PointLights
-    std::vector<PointLight*> AllPointLights = m_ECSReference->GetPointLights();
+    std::vector<PointLight*> AllPointLights = m_ECS->GetPointLights();
     if (AllPointLights.size() > 0) {
         program.SetUniform("uPointLightsCount", static_cast<int>(AllPointLights.size()));
         for (uint32 LightIndex = 0; LightIndex < AllPointLights.size(); LightIndex++) {
@@ -162,7 +249,7 @@ void Renderer::RenderLightMap(ShaderProgram& program) {
     }
 
     //SpotLights
-    std::vector<SpotLight*> AllSpotLights = m_ECSReference->GetSpotLights();
+    std::vector<SpotLight*> AllSpotLights = m_ECS->GetSpotLights();
     if (AllSpotLights.size() > 0) {
         program.SetUniform("uSpotLightsCount", static_cast<int>(AllSpotLights.size()));
         for (uint32 LightIndex = 0; LightIndex < AllSpotLights.size(); LightIndex++) {
@@ -202,7 +289,7 @@ void Renderer::SetupMaterial(ShaderProgram& program, const SpriteRenderer* compo
 
 
     //Sprite/Diffuse
-    m_TextureStorageReference->SetActiveTextureUnit(TextureUnit::TEXTURE0); //TODO: Create own abstraction for texture units
+    m_TextureStorage->SetActiveTextureUnit(TextureUnit::TEXTURE0); //TODO: Create own abstraction for texture units
     if (Sprite != nullptr)
         Sprite->Bind();
     else {
@@ -213,7 +300,7 @@ void Renderer::SetupMaterial(ShaderProgram& program, const SpriteRenderer* compo
                 Sprite->Bind();
         }
         else {
-            if (m_TextureStorageReference->GetEditorTexture2DByName("NoDiffuse", Sprite))
+            if (m_TextureStorage->GetEditorTexture2DByName("NoDiffuse.jpg", Sprite))
                 Sprite->Bind();
         }
     }
@@ -221,13 +308,13 @@ void Renderer::SetupMaterial(ShaderProgram& program, const SpriteRenderer* compo
     if (CompMaterial != nullptr) {
 
         //Ambient
-        m_TextureStorageReference->SetActiveTextureUnit(TextureUnit::TEXTURE1); //TODO: Create own abstraction for texture units
+        m_TextureStorage->SetActiveTextureUnit(TextureUnit::TEXTURE1); //TODO: Create own abstraction for texture units
         if (CompMaterial->m_Ambient != nullptr) {
             CompMaterial->m_Ambient->Bind();
         }
         //TODO: Otherwise use sprite/diffuse as ambient!
         //Specular
-        m_TextureStorageReference->SetActiveTextureUnit(TextureUnit::TEXTURE2); //TODO: Create own abstraction for texture units
+        m_TextureStorage->SetActiveTextureUnit(TextureUnit::TEXTURE2); //TODO: Create own abstraction for texture units
         if (CompMaterial->m_Specular != nullptr) {
             CompMaterial->m_Specular->Bind();
         }
@@ -255,7 +342,7 @@ void Renderer::UnbindAllTextures(const SpriteRenderer* component) {
 
     //Diffuse
     if (Sprite != nullptr) {
-        m_TextureStorageReference->SetActiveTextureUnit(TextureUnit::TEXTURE0);
+        m_TextureStorage->SetActiveTextureUnit(TextureUnit::TEXTURE0);
         Sprite->Unbind();
     }
 
@@ -265,13 +352,13 @@ void Renderer::UnbindAllTextures(const SpriteRenderer* component) {
 
     //Ambient
     if (CompMaterial->m_Ambient != nullptr) {
-        m_TextureStorageReference->SetActiveTextureUnit(TextureUnit::TEXTURE1);
+        m_TextureStorage->SetActiveTextureUnit(TextureUnit::TEXTURE1);
         CompMaterial->m_Ambient->Unbind();
     }
 
     //Specular
     if (CompMaterial->m_Specular != nullptr) {
-        m_TextureStorageReference->SetActiveTextureUnit(TextureUnit::TEXTURE2);
+        m_TextureStorage->SetActiveTextureUnit(TextureUnit::TEXTURE2);
         CompMaterial->m_Specular->Unbind();
     }
 

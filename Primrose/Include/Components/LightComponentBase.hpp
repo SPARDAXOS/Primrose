@@ -3,9 +3,6 @@
 #include "Math.hpp"
 #include "Transform.hpp"
 
-class GameObject;
-
-
 
 class LightComponentBase : public ComponentBase {
 public:

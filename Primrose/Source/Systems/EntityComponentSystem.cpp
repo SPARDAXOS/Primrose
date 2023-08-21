@@ -137,6 +137,19 @@ SpriteRenderer* EntityComponentSystem::AddComponent<SpriteRenderer>(uint64 objec
 	return NewSpriteRenderer;
 }
 template<>
+SkeletalMesh* EntityComponentSystem::AddComponent<SkeletalMesh>(uint64 objectID) {
+	static_assert(std::is_base_of_v<ComponentBase, SkeletalMesh>); //Makes more sense for the custom components
+	GameObject* ptr = FindGameObject(objectID);
+	if (ptr == nullptr)
+		return nullptr;
+
+	//Check limit on components? Maybe Gameobject side instead. one sounds logical
+
+	SkeletalMesh* NewSkeletalMesh = new SkeletalMesh(*ptr, objectID); //Add index in 
+	m_SkeletalMeshes.push_back(NewSkeletalMesh);
+	return NewSkeletalMesh;
+}
+template<>
 Camera* EntityComponentSystem::AddComponent<Camera>(uint64 objectID) {
 	static_assert(std::is_base_of_v<ComponentBase, Camera>); //Makes more sense for the custom components
 	GameObject* ptr = FindGameObject(objectID);
@@ -217,6 +230,14 @@ GameObject* EntityComponentSystem::FindGameObject(uint64 objectID) const noexcep
 int32 EntityComponentSystem::FindSpriteRenderer(uint64 objectID) const noexcept {
 	for (uint32 index = 0; index < m_SpriteRenderers.size(); index++) {
 		if (m_SpriteRenderers.at(index)->GetOwnerID() == objectID) {
+			return index;
+		}
+	}
+	return INVALID_OBJECT_ID;
+}
+int32 EntityComponentSystem::FindSkeletalMesh(uint64 objectID) const noexcept {
+	for (uint32 index = 0; index < m_SkeletalMeshes.size(); index++) {
+		if (m_SkeletalMeshes.at(index)->GetOwnerID() == objectID) {
 			return index;
 		}
 	}

@@ -135,7 +135,7 @@ private:
 	int32 m_ViewportPositionX;
 	int32 m_ViewportPositionY;
 	
-	uint8 m_VSync = 1;
+	uint8 m_VSync = 0;
 	int32 m_RefreshRate = 144;
 
 private:

@@ -6,7 +6,7 @@
 Serializer::Serializer(Core& core) noexcept
 	:	m_CoreReference(&core)
 {
-	m_TextureStorageReference = m_CoreReference->GetTextureStorage();
+	m_TextureStorage = m_CoreReference->GetTextureStorage();
 }
 
 

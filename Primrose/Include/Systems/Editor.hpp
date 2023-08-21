@@ -130,6 +130,7 @@ private:
 	void RenderInfoDetails();
 	void RenderTransformDetails();
 	void RenderSpriteRendererDetails();
+	void RenderSkeletalMeshDetails();
 	void RenderDirectionalLightDetails();
 	void RenderPointLightDetails();
 	void RenderSpotLightDetails();
@@ -301,9 +302,9 @@ private:
 
 private:
 	Core* m_CoreReference						{ nullptr };
-	Window* m_WindowReference					{ nullptr };
-	EntityComponentSystem* m_ECSReference		{ nullptr };
-	TextureStorage* m_TextureStorageReference	{ nullptr };
+	Window* m_Window					{ nullptr };
+	EntityComponentSystem* m_ECS		{ nullptr };
+	TextureStorage* m_TextureStorage	{ nullptr };
 	AssetManager* m_AssetManagerReference		{ nullptr };
 	Input* m_InputReference						{ nullptr };
 	Time* m_TimeReference						{ nullptr };

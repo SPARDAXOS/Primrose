@@ -7,6 +7,7 @@
 
 class Serializer;
 class TextureStorage;
+class ModelStorage;
 class Core;
 class Material;
 class Texture2D;
@@ -114,7 +115,7 @@ private:
 private:
 	Core* m_Core						{ nullptr };
 	TextureStorage* m_TextureStorage	{ nullptr };
-	ModelLoader* m_ModelLoader			{ nullptr };
+	ModelStorage* m_ModelStorage		{ nullptr };
 	Serializer* m_Serializer			{ nullptr };
 };
 

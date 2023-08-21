@@ -122,6 +122,6 @@ private:
 
 private:
 	Core* m_CoreReference;
-	TextureStorage* m_TextureStorageReference;
+	TextureStorage* m_TextureStorage;
 
 };

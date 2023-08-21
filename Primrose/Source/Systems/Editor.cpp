@@ -9,9 +9,9 @@
 Editor::Editor(Core& core)
 	: m_CoreReference(&core)
 {
-	m_WindowReference = m_CoreReference->GetWindow();
-	m_ECSReference = m_CoreReference->GetECS();
-	m_TextureStorageReference = m_CoreReference->GetTextureStorage();
+	m_Window = m_CoreReference->GetWindow();
+	m_ECS = m_CoreReference->GetECS();
+	m_TextureStorage = m_CoreReference->GetTextureStorage();
 	m_AssetManagerReference = m_CoreReference->GetAssetManager();
 	m_InputReference = m_CoreReference->GetInput();
 	m_TimeReference = m_CoreReference->GetTime();
@@ -30,7 +30,7 @@ Editor::Editor(Core& core)
 	m_LoggerReference->SystemLog(VersionMessage);
 
 
-	m_ViewportCameraReference = &m_ECSReference->GetViewportCamera();
+	m_ViewportCameraReference = &m_ECS->GetViewportCamera();
 	if (m_ViewportCameraReference == nullptr)
 		m_LoggerReference->SystemLog("Failed to save viewport camera reference");
 
@@ -42,7 +42,7 @@ Editor::Editor(Core& core)
 	m_IO->ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange; //Disable IMGUI from interfering with glfw when it comes to cursor visibility and shape
 
 
-	ImGui_ImplGlfw_InitForOpenGL(m_WindowReference->GetWindowResource().m_Handle, true);
+	ImGui_ImplGlfw_InitForOpenGL(m_Window->GetWindowResource().m_Handle, true);
 	ImGui_ImplOpenGL3_Init();
 
 	//logger!
@@ -67,16 +67,16 @@ Editor::~Editor() {
 
 void Editor::SaveEngineTexturesReferences() {
 
-	if (!m_TextureStorageReference->GetEditorTexture2DByName("Folder", m_FolderTexture))
+	if (!m_TextureStorage->GetEditorTexture2DByName("Folder.png", m_FolderTexture))
 		m_LoggerReference->SystemLog("Failed to save reference to engine texture [Folder]");
 
-	if (!m_TextureStorageReference->GetEditorTexture2DByName("Debug", m_DebugTexture))
+	if (!m_TextureStorage->GetEditorTexture2DByName("Debug.png", m_DebugTexture))
 		m_LoggerReference->SystemLog("Failed to save reference to engine texture [Debug]");
 
-	if (!m_TextureStorageReference->GetEditorTexture2DByName("Warning", m_WarningTexture))
+	if (!m_TextureStorage->GetEditorTexture2DByName("Warning.png", m_WarningTexture))
 		m_LoggerReference->SystemLog("Failed to save reference to engine texture [Warning]");
 
-	if (!m_TextureStorageReference->GetEditorTexture2DByName("Error", m_ErrorTexture))
+	if (!m_TextureStorage->GetEditorTexture2DByName("Error.png", m_ErrorTexture))
 		m_LoggerReference->SystemLog("Failed to save reference to engine texture [Error]");
 
 }
@@ -164,9 +164,11 @@ void Editor::RenderDetailsMenu() {
 		RenderInfoDetails();
 		RenderTransformDetails();
 		RenderSpriteRendererDetails();
+		RenderSkeletalMeshDetails();
 		RenderDirectionalLightDetails();
 		RenderPointLightDetails();
 		RenderSpotLightDetails();
+
 
 		//Always at the bottom
 		RenderAddComponentMenu();
@@ -191,9 +193,9 @@ void Editor::RenderHeirarchyMenu() {
 	CheckForHoveredWindows();
 
 	//TODO: This needs cleanup, especially the id check down there. Like test if the ID is reserved or something
-	std::vector<GameObject*> GameObjects = m_ECSReference->GetGameObjects();
+	std::vector<GameObject*> GameObjects = m_ECS->GetGameObjects();
 	for (uint32 i = 0; i < GameObjects.size(); i++) {
-		if (!m_ECSReference->IsReserved(GameObjects.at(i)->GetObjectID()) && GameObjects.at(i)->GetParent() == nullptr)
+		if (!m_ECS->IsReserved(GameObjects.at(i)->GetObjectID()) && GameObjects.at(i)->GetParent() == nullptr)
 			AddHeirarchyEntry(GameObjects.at(i));
 	}
 
@@ -233,18 +235,18 @@ void Editor::RenderAddGameObjectMenu() {
 	if (ImGui::BeginPopup("AddGameObjectMenu")) {
 
 		if (ImGui::Selectable("Empty GameObject", false, 0, ImVec2(150, 20))) {
-			m_ECSReference->CreateGameObject();
+			m_ECS->CreateGameObject();
 		}
 		else if (ImGui::Selectable("Cube", false, 0, ImVec2(150, 20))) {
-			GameObject* Object = &m_ECSReference->CreateGameObject("Cube");
+			GameObject* Object = &m_ECS->CreateGameObject("Cube");
 			Object->AddComponent<SpriteRenderer>(); //CHANGE THIS WHEN I HAVE ACTUAL 3D MESHES
 		}
 		else if (ImGui::Selectable("Sprite", false, 0, ImVec2(150, 20))) {
-			GameObject* Object = &m_ECSReference->CreateGameObject("Sprite"); //This breaks for some reason
+			GameObject* Object = &m_ECS->CreateGameObject("Sprite"); //This breaks for some reason
 			Object->AddComponent<SpriteRenderer>(); //CHANGE THIS WHEN I HAVE ACTUAL 3D MESHES
 		}
 		else if (ImGui::Selectable("Camera", false, 0, ImVec2(150, 20))) {
-			GameObject* Object = &m_ECSReference->CreateGameObject("Camera"); //This breaks for some reason
+			GameObject* Object = &m_ECS->CreateGameObject("Camera"); //This breaks for some reason
 			Object->AddComponent<Camera>(); //CHANGE THIS WHEN I HAVE ACTUAL 3D MESHES
 		}
 
@@ -700,6 +702,16 @@ void Editor::RenderSpriteRendererDetails() {
 		}
 	}
 }
+void Editor::RenderSkeletalMeshDetails() {
+
+	if (m_SelectedGameObject->HasComponent<SkeletalMesh>()) {
+		//SkeletalMesh* SelectedSkeletalMesh = m_SelectedGameObject->GetComponent<SkeletalMesh>();
+		if (ImGui::CollapsingHeader("Skeletal Mesh", ImGuiTreeNodeFlags_DefaultOpen)) {
+
+
+		}
+	}
+}
 void Editor::RenderDirectionalLightDetails() {
 
 	if (m_SelectedGameObject->HasComponent<DirectionalLight>()) {
@@ -823,7 +835,6 @@ void Editor::RenderSpotLightDetails() {
 
 		}
 	}
-
 }
 void Editor::RenderAddComponentMenu() {
 
@@ -840,6 +851,9 @@ void Editor::RenderAddComponentMenu() {
 
 		if (ImGui::Selectable("SpriteRenderer", false, 0, ImVec2(150, 20))) {
 			m_SelectedGameObject->AddComponent<SpriteRenderer>();
+		}
+		else if (ImGui::Selectable("SkeletalMesh", false, 0, ImVec2(150, 20))) {
+			m_SelectedGameObject->AddComponent<SkeletalMesh>();
 		}
 		else if (ImGui::Selectable("Camera", false, 0, ImVec2(150, 20))) {
 			m_SelectedGameObject->AddComponent<Camera>();
@@ -1872,7 +1886,7 @@ void Editor::UpdateContentBrowserAssetEntries() {
 		const Texture2D* IconTexture = GetIconTexture(*Asset);
 		if (IconTexture != nullptr) {
 			TextureID = (void*)(intptr_t)(IconTexture->GetID());
-			m_TextureStorageReference->SetActiveTextureUnit(TextureUnit::TEXTURE0);
+			m_TextureStorage->SetActiveTextureUnit(TextureUnit::TEXTURE0);
 			IconTexture->Bind();
 		}
 
@@ -1999,7 +2013,7 @@ void Editor::UpdateSpriteSelectorEntries() {
 	SetupContentBrowserStyle();
 	NewSpriteSelectorFrame();
 
-	for (auto& Texture : m_TextureStorageReference->GetTexture2DStorage()) {
+	for (auto& Texture : m_TextureStorage->GetTexture2DStorage()) {
 
 
 		//Calculate element per line depending on window size
@@ -2194,15 +2208,15 @@ Texture2D* Editor::GetIconTexture(const Asset& asset) noexcept {
 	case AssetType::TEXTURE: {
 
 		if (asset.m_EditorAsset) {
-			if (!m_TextureStorageReference->GetEditorTexture2DByName(asset.m_Name, IconTexture)) {
-				if (!m_TextureStorageReference->GetEditorTexture2DByName("Error", IconTexture))
+			if (!m_TextureStorage->GetEditorTexture2DByName(asset.m_Name, IconTexture)) {
+				if (!m_TextureStorage->GetEditorTexture2DByName("Error.png", IconTexture))
 					return nullptr;
 				return IconTexture;
 			}
 		}
 		else {
-			if (!m_TextureStorageReference->GetTexture2DByName(asset.m_Name, IconTexture)) {
-				if (!m_TextureStorageReference->GetEditorTexture2DByName("Error", IconTexture))
+			if (!m_TextureStorage->GetTexture2DByName(asset.m_Name, IconTexture)) {
+				if (!m_TextureStorage->GetEditorTexture2DByName("Error.png", IconTexture))
 					return nullptr;
 				return IconTexture;
 			}
@@ -2212,8 +2226,8 @@ Texture2D* Editor::GetIconTexture(const Asset& asset) noexcept {
 	}break;
 	case AssetType::MATERIAL: {
 
-		if (!m_TextureStorageReference->GetEditorTexture2DByName("MaterialAsset", IconTexture)) {
-			if (!m_TextureStorageReference->GetEditorTexture2DByName("Error", IconTexture))
+		if (!m_TextureStorage->GetEditorTexture2DByName("MaterialAsset.png", IconTexture)) {
+			if (!m_TextureStorage->GetEditorTexture2DByName("Error.png", IconTexture))
 				return nullptr;
 			return IconTexture;
 		}
@@ -2221,10 +2235,10 @@ Texture2D* Editor::GetIconTexture(const Asset& asset) noexcept {
 		return IconTexture;
 	}break;
 	default:
-		if (m_TextureStorageReference->GetEditorTexture2DByName("Unknown", IconTexture))
+		if (m_TextureStorage->GetEditorTexture2DByName("Unknown.png", IconTexture))
 			return IconTexture;
 		else {
-			if (!m_TextureStorageReference->GetEditorTexture2DByName("Error", IconTexture))
+			if (!m_TextureStorage->GetEditorTexture2DByName("Error.png", IconTexture))
 				return nullptr;
 			return IconTexture;
 		}

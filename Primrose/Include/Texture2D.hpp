@@ -290,12 +290,17 @@ public:
 		}
 		GLCall(glBindTexture(GL_TEXTURE_2D, m_ID));
 
-		int Channels = GL_RGB;
-		if (GetColorChannelCount() == 3)
+
+		//This all could be removed.
+		int Channels = GL_RGBA;
+		if (GetColorChannelCount() == 1)
+			Channels = GL_RED;
+		else if (GetColorChannelCount() == 3)
 			Channels = GL_RGB;
 		else if (GetColorChannelCount() == 4)
-			Channels = GL_RGBA;
+			Channels = GL_RGBA; 
 
+		//THis mean it will copy the data every single frame again and again....
 		GLCall(glTexImage2D(GL_TEXTURE_2D, 0, Channels, m_Source.m_Width, m_Source.m_Height, 0, Channels, GL_UNSIGNED_BYTE, m_Source.m_Data));
 		GLCall(glGenerateMipmap(GL_TEXTURE_2D));
 	}

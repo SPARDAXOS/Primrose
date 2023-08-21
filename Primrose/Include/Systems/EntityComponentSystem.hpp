@@ -4,6 +4,7 @@
 #include "Components/DirectionalLightComponent.hpp"
 #include "Components/PointLightComponent.hpp"
 #include "Components/SpotLightComponent.hpp"
+#include "Components/SkeletalMeshComponent.hpp"
 
 #include <vector>
 
@@ -42,6 +43,8 @@ public:
 	template<>
 	SpriteRenderer*   AddComponent<SpriteRenderer>(uint64 objectID);
 	template<>
+	SkeletalMesh* AddComponent<SkeletalMesh>(uint64 objectID);
+	template<>
 	Camera*			  AddComponent<Camera>(uint64 objectID);
 	template<>
 	DirectionalLight* AddComponent<DirectionalLight>(uint64 objectID);
@@ -63,6 +66,17 @@ public:
 			return;
 
 		m_SpriteRenderers.erase(std::begin(m_SpriteRenderers) + TargetIndex);
+	}
+	template<>
+	void RemoveComponent<SkeletalMesh>(uint64 objectID) noexcept {
+		if (FindGameObject(objectID) == nullptr)
+			return;
+
+		const int32 TargetIndex = FindSkeletalMesh(objectID);
+		if (TargetIndex == INVALID_OBJECT_ID)
+			return;
+
+		m_SkeletalMeshes.erase(std::begin(m_SkeletalMeshes) + TargetIndex);
 	}
 	template<>
 	void RemoveComponent<Camera>(uint64 objectID) noexcept {
@@ -122,6 +136,17 @@ public:
 		return m_SpriteRenderers.at(TargetIndex);
 	}
 	template<>
+	SkeletalMesh* GetComponent<SkeletalMesh>(uint64 objectID) {
+		if (FindGameObject(objectID) == nullptr)
+			return nullptr;
+
+		const int32 TargetIndex = FindSkeletalMesh(objectID);
+		if (TargetIndex == INVALID_OBJECT_ID)
+			return nullptr;
+
+		return m_SkeletalMeshes.at(TargetIndex);
+	}
+	template<>
 	Camera* GetComponent<Camera>(uint64 objectID) {
 		if (FindGameObject(objectID) == nullptr)
 			return nullptr;
@@ -165,6 +190,7 @@ public:
 
 
 public:
+	//TODO: LATEST NOTE: Yes, delete all these and simply return the vector.
 	template<typename T>
 	uint32 GetComponentsAmount() const noexcept;
 	template<>
@@ -178,12 +204,16 @@ public:
 
 
 
-public: //TODO: maybe rework this to use lists? simply passes the vector?
-
+public:
 	inline std::vector<GameObject*> GetGameObjects() const noexcept { return m_GameObjects; }
+	inline std::vector<SpriteRenderer*> GetSpriteRenderers() const noexcept { return m_SpriteRenderers; }
+	inline std::vector<SkeletalMesh*> GetSkeletalMeshes() const noexcept { return m_SkeletalMeshes; }
 	inline std::vector<PointLight*> GetPointLights() const noexcept { return m_PointLights; }
 	inline std::vector<SpotLight*> GetSpotLights() const noexcept { return m_SpotLights; }
 
+
+
+	//TODO: maybe rework this to use lists? simply passes the vector?. LATEST NOTE: Yes, delete all these and simply return the vector.
 	template<typename T>
 	T* GetComponentForUpdate();
 	template<>
@@ -201,7 +231,6 @@ public: //TODO: maybe rework this to use lists? simply passes the vector?
 public:
 	inline std::string GetLastExitMessage() const noexcept { return m_LastExitMessage; }
 
-
 	inline GameObject& GetCurrentScene() const noexcept { return *m_MainScene; }
 	inline Camera& GetViewportCamera() const noexcept { return *m_ViewportCamera; }
 	inline DirectionalLight* GetMainDirectionalLight() const noexcept { return m_MainDirectionalLight; }
@@ -215,6 +244,7 @@ private:
 
 private:
 	int32 FindSpriteRenderer(uint64 objectID) const noexcept;
+	int32 FindSkeletalMesh(uint64 objectID) const noexcept;
 	int32 FindCamera(uint64 objectID) const noexcept;
 	int32 FindPointLight(uint64 objectID) const noexcept;
 	int32 FindSpotLight(uint64 objectID) const noexcept;
@@ -229,8 +259,10 @@ private:
 private:
 	std::vector<GameObject*> m_GameObjects;
 	std::vector<SpriteRenderer*> m_SpriteRenderers;
+	std::vector<SkeletalMesh*> m_SkeletalMeshes; 
 	std::vector<Camera*> m_Cameras;
-	
+
+	DirectionalLight* m_MainDirectionalLight;
 	std::vector<PointLight*> m_PointLights;
 	std::vector<SpotLight*> m_SpotLights;
 
@@ -243,7 +275,6 @@ private:
 	GameObject* m_MainScene; 
 	GameObject* m_ViewportCameraGO;
 	Camera* m_ViewportCamera;
-	DirectionalLight* m_MainDirectionalLight;
 
 	uint64 m_CurrentObjectIDIndex = 1;
 };
@@ -255,8 +286,6 @@ namespace Components {
 	template<typename T>
 	inline uint32 GetComponentID() noexcept;
 
-
-
 	template<>
 	inline uint32 GetComponentID<SpriteRenderer>() noexcept { return SPRITE_RENDERER_COMPONENT_ID; }
 	template<>
@@ -267,6 +296,8 @@ namespace Components {
 	inline uint32 GetComponentID<PointLight>() noexcept { return POINT_LIGHT_COMPONENT_ID; }
 	template<>
 	inline uint32 GetComponentID<SpotLight>() noexcept { return SPOT_LIGHT_COMPONENT_ID; }
+	template<>
+	inline uint32 GetComponentID<SkeletalMesh>() noexcept { return SKELETAL_MESH_COMPONENT_ID; }
 
 	//TODO: Add Custom Component which is basically a component with no code that can be customized.
 }

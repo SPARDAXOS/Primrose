@@ -111,7 +111,7 @@ public:
 		ActivatePositionAttribute();
 		ActivateTextureCoordinatesAttribute();
 		ActivateNormalAttribute();
-		Unbind();
+		Unbind(); 
 	}
 	~VBO() {
 		GLCall(glDeleteBuffers(1, &m_ID));

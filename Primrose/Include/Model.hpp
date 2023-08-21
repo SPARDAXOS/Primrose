@@ -14,9 +14,10 @@ public:
 	Model& operator=(Model&&) = delete;
 
 public:
-	//Internal Use Only
+	//Internal Use Only - TODO: Maybe do the same thing and construct this by passing a vec in the ctor
 	inline void AddMesh(Mesh* mesh) { m_Meshes.push_back(mesh); }
 
+	inline std::vector<Mesh*> GetMeshes() const noexcept { return m_Meshes; }
 
 
 private:
