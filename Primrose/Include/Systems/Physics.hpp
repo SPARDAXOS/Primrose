@@ -34,5 +34,5 @@ public:
 
 private:
 	Camera* m_ViewportCameraRef		{ nullptr };
-	Core* m_CoreReference				{ nullptr };
+	Core* m_Core				{ nullptr };
 };

@@ -4,9 +4,9 @@
 
 
 Serializer::Serializer(Core& core) noexcept
-	:	m_CoreReference(&core)
+	:	m_Core(&core)
 {
-	m_TextureStorage = m_CoreReference->GetTextureStorage();
+	m_TextureStorage = m_Core->GetTextureStorage();
 }
 
 
@@ -15,8 +15,8 @@ Serializer::Serializer(Core& core) noexcept
 //////////
 template<typename T>
 [[nodiscard]] bool Serializer::SerializeToFile(const T& output) const {
-	m_CoreReference->SystemLog("Asset type was not identified.");
-	m_CoreReference->SystemLog("Failed to serialize to file");
+	m_Core->SystemLog("Asset type was not identified.");
+	m_Core->SystemLog("Failed to serialize to file");
 }
 template<>
 bool Serializer::SerializeToFile<Material>(const Material& output) const {
@@ -29,7 +29,7 @@ bool Serializer::SerializeToFile<Material>(const Material& output) const {
 	char* ptr = Buffer;
 	size_t SerializedBytes;
 	if (!output.SerializeToFile(ptr, SerializedBytes)) {
-		m_CoreReference->SystemLog("Failed to serialize Material [" + output.GetAsset().m_Name + "]");
+		m_Core->SystemLog("Failed to serialize Material [" + output.GetAsset().m_Name + "]");
 		File.close();
 		return false;
 	}
@@ -47,8 +47,8 @@ bool Serializer::SerializeToFile<Material>(const Material& output) const {
 //////////
 template<typename T>
 [[nodiscard]] bool Serializer::SerializeFromFile(T& input) const {
-	m_CoreReference->SystemLog("Asset type was not identified.");
-	m_CoreReference->SystemLog("Failed to serialize from file");
+	m_Core->SystemLog("Asset type was not identified.");
+	m_Core->SystemLog("Failed to serialize from file");
 }
 template<>
 bool Serializer::SerializeFromFile<Material>(Material& input) const {
@@ -56,7 +56,7 @@ bool Serializer::SerializeFromFile<Material>(Material& input) const {
 	//Check header!
 	const Asset* TargetAsset = &input.GetAsset();
 	if (!ValidateFileHeader(*TargetAsset)) {
-		m_CoreReference->SystemLog("Failed to serialize material from file [" + TargetAsset->m_Name + "]");
+		m_Core->SystemLog("Failed to serialize material from file [" + TargetAsset->m_Name + "]");
 		return false;
 	}
 
@@ -73,7 +73,7 @@ bool Serializer::SerializeFromFile<Material>(Material& input) const {
 	std::memcpy(ptr, Buffer.data() + sizeof(MaterialFileHeader), Buffer.size() - sizeof(MaterialFileHeader));
 
 	if (!input.SerializeFromFile(ptr)) {
-		m_CoreReference->SystemLog("Material failed to serialize data from buffer.");
+		m_Core->SystemLog("Material failed to serialize data from buffer.");
 		return false;
 	}
 
@@ -88,8 +88,8 @@ bool Serializer::SerializeFromFile<Material>(Material& input) const {
 //////////
 template<typename T>
 [[nodiscard]] bool Serializer::CreateFile(const T& asset) const {
-	m_CoreReference->SystemLog("Asset type was not identified.");
-	m_CoreReference->SystemLog("Failed to create file.");
+	m_Core->SystemLog("Asset type was not identified.");
+	m_Core->SystemLog("Failed to create file.");
 };
 template<>
 bool Serializer::CreateFile<Material>(const Material& material) const {
@@ -111,7 +111,7 @@ bool Serializer::DeleteFile(const std::filesystem::path& path) const {
 
 	const auto Results = std::remove(path.string().data());
 	if (Results != -0) {
-		m_CoreReference->SystemLog("Failed to delete file at " + path.string());
+		m_Core->SystemLog("Failed to delete file at " + path.string());
 		return false;
 	}
 	return true;
@@ -120,7 +120,7 @@ bool Serializer::DeleteFolder(const std::filesystem::path& path) const {
 
 	const auto Results = std::filesystem::remove(path);
 	if (!Results) {
-		m_CoreReference->SystemLog("Failed to delete folder at " + path.string());
+		m_Core->SystemLog("Failed to delete folder at " + path.string());
 		return false;
 	}
 
@@ -183,7 +183,7 @@ bool Serializer::ValidateFileHeader(const Asset& asset) const {
 
 	std::string Buffer;
 	if (!CRead(asset.m_Path.string(), Buffer)) {
-		m_CoreReference->SystemLog("Failed to open file for header validation.");
+		m_Core->SystemLog("Failed to open file for header validation.");
 		return false;
 	}
 
@@ -195,14 +195,14 @@ bool Serializer::ValidateFileHeader(const Asset& asset) const {
 	if (FileMarker.m_Type == asset.m_Type)
 		Results = true;
 	else {
-		m_CoreReference->SystemLog("Discrepancy in asset type is detected between file and asset entry.");
+		m_Core->SystemLog("Discrepancy in asset type is detected between file and asset entry.");
 		Results = false;
 	}
 
 	if (FileMarker.m_Version == AssetFilesVersions::MATERIAL_FILE_VERSION)
 		Results = true;
 	else {
-		m_CoreReference->SystemLog("Discrepancy in asset version is detected between file and asset entry.");
+		m_Core->SystemLog("Discrepancy in asset version is detected between file and asset entry.");
 		Results = false;
 	}
 

@@ -269,7 +269,7 @@ private:
 private:
 	std::string m_LastExitMessage;
 
-	Core* m_CoreReference	{ nullptr };
+	Core* m_Core	{ nullptr };
 
 	//Created or loaded later on
 	GameObject* m_MainScene; 

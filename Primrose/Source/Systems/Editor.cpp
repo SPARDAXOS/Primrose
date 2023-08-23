@@ -7,32 +7,35 @@
 
 
 Editor::Editor(Core& core)
-	: m_CoreReference(&core)
+	: m_Core(&core)
 {
-	m_Window = m_CoreReference->GetWindow();
-	m_ECS = m_CoreReference->GetECS();
-	m_TextureStorage = m_CoreReference->GetTextureStorage();
-	m_AssetManagerReference = m_CoreReference->GetAssetManager();
-	m_InputReference = m_CoreReference->GetInput();
-	m_TimeReference = m_CoreReference->GetTime();
-	m_SerializerReference = m_CoreReference->GetSerializer();
-	m_LoggerReference = m_CoreReference->GetLogger();
+	m_Window = m_Core->GetWindow();
+	m_ECS = m_Core->GetECS();
+	m_TextureStorage = m_Core->GetTextureStorage();
+	m_AssetManager = m_Core->GetAssetManager();
+	m_Input = m_Core->GetInput();
+	m_Time = m_Core->GetTime();
+	m_Serializer = m_Core->GetSerializer();
+	m_Logger = m_Core->GetLogger();
 	//Get folder texture?
+
+	m_SelectionWindows = std::make_unique<SelectionWindows>(core, *this);
+	m_MaterialEditor = std::make_unique<MaterialEditor>(core, *this, *m_SelectionWindows);
 
 	IMGUI_CHECKVERSION();
 	m_GUIContext = ImGui::CreateContext();
 	m_GUIViewport = ImGui::GetMainViewport();
 	//TODO: Throw if any of these dont work!
 
-	m_LoggerReference->SystemLog("Dear IMGUI initialized.");
+	m_Logger->SystemLog("Dear IMGUI initialized.");
 	std::string VersionMessage("Version: ");
 	VersionMessage.append(ImGui::GetVersion());
-	m_LoggerReference->SystemLog(VersionMessage);
+	m_Logger->SystemLog(VersionMessage);
 
 
 	m_ViewportCameraReference = &m_ECS->GetViewportCamera();
 	if (m_ViewportCameraReference == nullptr)
-		m_LoggerReference->SystemLog("Failed to save viewport camera reference");
+		m_Logger->SystemLog("Failed to save viewport camera reference");
 
 
 	m_IO = &ImGui::GetIO();
@@ -57,9 +60,12 @@ Editor::~Editor() {
 
 [[nodiscard]] bool Editor::Update() {
 
+	m_SelectionWindows->Update();
+	m_MaterialEditor->Update();
+	
+	UpdateViewportCameraInput();
+	UpdateEditorInput();
 	Render();
-	CheckInput();
-	UpdateViewportControls();
 
 	return true;
 }
@@ -68,16 +74,16 @@ Editor::~Editor() {
 void Editor::SaveEngineTexturesReferences() {
 
 	if (!m_TextureStorage->GetEditorTexture2DByName("Folder.png", m_FolderTexture))
-		m_LoggerReference->SystemLog("Failed to save reference to engine texture [Folder]");
+		m_Logger->SystemLog("Failed to save reference to engine texture [Folder]");
 
 	if (!m_TextureStorage->GetEditorTexture2DByName("Debug.png", m_DebugTexture))
-		m_LoggerReference->SystemLog("Failed to save reference to engine texture [Debug]");
+		m_Logger->SystemLog("Failed to save reference to engine texture [Debug]");
 
 	if (!m_TextureStorage->GetEditorTexture2DByName("Warning.png", m_WarningTexture))
-		m_LoggerReference->SystemLog("Failed to save reference to engine texture [Warning]");
+		m_Logger->SystemLog("Failed to save reference to engine texture [Warning]");
 
 	if (!m_TextureStorage->GetEditorTexture2DByName("Error.png", m_ErrorTexture))
-		m_LoggerReference->SystemLog("Failed to save reference to engine texture [Error]");
+		m_Logger->SystemLog("Failed to save reference to engine texture [Error]");
 
 }
 
@@ -85,9 +91,9 @@ void Editor::Render() {
 
 	StartFrame();
 	m_IsAnyWindowHovered = false;
-	m_LoggerReference->NewFrame();
+	m_Logger->NewFrame();
 
-	UpdateWindowPositions(); //NOTE: Currently updates sizes and positions
+	UpdateWindowPosition(); //NOTE: Currently updates sizes and positions
 	m_EditorStyle.Apply();
 
 	//Testing!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -115,8 +121,8 @@ void Editor::Render() {
 	RenderMainMenuBar();
 	RenderContentWindows();
 
-
-
+	m_SelectionWindows->Render();
+	m_MaterialEditor->Render();
 
 	m_EditorStyle.Clear();
 
@@ -286,9 +292,9 @@ void Editor::RenderDirectoryExplorer() {
 
 
 
-	auto ProjectRoot = m_AssetManagerReference->GetProjectRoot();
+	auto ProjectRoot = m_AssetManager->GetProjectRoot();
 	if (ProjectRoot == nullptr) {
-		m_LoggerReference->SystemLog("m_AssetManagerReference->GetProjectRoot() returned null! - RenderDirectoryExplorer()");
+		m_Logger->SystemLog("m_AssetManagerReference->GetProjectRoot() returned null! - RenderDirectoryExplorer()");
 		return;
 	}
 	if (m_SelectedDirectory == nullptr) //Set default directory if not set
@@ -299,9 +305,9 @@ void Editor::RenderDirectoryExplorer() {
 	//TODO: Do something about the assets then cause they will not be loaded from the correct texture storage for the editor. Content Browser!
 
 	if (m_DirectoryExplorerEditorFilter) {
-		auto EditorRoot = m_AssetManagerReference->GetEditorRoot();
+		auto EditorRoot = m_AssetManager->GetEditorRoot();
 		if (EditorRoot == nullptr) {
-			m_LoggerReference->SystemLog("m_AssetManagerReference->GetEditorRoot() returned null! - RenderDirectoryExplorer()");
+			m_Logger->SystemLog("m_AssetManagerReference->GetEditorRoot() returned null! - RenderDirectoryExplorer()");
 			return;
 		}
 		AddFileExplorerEntry(EditorRoot);
@@ -439,8 +445,6 @@ void Editor::RenderSpriteRendererDetails() {
 	if (m_SelectedGameObject->HasComponent<SpriteRenderer>()) {
 		SpriteRenderer* SelectedSpriteRenderer = m_SelectedGameObject->GetComponent<SpriteRenderer>();
 		if (ImGui::CollapsingHeader("Sprite Renderer", ImGuiTreeNodeFlags_DefaultOpen)) {
-			
-			//NOTE: These could be broken down into smaller functions as well
 
 			//SPRITE
 			//IMPORTANT NOTE: For code like this, i used the same color from the style but in case of colors that are not 1.0.0, 0.1.0 and 0.0.1 -
@@ -451,17 +455,82 @@ void Editor::RenderSpriteRendererDetails() {
 			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(m_EditorStyle.m_MainColor.m_R * 0.3f, 0.0f, 0.0f, 1.0f));
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(m_EditorStyle.m_MainColor.m_R * 0.4f, 0.0f, 0.0f, 1.0f));
 
-			const ImVec2 CursorPosition = ImGui::GetCursorPos();
-			if (ImGui::Button("##SpriteNameButton", ImVec2(m_DetailsWindowSize.x * 0.3f, 15.0f))) {
-				m_SpriteSelectorOpened = true;
-				SetSpriteSelectorTarget(SelectedSpriteRenderer->GetSpriteRef()); //Here instead
-			}
-			ImGui::SetCursorPos(CursorPosition);
+
+			ImVec2 ElementTextSize;
+
+			//NOTE: There is a lot of repeated code in the selectors. Consider making it a reusable function!
+
+			//Selectors
+			std::string ValueName;
+			ImVec2 ValueNameSize;
+			ImVec2 InputBoxSize;
+			ImVec2 ValueNameTextPosition;
+
+			//Sprite
+			//Parameter Name
+			ImGui::Text("Sprite");
+			ElementTextSize = ImGui::CalcTextSize("Sprite");
+			ImGui::SameLine(ElementTextSize.x + (m_DetailsWindowSize.x * 0.05f));
+
+			//Value Text Calculation
 			const Texture2D* Sprite = SelectedSpriteRenderer->GetSprite();
 			if (Sprite != nullptr)
-				ImGui::Text(Sprite->GetName().data());
+				ValueName = Sprite->GetName();
 			else
-				ImGui::Text("None");
+				ValueName = "None";
+			ValueNameSize = ImGui::CalcTextSize(ValueName.data());
+
+			//Input Box
+			InputBoxSize = ImVec2(m_DetailsWindowSize.x * 0.2f + ValueNameSize.x, 15.0f);
+			if (ImGui::Button("##SpriteNameButton", InputBoxSize)) {
+				m_SelectionWindows->SetSpriteSelectorWindowState(true);
+				m_SelectionWindows->SetSpriteSelectorTarget(SelectedSpriteRenderer->GetSpriteRef());
+			}
+
+			//Value Name Text
+			ImGui::SameLine(ElementTextSize.x + (m_DetailsWindowSize.x * 0.05f));
+			ValueNameTextPosition.x = (ElementTextSize.x + (m_DetailsWindowSize.x * 0.05f) + InputBoxSize.x / 2) - (ValueNameSize.x / 2);
+			ValueNameTextPosition.y = ((ImGui::GetCursorPosY() - InputBoxSize.y / 2) + ValueNameSize.y / 2) - 2; //Offset by -2 to make it look better!
+			ImGui::SetCursorPos(ValueNameTextPosition);
+			ImGui::Text(ValueName.data());
+
+
+			//Material
+			//Parameter Name
+			ImGui::Text("Material");
+			ElementTextSize = ImGui::CalcTextSize("Material");
+			ImGui::SameLine(ElementTextSize.x + (m_DetailsWindowSize.x * 0.05f));
+
+			//Value Text Calculation
+			const Material* Material = SelectedSpriteRenderer->GetMaterial();
+			if (Material != nullptr)
+				ValueName = Material->GetAsset().m_Name; //Add GetName() for quicker access and API consistency!
+			else
+				ValueName = "None";
+			ValueNameSize = ImGui::CalcTextSize(ValueName.data());
+
+			//Input Box
+			InputBoxSize = ImVec2(m_DetailsWindowSize.x * 0.2f + ValueNameSize.x, 15.0f);
+			if (ImGui::Button("##MaterialNameButton", InputBoxSize)) {
+				m_SelectionWindows->SetMaterialSelectorWindowState(true);
+				m_SelectionWindows->SetMaterialSelectorTarget(SelectedSpriteRenderer->GetMaterialRef());
+			}
+
+			//Value Name Text
+			ImGui::SameLine(ElementTextSize.x + (m_DetailsWindowSize.x * 0.05f));
+			ValueNameTextPosition.x = (ElementTextSize.x + (m_DetailsWindowSize.x * 0.05f) + InputBoxSize.x / 2) - (ValueNameSize.x / 2);
+			ValueNameTextPosition.y = ((ImGui::GetCursorPosY() - InputBoxSize.y / 2) + ValueNameSize.y / 2) - 2; //Offset by -2 to make it look better!
+			ImGui::SetCursorPos(ValueNameTextPosition);
+			ImGui::Text(ValueName.data());
+
+
+
+
+
+
+
+
+
 
 			ImGui::PopStyleColor(3);
 			ImGui::PopStyleVar();
@@ -1006,14 +1075,9 @@ void Editor::RenderViewportWindow() {
 }
 void Editor::RenderContentWindows() {
 	//Change Names? 
-
 	RenderContentBrowser();
 	RenderDebugLog();
 	RenderSystemLog();
-
-	//Doesnt scale according to the rest of the windows
-	RenderSpriteSelector();
-	RenderMaterialEditor();
 }
 
 void Editor::RenderContentBrowser() {
@@ -1110,10 +1174,10 @@ void Editor::RenderDebugLog() {
 			const ImVec2 ClearSize = ImGui::CalcTextSize("Clear");
 			const ImVec2 AutoScrollSize = ImGui::CalcTextSize("AutoScroll");
 			if (ImGui::Selectable("Clear", &ClearSelected, 0, ClearSize)) {
-				m_LoggerReference->ClearDebugLog();
+				m_Logger->ClearDebugLog();
 			}
-			if (ImGui::Selectable("AutoScroll", m_LoggerReference->GetDebugLogAutoScroll(), 0, AutoScrollSize)) {
-				m_LoggerReference->ToggleDebugLogAutoScroll();
+			if (ImGui::Selectable("AutoScroll", m_Logger->GetDebugLogAutoScroll(), 0, AutoScrollSize)) {
+				m_Logger->ToggleDebugLogAutoScroll();
 			}
 
 			//TODO: Implement a function that checks for an engine texture. 
@@ -1135,18 +1199,18 @@ void Editor::RenderDebugLog() {
 			}
 
 			//Color
-			if (!m_LoggerReference->GetShowErrorMessages())
+			if (!m_Logger->GetShowErrorMessages())
 				IconColor = ImVec4(0.3f, 0.3f, 0.3f, 1.0f);
 
 
 			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 30.0f, ImGui::GetCursorPosY())); //Manual offset by +2
 			if (ImGui::ImageButton("##ErrorLog", TextureID, ImVec2(15.0f, 15.0f), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0.0f, 0.0f, 0.0f, 0.0f), IconColor))
-				m_LoggerReference->ToggleShowErrorMessages();
+				m_Logger->ToggleShowErrorMessages();
 			if (m_ErrorTexture != nullptr)
 				m_ErrorTexture->Unbind();
 
 			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 5.0f, ImGui::GetCursorPosY()));
-			ImGui::Text("%d", m_LoggerReference->GetErrorMessagesCount());
+			ImGui::Text("%d", m_Logger->GetErrorMessagesCount());
 			IconColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 
 
@@ -1157,17 +1221,17 @@ void Editor::RenderDebugLog() {
 			}
 
 			//Color
-			if (!m_LoggerReference->GetShowWarningMessages())
+			if (!m_Logger->GetShowWarningMessages())
 				IconColor = ImVec4(0.3f, 0.3f, 0.3f, 1.0f);
 
 			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 80.0f, ImGui::GetCursorPosY())); //Manual offset by +2
 			if (ImGui::ImageButton("##WarningLog", TextureID, ImVec2(15.0f, 15.0f), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0.0f, 0.0f, 0.0f, 0.0f), IconColor))
-				m_LoggerReference->ToggleShowWarningMessages();
+				m_Logger->ToggleShowWarningMessages();
 			if (m_WarningTexture != nullptr)
 				m_WarningTexture->Unbind();
 
 			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 55.0f, ImGui::GetCursorPosY()));
-			ImGui::Text("%d", m_LoggerReference->GetWarningMessagesCount());
+			ImGui::Text("%d", m_Logger->GetWarningMessagesCount());
 			IconColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 
 
@@ -1178,17 +1242,17 @@ void Editor::RenderDebugLog() {
 			}
 
 			//Color
-			if (!m_LoggerReference->GetShowDebugMessages())
+			if (!m_Logger->GetShowDebugMessages())
 				IconColor = ImVec4(0.3f, 0.3f, 0.3f, 1.0f);
 
 			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 130.0f, ImGui::GetCursorPosY())); //Manual offset by +2
 			if (ImGui::ImageButton("##DebugLog", TextureID, ImVec2(15.0f, 15.0f), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0.0f, 0.0f, 0.0f, 0.0f), IconColor))
-				m_LoggerReference->ToggleShowDebugMessages();
+				m_Logger->ToggleShowDebugMessages();
 			if (m_DebugTexture != nullptr)
 				m_DebugTexture->Unbind();
 
 			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - 105.0f, ImGui::GetCursorPosY()));
-			ImGui::Text("%d", m_LoggerReference->GetDebugMessagesCount());
+			ImGui::Text("%d", m_Logger->GetDebugMessagesCount());
 			IconColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 
 
@@ -1199,23 +1263,23 @@ void Editor::RenderDebugLog() {
 
 			ImGui::EndMenuBar();
 		}
-		if (m_LoggerReference->GetLoggedMessagesCount() > 0) {
+		if (m_Logger->GetLoggedMessagesCount() > 0) {
 
-			while (!m_LoggerReference->IsLoggedBufferLooped()) {
+			while (!m_Logger->IsLoggedBufferLooped()) {
 
-				const Message* NewMessage = m_LoggerReference->GetNextLoggedMessage();
+				const Message* NewMessage = m_Logger->GetNextLoggedMessage();
 				if (NewMessage == nullptr)
 					continue;
 
 				const MessageType Type = NewMessage->GetType();
-				if (Type == MessageType::DEBUG && !m_LoggerReference->GetShowDebugMessages())
+				if (Type == MessageType::DEBUG && !m_Logger->GetShowDebugMessages())
 					continue;
-				if (Type == MessageType::WARNING && !m_LoggerReference->GetShowWarningMessages())
+				if (Type == MessageType::WARNING && !m_Logger->GetShowWarningMessages())
 					continue;
-				if (Type == MessageType::ERROR && !m_LoggerReference->GetShowErrorMessages())
+				if (Type == MessageType::ERROR && !m_Logger->GetShowErrorMessages())
 					continue;
 				if (Type == MessageType::SYSTEM) {
-					m_LoggerReference->ErrorLog("System type message was saved in the logged messages buffer");
+					m_Logger->ErrorLog("System type message was saved in the logged messages buffer");
 					continue;
 				}
 
@@ -1236,13 +1300,13 @@ void Editor::RenderDebugLog() {
 				//NOTE: Separate window and buffer for system messages?
 				//TODO: Switch all log functions back to const char* and simply construct 1 string at the func definition in logger to minimize copies. Emplace it even
 
-				ImGui::Text("[%s] [%llu] %s", m_TimeReference->FormatTime(NewMessage->GetTimestamp()).data(), NewMessage->GetTick(), NewMessage->GetData().data());
+				ImGui::Text("[%s] [%llu] %s", m_Time->FormatTime(NewMessage->GetTimestamp()).data(), NewMessage->GetTick(), NewMessage->GetData().data());
 
 				ImGui::PopStyleColor();
 				AddSeparators(1);
 
 				//AutoScroll
-				if (ImGui::GetScrollY() <= ImGui::GetScrollMaxY() && m_LoggerReference->GetDebugLogAutoScroll())
+				if (ImGui::GetScrollY() <= ImGui::GetScrollMaxY() && m_Logger->GetDebugLogAutoScroll())
 					ImGui::SetScrollHereY(1.0f);
 			}
 		}
@@ -1289,30 +1353,30 @@ void Editor::RenderSystemLog() {
 			const ImVec2 ClearSize = ImGui::CalcTextSize("Clear");
 			const ImVec2 AutoScrollSize = ImGui::CalcTextSize("AutoScroll");
 			if (ImGui::Selectable("Clear", &ClearSelected, 0, ClearSize))
-				m_LoggerReference->ClearSystemLog();
-			if (ImGui::Selectable("AutoScroll", m_LoggerReference->GetSystemLogAutoScroll(), 0, AutoScrollSize))
-				m_LoggerReference->ToggleSystemLogAutoScroll();
+				m_Logger->ClearSystemLog();
+			if (ImGui::Selectable("AutoScroll", m_Logger->GetSystemLogAutoScroll(), 0, AutoScrollSize))
+				m_Logger->ToggleSystemLogAutoScroll();
 
 
 
 			ImGui::EndMenuBar();
 		}
-		if (m_LoggerReference->GetSystemMessagesCount() > 0) {
+		if (m_Logger->GetSystemMessagesCount() > 0) {
 
-			while (!m_LoggerReference->IsSystemBufferLooped()) {
+			while (!m_Logger->IsSystemBufferLooped()) {
 
-				const Message* NewMessage = m_LoggerReference->GetNextSystemMessage();
+				const Message* NewMessage = m_Logger->GetNextSystemMessage();
 				if (NewMessage == nullptr)
 					continue;
 
 				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
-				ImGui::Text("[%s] [%llu] %s", m_TimeReference->FormatTime(NewMessage->GetTimestamp()).data(), NewMessage->GetTick(), NewMessage->GetData().data());
+				ImGui::Text("[%s] [%llu] %s", m_Time->FormatTime(NewMessage->GetTimestamp()).data(), NewMessage->GetTick(), NewMessage->GetData().data());
 				ImGui::PopStyleColor();
 				AddSeparators(1);
 
 				//TODO: Moving the scroll manually disables auto scroll
 				//AutoScroll debug log
-				if (ImGui::GetScrollY() <= ImGui::GetScrollMaxY() && m_LoggerReference->GetSystemLogAutoScroll())
+				if (ImGui::GetScrollY() <= ImGui::GetScrollMaxY() && m_Logger->GetSystemLogAutoScroll())
 					ImGui::SetScrollHereY(1.0f);
 			}
 		}
@@ -1320,194 +1384,9 @@ void Editor::RenderSystemLog() {
 	}
 	ImGui::End();
 }
-void Editor::RenderSpriteSelector() {
-
-	if (!m_SpriteSelectorOpened || m_SpriteSelectorTarget == nullptr)
-		return;
-
-	ImGui::PushStyleColor(ImGuiCol_ModalWindowDimBg, ImVec4(0.4f, 0.0f, 0.0f, 1.0f));
-	ImGui::PushStyleVar(ImGuiStyleVar_PopupRounding, 5.0f);
-
-	ImGuiWindowFlags Flags = 0;
-	Flags |= ImGuiWindowFlags_AlwaysVerticalScrollbar;
 
 
-	//Open Popup
-	if (m_SpriteSelectorOpened) {
-		if (!ImGui::IsPopupOpen("Sprite Selector")) {
-			ImGui::SetNextWindowPos(ImGui::GetMousePos());
-			ImGui::SetNextWindowSize(m_SpriteSelectorWindowSize);
-			ImGui::OpenPopup("Sprite Selector");
-		}
-	}
-
-	//Render Popup
-	if (ImGui::BeginPopupModal("Sprite Selector", &m_SpriteSelectorOpened, Flags)) {
-		CheckForHoveredWindows();
-		UpdateSpriteSelectorEntries();
-
-		m_SpriteSelectorWindowSize = ImGui::GetWindowSize(); //This method is great but it requires that i keep track of the bool and edit it manually.
-		//-Which is not a problem. ???
-		ImGui::EndPopup();
-	}
-	else {
-		if (m_SpriteSelectorTarget != nullptr)
-			m_SpriteSelectorTarget = nullptr;
-		m_SpriteSelectorOpened = false;
-	}
-
-	ImGui::PopStyleColor();
-	ImGui::PopStyleVar();
-}
-void Editor::RenderMaterialEditor() {
-
-	if (!m_MaterialEditorOpened || m_MaterialEditorTarget == nullptr)
-		return;
-
-	ImGuiWindowFlags Flags = 0;
-	Flags |= ImGuiWindowFlags_NoCollapse;
-	Flags |= ImGuiWindowFlags_NoSavedSettings;
-
-
-	if (m_MaterialEditorWindowReset) {
-		m_MaterialEditorWindowReset = false;
-		ImGui::SetNextWindowSize(m_MaterialEditorWindowSize);
-		ImGui::SetNextWindowPos(GetUniqueScreenCenterPoint(m_MaterialEditorWindowSize));
-	}
-
-
-	if (ImGui::Begin("Material Editor", &m_MaterialEditorOpened, Flags)) {
-		CheckForHoveredWindows();
-
-		//Style for texture selectors
-		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
-		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(m_EditorStyle.m_MainColor.m_R * 0.2f, 0.0f, 0.0f, 1.0f));
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(m_EditorStyle.m_MainColor.m_R * 0.3f, 0.0f, 0.0f, 1.0f));
-		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(m_EditorStyle.m_MainColor.m_R * 0.4f, 0.0f, 0.0f, 1.0f));
-
-		ImVec2 TextureTypeTextSize;
-		ImVec2 TextureNameTextSize;
-		ImVec2 SpriteSelectorSize;
-		std::string TextureName;
-		ImVec2 NoneTextSize = ImGui::CalcTextSize("None");
-
-		//TODO: When deleting materials. Check if it is selected!. Make general function for that stuff! 
-		//-It checks if it is a selected asset/material/gameobject then does the appropriate thing like closing an editor or something.
-
-
-		//////////
-		//Diffuse
-		//////////
-
-		//Texture
-		ImGui::SetCursorPos(ImVec2(m_MaterialEditorWindowSize.x * 0.05f, ImGui::GetCursorPos().y));
-		TextureTypeTextSize = ImGui::CalcTextSize("Diffuse");
-		ImGui::Text("Diffuse");
-		ImGui::SameLine(TextureTypeTextSize.x + (m_MaterialEditorWindowSize.x * 0.1f));
-		if (m_MaterialEditorTarget->m_Diffuse != nullptr) {
-			TextureName = m_MaterialEditorTarget->m_Diffuse->GetName();
-			TextureNameTextSize = ImGui::CalcTextSize(TextureName.data());
-		}
-		else {
-			TextureName = "None";
-			TextureNameTextSize = NoneTextSize;
-		}
-
-		SpriteSelectorSize = ImVec2(TextureNameTextSize.x + (m_MaterialEditorWindowSize.x * 0.2f), 20.0f);
-		if (ImGui::Button(TextureName.data(), SpriteSelectorSize)) {
-			m_SpriteSelectorOpened = true;
-			SetSpriteSelectorTarget(m_MaterialEditorTarget->m_Diffuse);
-		}
-		ImGui::Separator();
-
-
-		//////////
-		//Ambient
-		//////////
-		
-		//Texture
-		ImGui::SetCursorPos(ImVec2(m_MaterialEditorWindowSize.x * 0.05f, ImGui::GetCursorPos().y));
-		TextureTypeTextSize = ImGui::CalcTextSize("Ambient");
-		ImGui::Text("Ambient");
-		ImGui::SameLine(TextureTypeTextSize.x + (m_MaterialEditorWindowSize.x * 0.1f));
-		if (m_MaterialEditorTarget->m_Ambient != nullptr) {
-			TextureName = m_MaterialEditorTarget->m_Ambient->GetName();
-			TextureNameTextSize = ImGui::CalcTextSize(TextureName.data());
-		}
-		else {
-			TextureName = "None";
-			TextureNameTextSize = NoneTextSize;
-		}
-
-		SpriteSelectorSize = ImVec2(TextureNameTextSize.x + (m_MaterialEditorWindowSize.x * 0.2f), 20.0f);
-		if (ImGui::Button(TextureName.data(), SpriteSelectorSize)) {
-			m_SpriteSelectorOpened = true;
-			SetSpriteSelectorTarget(m_MaterialEditorTarget->m_Ambient);
-		}
-
-		//Strength
-		ImGui::SetCursorPos(ImVec2(m_MaterialEditorWindowSize.x * 0.05f, ImGui::GetCursorPos().y));
-		ImGui::Text("Strength");
-		ImGui::SameLine(ImGui::CalcTextSize("Strength").x + (m_MaterialEditorWindowSize.x * 0.1f));
-		ImGui::SetNextItemWidth(TextureNameTextSize.x + (m_MaterialEditorWindowSize.x * 0.2f));
-		ImGui::InputFloat("##AmbientStrength", &m_MaterialEditorTarget->m_AmbientStrength);
-		ImGui::Separator();
-
-
-		//NOTE: Check what flags i get.
-
-
-		//////////
-		//Specular
-		//////////
-		
-		//Texture
-		ImGui::SetCursorPos(ImVec2(m_MaterialEditorWindowSize.x * 0.05f, ImGui::GetCursorPos().y));
-		TextureTypeTextSize = ImGui::CalcTextSize("Specular");
-		ImGui::Text("Specular");
-		ImGui::SameLine(TextureTypeTextSize.x + (m_MaterialEditorWindowSize.x * 0.1f));
-		if (m_MaterialEditorTarget->m_Specular != nullptr) {
-			TextureName = m_MaterialEditorTarget->m_Specular->GetName();
-			TextureNameTextSize = ImGui::CalcTextSize(TextureName.data());
-		}
-		else {
-			TextureName = "None";
-			TextureNameTextSize = NoneTextSize;
-		}
-
-
-		SpriteSelectorSize = ImVec2(TextureNameTextSize.x + (m_MaterialEditorWindowSize.x * 0.2f), 20.0f);
-		if (ImGui::Button(TextureName.data(), SpriteSelectorSize)) {
-			m_SpriteSelectorOpened = true;
-			SetSpriteSelectorTarget(m_MaterialEditorTarget->m_Specular);
-		}
-
-		//Strength
-		ImGui::SetCursorPos(ImVec2(m_MaterialEditorWindowSize.x * 0.05f, ImGui::GetCursorPos().y));
-		ImGui::Text("Strength");
-		ImGui::SameLine(ImGui::CalcTextSize("Strength").x + (m_MaterialEditorWindowSize.x * 0.1f));
-		ImGui::SetNextItemWidth(TextureNameTextSize.x + (m_MaterialEditorWindowSize.x * 0.2f));
-		ImGui::InputFloat("##AmbientStrength", &m_MaterialEditorTarget->m_SpecularStrength);
-
-		//Shininess
-		ImGui::SetCursorPos(ImVec2(m_MaterialEditorWindowSize.x * 0.05f, ImGui::GetCursorPos().y));
-		ImGui::Text("Shininess");
-		ImGui::SameLine(ImGui::CalcTextSize("Shininess").x + (m_MaterialEditorWindowSize.x * 0.1f));
-		ImGui::SetNextItemWidth(TextureNameTextSize.x + (m_MaterialEditorWindowSize.x * 0.2f));
-		ImGui::InputInt("##Shininess", &m_MaterialEditorTarget->m_SpecularShininess);
-		ImGui::Separator();
-
-
-		ImGui::PopStyleVar();
-		ImGui::PopStyleColor(3);
-
-		m_MaterialEditorWindowSize = ImGui::GetWindowSize();
-	}
-	ImGui::End();
-}
-
-
-void Editor::CheckInput() {
+void Editor::UpdateEditorInput() {
 
 	//NOTE: Needs to be after the render calls otherwise its always false cause the flag is reseted right on top of this function
 
@@ -1525,7 +1404,7 @@ void Editor::CheckInput() {
 			m_SelectedContentElement = nullptr;
 
 		if (ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
-			m_CoreReference->ErrorLog("Released");
+			m_Core->ErrorLog("Released");
 			//Short afterimage when deleting!
 			m_OpenContentBrowserEditMenu = true;
 		}
@@ -1545,7 +1424,7 @@ void Editor::CheckInput() {
 		
 	}
 }
-void Editor::UpdateViewportControls() {
+void Editor::UpdateViewportCameraInput() {
 
 	if (m_IsAnyWindowHovered)
 		return;
@@ -1553,13 +1432,13 @@ void Editor::UpdateViewportControls() {
 
 	//NOTE: This function could be broken into 3 or 4 parts.
 
-	if (m_InputReference->GetMouseKey(MouseKeyCode::RIGHT) && !m_ViewportNavigationMode) {
+	if (m_Input->GetMouseKey(MouseKeyCode::RIGHT) && !m_ViewportNavigationMode) {
 		m_ViewportNavigationMode = true;
-		m_InputReference->SetMouseInputMode(MouseMode::DISABLED);
+		m_Input->SetMouseInputMode(MouseMode::DISABLED);
 	}
-	else if (!m_InputReference->GetMouseKey(MouseKeyCode::RIGHT) && m_ViewportNavigationMode) {
+	else if (!m_Input->GetMouseKey(MouseKeyCode::RIGHT) && m_ViewportNavigationMode) {
 		m_ViewportNavigationMode = false;
-		m_InputReference->SetMouseInputMode(MouseMode::NORMAL);
+		m_Input->SetMouseInputMode(MouseMode::NORMAL);
 	}
 
 	if (!m_ViewportNavigationMode) {
@@ -1569,29 +1448,29 @@ void Editor::UpdateViewportControls() {
 	if (m_ViewportCameraReference == nullptr)
 		return;
 
-	const float DeltaTime = static_cast<float>(m_TimeReference->GetDeltaTime());
+	const float DeltaTime = static_cast<float>(m_Time->GetDeltaTime());
 
 
-	if (m_InputReference->GetKey(Keycode::W)) {
+	if (m_Input->GetKey(Keycode::W)) {
 		m_ViewportCameraReference->MoveY(m_CameraMovementSpeed * DeltaTime);
 	}
-	if (m_InputReference->GetKey(Keycode::S)) {
+	if (m_Input->GetKey(Keycode::S)) {
 		m_ViewportCameraReference->MoveY((m_CameraMovementSpeed * DeltaTime) * -1);
 	}
-	if (m_InputReference->GetKey(Keycode::A)) {
+	if (m_Input->GetKey(Keycode::A)) {
 		m_ViewportCameraReference->MoveX((m_CameraMovementSpeed * DeltaTime) * -1);
 	}
-	if (m_InputReference->GetKey(Keycode::D)) {
+	if (m_Input->GetKey(Keycode::D)) {
 		m_ViewportCameraReference->MoveX(m_CameraMovementSpeed * DeltaTime);
 	}
-	if (m_InputReference->GetKey(Keycode::E)) {
+	if (m_Input->GetKey(Keycode::E)) {
 		m_ViewportCameraReference->MoveVertical(m_CameraMovementSpeed * DeltaTime);
 	}
-	if (m_InputReference->GetKey(Keycode::Q)) {
+	if (m_Input->GetKey(Keycode::Q)) {
 		m_ViewportCameraReference->MoveVertical((m_CameraMovementSpeed * DeltaTime) * -1);
 	}
 
-	const Vector2f CursorDelta = m_InputReference->GetMouseCursorDelta();
+	const Vector2f CursorDelta = m_Input->GetMouseCursorDelta();
 
 	//TODO: Make funcs for those
 	if (CursorDelta.m_X >= m_FreeLookSensitivity)
@@ -1604,7 +1483,7 @@ void Editor::UpdateViewportControls() {
 	if (CursorDelta.m_Y <= -m_FreeLookSensitivity)
 		m_ViewportCameraReference->RotateX((m_FreeLookSpeed * DeltaTime * -CursorDelta.m_Y) * -1);
 
-	const float ScrollDelta = m_InputReference->GetScrollDelta();
+	const float ScrollDelta = m_Input->GetScrollDelta();
 
 	//Scroll Wheel
 	if (ScrollDelta > 0.0f) {
@@ -1788,10 +1667,7 @@ void Editor::NewContentBrowserFrame() noexcept {
 	m_ContentLineElementsCount = 0;
 	m_FolderEntryOpened = false;
 }
-void Editor::NewSpriteSelectorFrame() noexcept {
-	m_SpriteSelectorElementCursor = 0.0f;
-	m_SpriteSelectorLineElementsCount = 0;
-}
+
 void Editor::UpdateContentBrowserFolderEntries() {
 
 	//TODO: Implement some countermeasure in case the texture was not found
@@ -1866,7 +1742,7 @@ void Editor::UpdateContentBrowserFolderEntries() {
 
 				}
 				if (ImGui::MenuItem("Delete"))
-					m_AssetManagerReference->RemoveDirectory(*Folder);
+					m_AssetManager->RemoveDirectory(*Folder);
 
 				ImGui::EndPopup();
 			}
@@ -1956,7 +1832,7 @@ void Editor::UpdateContentBrowserAssetEntries() {
 
 				}
 				if (ImGui::MenuItem("Delete"))
-					m_AssetManagerReference->RemoveAsset(*Asset);
+					m_AssetManager->RemoveAsset(*Asset);
 
 				//TODO: Clean up to avoid after image
 
@@ -1996,88 +1872,15 @@ void Editor::OpenAsset(Asset& asset) {
 
 	//Add more types here!
 	if (asset.m_Type == AssetType::MATERIAL) {
-		m_MaterialEditorOpened = true;
-		m_MaterialEditorWindowReset = true;
-		SetMaterialEditorTarget(m_AssetManagerReference->GetMaterial(asset));
+		m_MaterialEditor->SetWindowState(true);
+		m_MaterialEditor->SetTarget(m_AssetManager->GetMaterial(asset));
 	}
 
 
 
 }
 
-void Editor::UpdateSpriteSelectorEntries() {
 
-	//NOTE: This applies to the content browser as well but this could be cleaned a lot more than this
-
-	AddSpacings(5);
-	SetupContentBrowserStyle();
-	NewSpriteSelectorFrame();
-
-	for (auto& Texture : m_TextureStorage->GetTexture2DStorage()) {
-
-
-		//Calculate element per line depending on window size
-		//TODO: Deal with in case it wasnt found!
-		if (Texture == nullptr) {
-			//Error texture!
-			continue;
-		}
-
-		void* TextureID = nullptr;
-		TextureID = (void*)(intptr_t)(Texture->GetID());
-		Texture->Bind();
-
-
-
-		std::string Name = Texture->GetName().data();
-		std::string ID = "##" + Name;
-		bool AppliedStyle = false;
-
-
-
-		//Calculate position and check if new line is necessary
-		m_SpriteSelectorElementCursor = (m_SpriteSelectorElementPadding * (m_SpriteSelectorLineElementsCount + 1)) + m_SpriteSelectorElementSize.x * m_SpriteSelectorLineElementsCount;
-		if (m_SpriteSelectorElementCursor + m_SpriteSelectorElementSize.x >= m_SpriteSelectorWindowSize.x) {
-			FlushSpriteSelectorTexts();
-			m_SpriteSelectorElementCursor = m_SpriteSelectorElementPadding;
-			m_SpriteSelectorLineElementsCount = 0; //This means its a new line!
-		}
-
-		//Apply selected style
-		if (m_SelectedSpriteSelectorElement == Texture) {
-			AppliedStyle = true;
-			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5f, 0.5f, 0.5f, 0.6f));
-		}
-
-		//Render content
-		ImGui::SameLine(m_SpriteSelectorElementCursor);
-		if (ImGui::ImageButton(ID.data(), TextureID, m_SpriteSelectorElementSize)) {
-			if (m_SelectedSpriteSelectorElement == Texture) {
-				m_SelectedSpriteSelectorElement = nullptr;
-
-				*m_SpriteSelectorTarget = Texture;
-				m_SpriteSelectorTarget = nullptr;
-
-				ImGui::CloseCurrentPopup();
-			}
-			else
-				m_SelectedSpriteSelectorElement = Texture;
-		}
-
-		//Pop selected style
-		if (AppliedStyle)
-			ImGui::PopStyleColor();
-
-		m_QueuedSpriteSelectorTexts.emplace_back(Name);
-		m_SpriteSelectorLineElementsCount++;
-
-		if (Texture != nullptr)
-			Texture->Unbind();
-	}
-
-	ClearContentBrowserStyle();
-	FlushSpriteSelectorTexts();
-}
 void Editor::UpdateContentBrowserMenu() {
 
 	//Open Popup
@@ -2092,39 +1895,14 @@ void Editor::UpdateContentBrowserMenu() {
 
 		ImGui::SeparatorText("Add new...");
 		if (ImGui::MenuItem("New folder")) {
-			m_AssetManagerReference->CreateNewFolder(*m_SelectedDirectory);
+			m_AssetManager->CreateNewFolder(*m_SelectedDirectory);
 		}
 		else if (ImGui::MenuItem("Material")) {
-			m_AssetManagerReference->CreateAsset(AssetType::MATERIAL, *m_SelectedDirectory);
+			m_AssetManager->CreateAsset(AssetType::MATERIAL, *m_SelectedDirectory);
 		}
 
 		ImGui::EndPopup();
 	}
-}
-void Editor::FlushSpriteSelectorTexts() {
-
-	if (m_QueuedSpriteSelectorTexts.size() == 0)
-		return;
-
-	AddSpacings(1);
-	float CurrentX = 0.0f;
-
-	for (uint32 Index = 0; Index < m_QueuedSpriteSelectorTexts.size(); Index++) {
-
-		std::string ElementName = m_QueuedSpriteSelectorTexts.at(Index);
-
-		ImVec2 TextSize = ImGui::CalcTextSize(ElementName.data());
-		CurrentX = (m_SpriteSelectorElementPadding * (Index + 1)) + m_SpriteSelectorElementSize.x * Index; //Same pos as content
-		CurrentX += m_SpriteSelectorElementSize.x / 2.0f; //Shift it by button half button size
-		CurrentX -= TextSize.x / 2.0f; //Shift it back by text half width
-		//TODO: Fix the positioning, it is slightly off still.
-
-		ImGui::SameLine(CurrentX);
-		ImGui::Text(ElementName.data());
-	}
-
-	m_QueuedSpriteSelectorTexts.clear();
-	AddSpacings(3);
 }
 
 
@@ -2185,8 +1963,9 @@ void Editor::SetSelectedGameObject(GameObject* object) noexcept {
 		strcpy_s(m_NameInputBuffer, m_SelectedGameObject->GetName().c_str());
 		strcpy_s(m_TagInputBuffer, m_SelectedGameObject->GetTag().c_str());
 	}
-	if (m_SpriteSelectorTarget != nullptr)
-		m_SpriteSelectorTarget = nullptr;
+	//THIS WHOLE THING NEEDS TO BE REWORKED I THINK!
+	if (m_SelectionWindows->GetSpriteSelectorTarget() != nullptr) ////////????????? Material then...
+		m_SelectionWindows->ResetSpriteSelectorTarget();
 }
 void Editor::SetSelectedDirectory(Directory* directory) noexcept {
 
@@ -2270,7 +2049,7 @@ bool Editor::IsPointInBoundingBox(ImVec2 point, ImVec2 position, ImVec2 size) co
 
 	return XWithin &= YWithin;
 }
-void Editor::UpdateWindowPositions() {
+void Editor::UpdateWindowPosition() {
 	//NOTE: Seems like size then position cause a lot of positions depend on sizes
 	//NOTE: Any hardcoded values here such as 100 200 etc means the value has not been implemented in code yet. (percentage values are fine)
 	//NOTE: The percentage values can be changed safely and should be exposed later on
@@ -2286,11 +2065,8 @@ void Editor::UpdateWindowPositions() {
 	m_NewContentWindowSize = ImVec2(m_GUIViewport->Size.x * 0.3f, m_GUIViewport->Size.y * 0.3f);
 	m_HierarchyWindowSize = ImVec2(m_GUIViewport->Size.x * 0.1f, m_GUIViewport->Size.y - m_DirectoryExplorerWindowSize.y - m_MainMenuBarSize.y);
 
-	if (!m_SpriteSelectorOpened)
-		m_SpriteSelectorWindowSize = ImVec2(m_GUIViewport->Size.x * 0.2f, m_GUIViewport->Size.y * 0.6f);
+	//Consider making this vars maybe?
 
-	if (!m_MaterialEditorOpened)
-		m_MaterialEditorWindowSize = ImVec2(m_GUIViewport->Size.x * 0.2f, m_GUIViewport->Size.y * 0.6f);
 
 	m_ContentBrowserWindowPosition = ImVec2(m_DirectoryExplorerWindowSize.x, m_GUIViewport->Size.y - m_ContentBrowserWindowSize.y);
 	m_DetailsWindowPosition = ImVec2(m_GUIViewport->Size.x - m_DetailsWindowSize.x, m_MainMenuBarSize.y);

@@ -121,7 +121,7 @@ private:
 	bool ValidateFileHeader(const Asset& asset) const;
 
 private:
-	Core* m_CoreReference;
+	Core* m_Core;
 	TextureStorage* m_TextureStorage;
 
 };

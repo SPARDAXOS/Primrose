@@ -4,7 +4,7 @@
 
 
 EntityComponentSystem::EntityComponentSystem(Core& core) noexcept
-	:	m_CoreReference(&core)
+	:	m_Core(&core)
 {
 	//TODO: Move these into functions that are called by the core or in intitialization if custom ctor is used
 
@@ -172,7 +172,7 @@ DirectionalLight* EntityComponentSystem::AddComponent<DirectionalLight>(uint64 o
 
 	//Limits amount to 1
 	if (m_MainDirectionalLight != nullptr) {
-		m_CoreReference->WarningLog("Unable to add a directional light component. Reason: a game object with a directional light component already exists!");
+		m_Core->WarningLog("Unable to add a directional light component. Reason: a game object with a directional light component already exists!");
 		return nullptr;
 	}
 

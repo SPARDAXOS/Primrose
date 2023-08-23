@@ -7,7 +7,7 @@ public:
 
 	explicit Material() = delete;
 	Material(Asset& asset, AssetManager& assetManager) noexcept 
-		: m_Asset(&asset), m_AssetManagerReference(&assetManager)
+		: m_Asset(&asset), m_AssetManager(&assetManager)
 	{
 	}
 	~Material() = default;
@@ -150,7 +150,7 @@ public:
 		//Diffuse
 		std::getline(StringStream, TextureName);
 		if (TextureName != "None") {
-			if (!m_AssetManagerReference->RequestTexture2D(TextureName, Texture_ptr)) {
+			if (!m_AssetManager->RequestTexture2D(TextureName, Texture_ptr)) {
 				//Print error message! Get it from asset manager or something?
 			}
 			m_Diffuse = Texture_ptr;
@@ -162,7 +162,7 @@ public:
 		//Ambient
 		std::getline(StringStream, TextureName);
 		if (TextureName != "None") {
-			if (!m_AssetManagerReference->RequestTexture2D(TextureName, Texture_ptr)) {
+			if (!m_AssetManager->RequestTexture2D(TextureName, Texture_ptr)) {
 				//Print error message! Get it from asset manager or something?
 			}
 			m_Ambient = Texture_ptr;
@@ -174,7 +174,7 @@ public:
 		//Specular
 		std::getline(StringStream, TextureName);
 		if (TextureName != "None") {
-			if (!m_AssetManagerReference->RequestTexture2D(TextureName, Texture_ptr)) {
+			if (!m_AssetManager->RequestTexture2D(TextureName, Texture_ptr)) {
 				//Print error message! Get it from asset manager or something?
 			}
 			m_Specular = Texture_ptr;
@@ -205,7 +205,10 @@ public:
 	float m_SpecularStrength = 0.5f;
 	int32 m_SpecularShininess = 32;
 
+	public:
+		//Move the texture style stuff here.
+
 private:
 	Asset* m_Asset							{ nullptr };
-	AssetManager* m_AssetManagerReference	{ nullptr };
+	AssetManager* m_AssetManager	{ nullptr };
 };

@@ -32,9 +32,6 @@ public:
 	bool LoadAssets();
 
 public:
-	[[nodiscard]] bool LoadModelTexture(const std::string_view& path, Texture2D*& texture, bool editorAsset = false);
-
-public:
 	//TODO: Template this instead!
 	bool CreateAsset(AssetType type, Directory& location);
 	bool CreateNewFolder(Directory& location);
@@ -51,6 +48,7 @@ public:
 
 public:
 	[[nodiscard]] bool RequestTexture2D(const std::string_view& name, Texture2D*& ptr) const noexcept;
+	inline std::vector<Material*> GetMaterialsStorage() const noexcept { return m_MaterialStorage; }
 
 	//TODO: Send extension to function along with newasset pointer to determine asset type! and set it !
 	//TODO: Add opening file at spot functionality

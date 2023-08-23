@@ -3,7 +3,7 @@
 
 
 TextureStorage::TextureStorage(Core& core) noexcept
-	: m_CoreReference(&core)
+	: m_Core(&core)
 {
 }
 TextureStorage::~TextureStorage() {
@@ -22,7 +22,7 @@ TextureStorage::~TextureStorage() {
 		m_EditorTexture2DStorage.clear();
 	}
 
-	m_CoreReference->SystemLog("[Exit] TextureStorage was exited successfully.");
+	m_Core->SystemLog("[Exit] TextureStorage was exited successfully.");
 }
 
 
@@ -68,7 +68,7 @@ bool TextureStorage::UnloadTexture2D(const std::string_view& path) {
 
 	int32 TextureIndex = -1;
 	if (!IsTexture2DLoaded(path, &TextureIndex)) {
-		m_CoreReference->SystemLog(std::string("Failed to find texture to unload at " + *path.data()));
+		m_Core->SystemLog(std::string("Failed to find texture to unload at " + *path.data()));
 		return false;
 	}
 	else {

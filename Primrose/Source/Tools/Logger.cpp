@@ -3,7 +3,7 @@
 
 
 Logger::Logger(Time& time) noexcept
-	: m_TimeReference(&time)
+	: m_Time(&time)
 {
 }
 
@@ -12,18 +12,18 @@ Logger::Logger(Time& time) noexcept
 
 void Logger::DebugLog(std::string message) noexcept {
 
-	if (m_TimeReference == nullptr)
+	if (m_Time == nullptr)
 		return;
 
 	if (m_DebugCounter == m_DebugLimit)
 		m_DebugLog.erase(std::begin(m_DebugLog));
 	else
 		m_DebugCounter++;
-	m_DebugLog.push_back({ MessageType::DEBUG, m_TimeReference->GetTick(), m_TimeReference->GetRunningTime(), message });
+	m_DebugLog.push_back({ MessageType::DEBUG, m_Time->GetTick(), m_Time->GetRunningTime(), message });
 }
 void Logger::WarningLog(std::string message) noexcept {
 
-	if (m_TimeReference == nullptr)
+	if (m_Time == nullptr)
 		return;
 
 	if (m_WarningCounter == m_WarningLimit)
@@ -31,11 +31,11 @@ void Logger::WarningLog(std::string message) noexcept {
 	else
 		m_WarningCounter++;
 
-	m_DebugLog.push_back({ MessageType::WARNING, m_TimeReference->GetTick(), m_TimeReference->GetRunningTime(), message });
+	m_DebugLog.push_back({ MessageType::WARNING, m_Time->GetTick(), m_Time->GetRunningTime(), message });
 }
 void Logger::ErrorLog(std::string message) noexcept {
 
-	if (m_TimeReference == nullptr)
+	if (m_Time == nullptr)
 		return;
 
 	if (m_ErrorCounter == m_ErrorLimit)
@@ -43,11 +43,11 @@ void Logger::ErrorLog(std::string message) noexcept {
 	else
 		m_ErrorCounter++;
 
-	m_DebugLog.push_back({ MessageType::ERROR, m_TimeReference->GetTick(), m_TimeReference->GetRunningTime(), message });
+	m_DebugLog.push_back({ MessageType::ERROR, m_Time->GetTick(), m_Time->GetRunningTime(), message });
 }
 void Logger::SystemLog(std::string message) noexcept {
 
-	if (m_TimeReference == nullptr)
+	if (m_Time == nullptr)
 		return;
 
 	if (m_SystemCounter == m_SystemLimit)
@@ -55,5 +55,5 @@ void Logger::SystemLog(std::string message) noexcept {
 	else
 		m_SystemCounter++;
 
-	m_SystemLog.push_back({ MessageType::SYSTEM, m_TimeReference->GetTick(), m_TimeReference->GetRunningTime(), message});
+	m_SystemLog.push_back({ MessageType::SYSTEM, m_Time->GetTick(), m_Time->GetRunningTime(), message});
 }

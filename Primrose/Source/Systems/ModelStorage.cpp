@@ -63,8 +63,6 @@ void ModelStorage::ProcessMesh(Model& model, aiMesh* mesh, const aiScene* scene,
 	std::vector<uint32> Indicies;
 	std::vector<Texture2D*> Textures;
 
-	//TODO: I could split each step into its own function.
-
 	//Vertices
 	for (uint32 index = 0; index < mesh->mNumVertices; index++) {
 		Vertex NewVertex;
@@ -91,7 +89,6 @@ void ModelStorage::ProcessMesh(Model& model, aiMesh* mesh, const aiScene* scene,
 
 
 		Vertices.push_back(NewVertex);
-		//NewMesh->AddVertex(NewVertex);
 	}
 
 	//Indices
@@ -99,11 +96,9 @@ void ModelStorage::ProcessMesh(Model& model, aiMesh* mesh, const aiScene* scene,
 		aiFace face = mesh->mFaces[i];
 		for (uint32 j = 0; j < face.mNumIndices; j++)
 			Indicies.push_back(face.mIndices[j]);
-			//NewMesh->AddIndex(face.mIndices[j]);
 	}
 
 	//Textures
-	//LoadMeshTextures(*NewMesh, mesh, scene, editorAsset);
 	if (mesh->mMaterialIndex >= 0) {
 		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 		//You do this for each type to get all textures - TODO: Could be made into a function where you pass type?
@@ -125,29 +120,4 @@ void ModelStorage::ProcessMesh(Model& model, aiMesh* mesh, const aiScene* scene,
 
 	Mesh* NewMesh = new Mesh(*mesh, Vertices, Indicies, Textures);
 	model.AddMesh(NewMesh);
-}
-
-//Not needed
-void ModelStorage::LoadMeshTextures(Mesh& targetMesh, aiMesh* mesh, const aiScene* scene, bool editorAsset) {
-
-	//Loads textures and calls AssetManager to create assets for them. Own asset type? 
-	if (mesh->mMaterialIndex >= 0) {
-		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-		//You do this for each type to get all textures - TODO: Could be made into a function where you pass type?
-		for (uint32 i = 0; i < material->GetTextureCount(aiTextureType_DIFFUSE); i++) {
-			aiString TextureName;
-			material->GetTexture(aiTextureType_DIFFUSE, i, &TextureName);
-			Texture2D* Texture = nullptr;
-			if (!m_TextureStorage->GetTexture2DByName(TextureName.C_Str(), Texture)) {
-				m_Core->SystemLog(std::string("Failed to find texture ") + TextureName.C_Str() + " for model."); //Bad message
-				//Maybe its not the end of the world if one texture was not loaded?
-			}
-
-			//targetMesh.AddTexture(Texture);
-		}
-
-
-
-
-	}
 }

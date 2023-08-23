@@ -74,7 +74,13 @@ void main() {
 	vec3 Normal = normalize(uNormalMatrix * oNormal);
 	vec3 ViewDirection = normalize(uViewCameraPosition - oFragPosition);
 
-	vec4 Output = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	vec4 Output = vec4(1.0f);
+
+
+	//Ambient
+	vec4 Ambient = vec4(texture(uMaterial.Ambient, oCoords).rgb * uMaterial.AmbientStrength, 1.0) * uTint;
+	Output = Ambient;
+
 	Output += CalculateDirectionalLight(uDirectionalLight, uMaterial, Normal, ViewDirection);
 
 	for (int i = 0; i < uPointLightsCount; i++) {
@@ -85,7 +91,7 @@ void main() {
 		Output += CalculateSpotLight(uSpotLights[i], uMaterial, Normal, oFragPosition, ViewDirection);
 	}
 
-	Output.a = 1.0f; //For testing
+
 	FragColor = Output;
 }
 
@@ -100,14 +106,14 @@ vec4 CalculateDirectionalLight(DirectionalLight light, Material material, vec3 n
 	vec4 Diffuse = texture(material.Diffuse, oCoords) * LightDotNormal * light.LightColor * uTint;
 
 	//Ambient
-	vec4 Ambient = vec4(texture(material.Ambient, oCoords).rgb * uMaterial.AmbientStrength, 1.0) * uTint;
+	//vec4 Ambient = vec4(texture(material.Ambient, oCoords).rgb * uMaterial.AmbientStrength, 1.0) * uTint;
 
 	//Specular
 	vec3 ReflectDirection = reflect(-LightDirection, normal);
 	float SpecularValue = pow(max(dot(viewDirection, ReflectDirection), 0.0), material.SpecularShininess);
 	vec4 Specular = texture(material.Specular, oCoords) * material.SpecularStrength * SpecularValue * light.LightColor * uTint;  
 
-	return vec4((Ambient + Diffuse + Specular) * light.Intensity);
+	return vec4((Diffuse + Specular) * light.Intensity);
 }
 
 
@@ -120,7 +126,7 @@ vec4 CalculatePointLight(PointLight light, Material material, vec3 normal, vec3 
 	vec4 Diffuse = texture(material.Diffuse, oCoords) * LightDotNormal * light.LightColor * uTint;
 
 	//Ambient
-	vec4 Ambient = vec4(texture(material.Ambient, oCoords).rgb * uMaterial.AmbientStrength, 1.0) * uTint;
+	//vec4 Ambient = vec4(texture(material.Ambient, oCoords).rgb * uMaterial.AmbientStrength, 1.0) * uTint;
 
 	//Specular
 	vec3 ReflectDirection = reflect(-LightDirection, normal);
@@ -133,11 +139,11 @@ vec4 CalculatePointLight(PointLight light, Material material, vec3 normal, vec3 
 	
 	
 	Diffuse *= Attenuation;
-	Ambient *= Attenuation;
+	//Ambient *= Attenuation;
 	Specular *= Attenuation;
 
 
-    return vec4((Ambient + Diffuse + Specular) * light.Intensity);
+    return vec4((Diffuse + Specular) * light.Intensity);
 }
 
 
@@ -151,7 +157,7 @@ vec4 CalculateSpotLight(SpotLight light, Material material, vec3 normal, vec3 fr
 	vec4 Diffuse = texture(material.Diffuse, oCoords) * LightDotNormal * light.LightColor * uTint;
 
 	//Ambient
-	vec4 Ambient = vec4(texture(material.Ambient, oCoords).rgb * uMaterial.AmbientStrength, 1.0) * uTint;
+	//vec4 Ambient = vec4(texture(material.Ambient, oCoords).rgb * uMaterial.AmbientStrength, 1.0) * uTint;
 
 	//Specular
 	vec3 ReflectDirection = reflect(-LightDirection, normal);
@@ -163,7 +169,7 @@ vec4 CalculateSpotLight(SpotLight light, Material material, vec3 normal, vec3 fr
 	float Attenuation = 1.0f / (1.0f + (light.Attenuation * Distance) + (light.SourceRadius * (Distance * Distance)));
 	
 	Diffuse *= Attenuation;
-	Ambient *= Attenuation;
+	//Ambient *= Attenuation;
 	Specular *= Attenuation;
 
 	//Fade
@@ -172,10 +178,10 @@ vec4 CalculateSpotLight(SpotLight light, Material material, vec3 normal, vec3 fr
 	float FadeOut = clamp((theta - light.OuterCutoffAngle) / epsilon, 0.0, 1.0);  
 
 	Diffuse.xyz *= FadeOut;
-	Ambient.xyz *= FadeOut;
+	//Ambient.xyz *= FadeOut;
 	Specular.xyz *= FadeOut;
 
 
-    return vec4((Ambient + Diffuse + Specular) * light.Intensity);
+    return vec4((Diffuse + Specular) * light.Intensity);
 }
 

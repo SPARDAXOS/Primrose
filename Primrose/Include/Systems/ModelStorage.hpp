@@ -37,7 +37,6 @@ public:
 private:
 	void ProcessNode(Model& model, aiNode* node, const aiScene* scene, bool editorAsset);
 	void ProcessMesh(Model& model, aiMesh* mesh, const aiScene* scene, bool editorAsset);
-	void LoadMeshTextures(Mesh& model, aiMesh* mesh, const aiScene* scene, bool editorAsset);
 
 private:
 	std::vector<Model*> m_ModelsStorage;

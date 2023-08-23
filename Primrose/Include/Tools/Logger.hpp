@@ -186,7 +186,7 @@ public:
 	inline void ToggleDebugLogAutoScroll() noexcept { m_AutoScrollDebugLog ^= 1; }
 	inline void ToggleSystemLogAutoScroll() noexcept { m_AutoScrollSystemLog ^= 1; }
 
-	inline void SetTimeReference(Time& time) noexcept { m_TimeReference = &time; }
+	inline void SetTimeReference(Time& time) noexcept { m_Time = &time; }
 
 private:
 	bool m_ShowDebugMessages   = true;
@@ -214,7 +214,7 @@ private:
 	uint32 m_SystemMessageCursor = 0;
 
 private:
-	Time* m_TimeReference = nullptr;
+	Time* m_Time = nullptr;
 	//I dont like the differnciation between debug and system especially since they both are the same struct and the enum encompasses both
 	//NOTE: Maybe seperate them into 2 message types that each inherit from a base message and has only different types as unique member variable
 	//NOTE: User and Engine

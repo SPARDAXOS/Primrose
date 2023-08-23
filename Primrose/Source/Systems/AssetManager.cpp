@@ -41,68 +41,6 @@ bool AssetManager::LoadAssets() {
 }
 
 
-bool AssetManager::LoadModelTexture(const std::string_view& path, Texture2D*& texture, bool editorAsset) {
-
-	//Create Asset out of path - wait... name and extension could be in the path string... Needs testing.
-	//An asset would have been created already for the model if found!
-
-	//NOTE: I would need to get editorAsset somehow from the asset that was sent in to load as model!
-
-	Asset* NewAsset = new Asset;
-	NewAsset->m_Path = path;
-	std::filesystem::path ParentPath = path.substr(0, path.find_last_of("/"));
-	
-	//Find directory with this path then use it!
-	Directory* ParentDirectory = nullptr;
-	if (editorAsset) {
-		if (!FindEditorDirectory(ParentPath.string(), ParentDirectory)) {
-			m_Core->SystemLog("Error loading model texture. Reason: Could not find parent directory at " + ParentPath.string());
-			delete NewAsset;
-			return false;
-		}
-	}
-	else {
-		if (!FindProjectDirectory(ParentPath.string(), ParentDirectory)) {
-			m_Core->SystemLog("Error loading model texture. Reason: Could not find parent directory at " + ParentPath.string());
-			delete NewAsset; 
-			return false;
-		}
-	}
-	NewAsset->m_Parent = ParentDirectory;
-
-	//Add this asset to its parent directory!
-	ParentDirectory->m_Assets.emplace_back(NewAsset);
-
-	//This does the rest
-	SetupAsset(*NewAsset, editorAsset);
-
-	//Now load the texture and get it to set texture to it!
-	if (!m_TextureStorage->LoadTexture2D(*NewAsset))
-		m_Core->SystemLog("Model texture failed to load [" + NewAsset->m_Name + "] " + NewAsset->m_Path.string());
-	else
-		m_Core->SystemLog("Model texture was successfully loaded [" + NewAsset->m_Name + "] " + NewAsset->m_Path.string());
-
-	//TODO: Rework interface so you can optionally get the texture ref on loading it!
-	if (editorAsset) {
-		if (!m_TextureStorage->GetEditorTexture2DByPath(path, texture)) {
-			m_Core->SystemLog("Error getting model texture. Reason: Could not find it after loading it!" + ParentPath.string());
-			m_Core->SystemLog("Critical Error!" + ParentPath.string());
-			delete NewAsset;
-			return false;
-		}
-	}
-	else {
-		if (!m_TextureStorage->GetTexture2DByPath(path, texture)) {
-			m_Core->SystemLog("Error getting model texture. Reason: Could not find it after loading it!" + ParentPath.string());
-			m_Core->SystemLog("Critical Error!" + ParentPath.string());
-			delete NewAsset;
-			return false;
-		}
-	}
-	return true;
-}
-
-
 
 bool AssetManager::CreateAsset(AssetType type, Directory& location) {
 

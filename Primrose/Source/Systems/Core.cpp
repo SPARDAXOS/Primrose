@@ -64,25 +64,6 @@ void Core::Run() {
 	SpriteRenderer* Component = GameObjectTest->GetComponent<SpriteRenderer>();
 	Component->SetSprite(CrateTexture);
 
-	//IMPORTANT NOTE: This is temporary so this will leak memory in the meanwhile
-	Asset* TestAsset = new Asset();
-	Material* TestMaterial = new Material(*TestAsset, *m_AssetManager);
-	Component->SetMaterial(TestMaterial);
-
-	Texture2D* AmbientTexture = nullptr;
-	if (m_TextureStorage->GetTexture2DByName("Crate2", AmbientTexture))
-		Component->GetMaterial()->m_Ambient = AmbientTexture;
-
-	Texture2D* SpecularTexture = nullptr;
-	if (m_TextureStorage->GetTexture2DByName("CrateSpecular", SpecularTexture))
-		Component->GetMaterial()->m_Specular = SpecularTexture;
-
-
-	Component->GetMaterial()->m_AmbientStrength = 0.4f;
-	Component->GetMaterial()->m_SpecularStrength = 0.9f;
-	Component->GetMaterial()->m_SpecularShininess = 16;
-
-
 
 	GameObject* GameObjectTestChild = &m_ECS->CreateGameObject("GameObject2");
 	GameObjectTestChild->AddComponent<SpriteRenderer>();
@@ -95,28 +76,11 @@ void Core::Run() {
 	ComponentChildChild->SetSprite(CrateTexture);
 
 
-	GameObject* GameObjectTest2 = &m_ECS->CreateGameObject("GameObject4");
-	GameObjectTest2->AddComponent<SpriteRenderer>();
-	SpriteRenderer* Component2 = GameObjectTest2->GetComponent<SpriteRenderer>();
-	Component2->SetSprite(CrateTexture);
-
-	GameObject* GameObjectTestChild2 = &m_ECS->CreateGameObject("GameObject5");
-	GameObjectTestChild2->AddComponent<SpriteRenderer>();
-	SpriteRenderer* ComponentChild2 = GameObjectTestChild2->GetComponent<SpriteRenderer>();
-	ComponentChild2->SetSprite(CrateTexture);
-
-	GameObject* GameObjectTestChildChild2 = &m_ECS->CreateGameObject("GameObject6");
-	GameObjectTestChildChild2->AddComponent<SpriteRenderer>();
-	SpriteRenderer* ComponentChildChild2 = GameObjectTestChildChild2->GetComponent<SpriteRenderer>();
-	ComponentChildChild2->SetSprite(CrateTexture);
-
 	//TODO: It is important to decide what to do when it comes to multiple components of the same type and such
 
 	GameObjectTest->AddChild(GameObjectTestChild); //Add
 	GameObjectTestChild->AddChild(GameObjectTestChildChild); //Multiple Steps Deep
 
-	GameObjectTest2->AddChild(GameObjectTestChild2); //Add
-	GameObjectTestChild2->AddChild(GameObjectTestChildChild2); //Multiple Steps Deep
 
 	//Component->SetTint(Colors::Red); //TODO: Remove vertex color attribute + clean up shaders + readjust attributes afterwards
 
@@ -126,18 +90,12 @@ void Core::Run() {
 	GameObjectTransform->m_Scale = Vector3f(1.0f, 1.0f, 1.0f);
 
 
-	Transform* GameObjectTransform2 = &GameObjectTest2->GetTransform();
-	GameObjectTransform2->m_Position = Vector3f(-5.0f, 0.0f, 0.0f);
-	GameObjectTransform2->m_Rotation = Vector3f(0.0f, 0.0f, 0.0f);
-	GameObjectTransform2->m_Scale = Vector3f(1.5f, 1.5f, 1.5f);
-
-
 	//Temp
 	GameObject* ModelTest = &m_ECS->CreateGameObject("ModelTest");
 	SkeletalMesh* MeshComp = ModelTest->AddComponent<SkeletalMesh>();
-	MeshComp->SetModel(m_ModelStorage->GetModelStorage()[0]);
+	MeshComp->SetModel(m_ModelStorage->GetModelStorage()[1]);
 	
-	
+	//Need Model selector screen and Material selector screen / Skip mdl files. We add pic of the model later with FBO
 	
 	while (m_Running) {
 

@@ -66,7 +66,7 @@ bool Renderer::Render2D() {
         SetupMaterial(ShaderProgramTest, TargetComponent); //WORKS ONLY FOR SPRITERENDERES
         SetupLightUniforms(ShaderProgramTest);
 
-
+        //IMPORTNAT NOTE: I got an error once when moving an object "5eeee". It had something to do with gluniform3f()
 
 
 
@@ -197,7 +197,8 @@ bool Renderer::Render3D() {
             //for (auto& Texture : Mesh->m_Textures) {
             //    Texture->Bind();
             //}
-            Mesh->m_Textures[0]->Bind();
+            if (Mesh->m_Textures.size() > 0)
+                Mesh->m_Textures[0]->Bind();
             ShaderProgramTest.SetUniform("uMaterial.Diffuse", TextureType::DIFFUSE); //??
             
             //Directional is kinda borked!
@@ -216,7 +217,8 @@ bool Renderer::Render3D() {
            //for (auto& Texture : Mesh->m_Textures) {
            //    Texture->Unbind();
            //}
-            Mesh->m_Textures[0]->Unbind();
+            if (Mesh->m_Textures.size() > 0)
+                Mesh->m_Textures[0]->Unbind();
             Mesh->m_VAO->Unbind();
         }
     }

@@ -40,6 +40,7 @@ public:
 	inline Texture2D*& GetSpriteRef() noexcept { return m_Sprite; }
 	inline Color GetTint() const noexcept { return m_Tint; }
 	inline Material* GetMaterial() const noexcept { return m_Material; }
+	inline Material*& GetMaterialRef() noexcept { return m_Material; }
 	inline bool GetFlipX() const noexcept { return m_FlipX; }
 	inline bool GetFlipY() const noexcept { return m_FlipY; }
 

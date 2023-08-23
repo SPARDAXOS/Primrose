@@ -3,7 +3,9 @@
 #include "ImGUI/imgui_impl_glfw.h"
 #include "ImGUI/imgui_impl_opengl3.h"
 
-#include "Tools/Logger.hpp"
+#include "Editor/SelectionWindows.hpp"
+#include "Editor/MaterialEditor.hpp"
+
 #include "Utility.hpp"
 #include "Math.hpp" //For color only
 
@@ -14,6 +16,7 @@ class TextureStorage;
 class AssetManager;
 class Input;
 class Time;
+class Logger;
 class Serializer;
 class GameObject;
 class Directory;
@@ -111,8 +114,31 @@ public:
 public:
 	[[nodiscard]] bool Update();
 
-public:
+public: //???
 	void SaveEngineTexturesReferences();
+
+public: //Reconsider these functions and whether they should be marked like this.
+	//INTERNAL USE ONLY
+	Texture2D* GetIconTexture(const Asset& asset) noexcept;
+	//INTERNAL USE ONLY
+	void CheckForHoveredWindows();
+	//INTERNAL USE ONLY
+	void AddSpacings(uint32 count);
+	//INTERNAL USE ONLY
+	void AddSeparators(uint32 count);
+	//INTERNAL USE ONLY
+	void SetupContentBrowserStyle();
+	//INTERNAL USE ONLY
+	void ClearContentBrowserStyle();
+	//INTERNAL USE ONLY
+	inline ImVec2 GetUniqueScreenCenterPoint(ImVec2 windowSize) const noexcept {
+		return ImVec2(m_GUIViewport->Size.x / 2 - windowSize.x / 2, m_GUIViewport->Size.y / 2 - windowSize.y / 2);
+	}
+	//INTERNAL USE ONLY - By ref for EditorStyle..Editor
+	inline EditorStyle& GetEditorStyle() noexcept { return m_EditorStyle; }
+
+public:
+	inline ImGuiViewport* GetGUIViewport() const noexcept { return m_GUIViewport; }
 
 private:
 	void Render();
@@ -126,6 +152,7 @@ private:
 	void RenderMainMenuBar();
 	void RenderViewportWindow();
 
+	//Details Menu
 	void RenderDetailsMenu();
 	void RenderInfoDetails();
 	void RenderTransformDetails();
@@ -140,13 +167,11 @@ private:
 	void RenderContentBrowser();
 	void RenderDebugLog();
 	void RenderSystemLog();
-	void RenderSpriteSelector();
-	void RenderMaterialEditor();
 
 
 private:
-	void CheckInput();
-	void UpdateViewportControls();
+	void UpdateEditorInput();
+	void UpdateViewportCameraInput();
 
 private:
 	void AddHeirarchyEntry(GameObject* entry);
@@ -154,13 +179,10 @@ private:
 
 private:
 	void NewContentBrowserFrame() noexcept;
-	void NewSpriteSelectorFrame() noexcept;
 	void UpdateContentBrowserFolderEntries();
 	void UpdateContentBrowserAssetEntries();
-	void UpdateSpriteSelectorEntries();
 	void UpdateContentBrowserMenu();
 	void FlushContentTexts();
-	void FlushSpriteSelectorTexts();
 
 private:
 	bool AddBlendModeSelectable(SourceBlendMode mode);
@@ -170,36 +192,25 @@ private:
 	bool AddFilteringModeMagSelectable(FilteringModeMag mode);
 
 private:
-	void AddSpacings(uint32 count);
-	void AddSeparators(uint32 count);
 
 	//Inline?
 	void SetSelectedGameObject(GameObject* object) noexcept;
 	void SetSelectedDirectory(Directory* directory) noexcept;
 
-	inline void SetMaterialEditorTarget(Material* target) noexcept { m_MaterialEditorTarget = target; }
-	inline void SetSpriteSelectorTarget(Texture2D*& target) noexcept { m_SpriteSelectorTarget = &target; }
+	//inline void SetMaterialEditorTarget(Material* target) noexcept { m_MaterialEditorTarget = target; }
 
 	void OpenAsset(Asset& asset);
 
-	void CheckForHoveredWindows();
-	Texture2D* GetIconTexture(const Asset& asset) noexcept;
-
 private:
-	void SetupContentBrowserStyle();
-	void ClearContentBrowserStyle();
-	void UpdateWindowPositions();
+	void UpdateWindowPosition();
 
 	bool IsPointInBoundingBox(ImVec2 point, ImVec2 position, ImVec2 size) const noexcept;
-	inline ImVec2 GetUniqueScreenCenterPoint(ImVec2 windowSize) const noexcept {
-		return ImVec2(m_GUIViewport->Size.x / 2 - windowSize.x / 2, m_GUIViewport->Size.y / 2 - windowSize.y / 2);
-	}
 
 private:
-	GameObject* m_SelectedGameObject			{ nullptr };
-	Directory* m_SelectedDirectory				{ nullptr };
+	GameObject* m_SelectedGameObject	{ nullptr };
+	Directory* m_SelectedDirectory		{ nullptr };
 
-	bool m_IsAnyWindowHovered					{ false };
+	bool m_IsAnyWindowHovered			{ false };
 	char m_NameInputBuffer[33];
 	char m_TagInputBuffer[33];
 
@@ -223,20 +234,6 @@ private:
 	bool m_SystemLogOpened = false;
 
 	ImVec2 m_ViewportSize;
-
-
-	//Sprite Selector
-	bool m_SpriteSelectorOpened = false;
-	ImVec2 m_SpriteSelectorWindowSize;
-	ImVec2 m_SpriteSelectorElementSize{ 100.0f, 100.0f };
-	float m_SpriteSelectorElementPadding = 50.0f;
-	Texture2D** m_SpriteSelectorTarget	{ nullptr };
-
-	//Material Editor
-	bool m_MaterialEditorOpened = false;
-	ImVec2 m_MaterialEditorWindowSize;
-	bool m_MaterialEditorWindowReset = true;
-	Material* m_MaterialEditorTarget	{ nullptr };
 
 private: //Content Browser
 	ImVec2 m_ContentBrowserWindowSize;
@@ -287,29 +284,25 @@ private:
 	bool m_FolderEntryOpened		{ false };
 
 private:
-	float m_SpriteSelectorElementCursor = 0.0f;
-	uint32 m_SpriteSelectorLineElementsCount = 0;
-	std::vector<std::string> m_QueuedSpriteSelectorTexts; //Could use const char* instead
-
-	void* m_SelectedSpriteSelectorElement	{ nullptr };
-
-private:
 	bool m_DirectoryExplorerEditorFilter = false;
-
 
 private:
 	EditorRedStyle m_EditorStyle;
 
 private:
-	Core* m_CoreReference						{ nullptr };
+	std::unique_ptr<SelectionWindows> m_SelectionWindows	{ nullptr };
+	std::unique_ptr<MaterialEditor> m_MaterialEditor		{ nullptr };
+
+private:
+	Core* m_Core						{ nullptr };
 	Window* m_Window					{ nullptr };
 	EntityComponentSystem* m_ECS		{ nullptr };
 	TextureStorage* m_TextureStorage	{ nullptr };
-	AssetManager* m_AssetManagerReference		{ nullptr };
-	Input* m_InputReference						{ nullptr };
-	Time* m_TimeReference						{ nullptr };
-	Serializer* m_SerializerReference			{ nullptr };
-	Logger* m_LoggerReference					{ nullptr };
+	AssetManager* m_AssetManager		{ nullptr };
+	Input* m_Input						{ nullptr };
+	Time* m_Time						{ nullptr };
+	Serializer* m_Serializer			{ nullptr };
+	Logger* m_Logger					{ nullptr };
 
 private:
 	ImGuiContext* m_GUIContext		{ nullptr };

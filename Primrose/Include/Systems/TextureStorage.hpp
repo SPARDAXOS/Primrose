@@ -83,5 +83,5 @@ private:
 	std::vector<Texture2D*> m_Texture2DStorage;
 	std::vector<Texture2D*> m_EditorTexture2DStorage;
 
-	Core* m_CoreReference	{ nullptr };
+	Core* m_Core	{ nullptr };
 };

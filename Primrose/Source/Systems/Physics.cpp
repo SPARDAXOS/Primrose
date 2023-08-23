@@ -2,9 +2,9 @@
 #include "Systems/Core.hpp"
 
 Physics::Physics(Core& core) noexcept 
-	:	m_CoreReference(&core)
+	:	m_Core(&core)
 {
-	m_ViewportCameraRef = &m_CoreReference->GetECS()->GetViewportCamera();
+	m_ViewportCameraRef = &m_Core->GetECS()->GetViewportCamera();
 }
 
 //CheckViewportSelection()
