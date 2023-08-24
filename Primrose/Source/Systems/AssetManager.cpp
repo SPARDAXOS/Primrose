@@ -397,6 +397,7 @@ void AssetManager::SetupAsset(Asset& asset, bool editorAsset) {
 	auto Name = asset.m_Path.filename();
 	asset.m_Extension = Extension.string();
 	asset.m_Name = Name.string();
+	asset.m_NameWithoutExtension = Name.replace_extension().string();
 	asset.m_EditorAsset = editorAsset;
 
 	//Any new supported asset types should be added here for checking

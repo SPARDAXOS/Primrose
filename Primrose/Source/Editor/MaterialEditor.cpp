@@ -9,11 +9,6 @@ MaterialEditor::MaterialEditor(Core& core, Editor& editor, SelectionWindows& sel
 {
 }
 
-void MaterialEditor::Update() {
-
-	UpdateWindowPosition();
-}
-
 void MaterialEditor::Render() {
 
 	if (!m_Opened || m_Target == nullptr)
@@ -26,10 +21,10 @@ void MaterialEditor::Render() {
 
 	if (m_WindowSizeReset) {
 		m_WindowSizeReset = false;
+		m_CurrentWindowSize = ImVec2(m_Editor->GetGUIViewport()->Size.x * 0.2f, m_Editor->GetGUIViewport()->Size.y * 0.6f); //Default Window Size
 		ImGui::SetNextWindowSize(m_CurrentWindowSize);
 		ImGui::SetNextWindowPos(m_Editor->GetUniqueScreenCenterPoint(m_CurrentWindowSize));
 	}
-
 
 	if (ImGui::Begin("Material Editor", &m_Opened, Flags)) {
 		m_Editor->CheckForHoveredWindows();
@@ -208,10 +203,4 @@ void MaterialEditor::Render() {
 		m_CurrentWindowSize = ImGui::GetWindowSize();
 	}
 	ImGui::End();
-}
-
-void MaterialEditor::UpdateWindowPosition() {
-
-	if (!m_Opened)
-		m_CurrentWindowSize = ImVec2(m_Editor->GetGUIViewport()->Size.x * 0.2f, m_Editor->GetGUIViewport()->Size.y * 0.6f);
 }

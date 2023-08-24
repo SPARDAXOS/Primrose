@@ -19,8 +19,6 @@ Editor::Editor(Core& core)
 	m_Logger = m_Core->GetLogger();
 	//Get folder texture?
 
-	m_SelectionWindows = std::make_unique<SelectionWindows>(core, *this);
-	m_MaterialEditor = std::make_unique<MaterialEditor>(core, *this, *m_SelectionWindows);
 
 	IMGUI_CHECKVERSION();
 	m_GUIContext = ImGui::CreateContext();
@@ -48,6 +46,10 @@ Editor::Editor(Core& core)
 	ImGui_ImplGlfw_InitForOpenGL(m_Window->GetWindowResource().m_Handle, true);
 	ImGui_ImplOpenGL3_Init();
 
+
+	m_SelectionWindows = std::make_unique<SelectionWindows>(core, *this);
+	m_MaterialEditor = std::make_unique<MaterialEditor>(core, *this, *m_SelectionWindows);
+
 	//logger!
 }
 Editor::~Editor() {
@@ -61,7 +63,6 @@ Editor::~Editor() {
 [[nodiscard]] bool Editor::Update() {
 
 	m_SelectionWindows->Update();
-	m_MaterialEditor->Update();
 	
 	UpdateViewportCameraInput();
 	UpdateEditorInput();

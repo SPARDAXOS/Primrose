@@ -23,23 +23,18 @@ public:
 	MaterialEditor& operator=(MaterialEditor&&) = delete;
 
 public:
-	void Update();
 	void Render();
 
 public:
 	inline void SetTarget(Material* target) noexcept { m_Target = target; }
-	inline void SetWindowState(bool state) noexcept { 
-
+	inline void SetWindowState(bool state) noexcept {
 		if (!m_Opened && state)
 			m_WindowSizeReset = true;
-			m_Opened = state; 
+		m_Opened = state;
 	}
 
 	inline Material* GetTarget() const noexcept { return m_Target; }
 	inline bool GetWindowState() const noexcept { return m_Opened; }
-
-private:
-	void UpdateWindowPosition();
 
 private:
 	Material* m_Target{ nullptr };

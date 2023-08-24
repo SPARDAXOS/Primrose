@@ -79,6 +79,7 @@ public:
 	std::filesystem::path m_Path;
 	std::string m_Extension;
 	std::string m_Name;
+	std::string m_NameWithoutExtension;
 
 	bool m_EditorAsset	{ false };
 	AssetType m_Type	{ AssetType::INVALID };
