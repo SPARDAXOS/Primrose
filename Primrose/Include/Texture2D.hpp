@@ -323,6 +323,7 @@ public:
 	inline int32 GetColorChannelCount() const noexcept { return m_Source.m_ColorChannelCount; }
 	inline uint8* GetData() const noexcept { return m_Source.m_Data; }
 	inline std::string_view GetName() const noexcept { return m_Asset->m_Name; }
+	inline std::string_view GetNameWithoutExtension() const noexcept { return m_Asset->m_NameWithoutExtension; }
 	inline std::string_view GetExtension() const noexcept { return m_Asset->m_Extension; }
 	inline std::string GetFilePath() const { return m_Asset->m_Path.string(); }
 

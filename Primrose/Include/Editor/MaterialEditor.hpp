@@ -11,6 +11,12 @@ struct ImVec2;
 
 
 class MaterialEditor final {
+private:
+	enum class SelectorBoxType {
+		DIFFUSE,
+		AMBIENT,
+		SPECULAR
+	};
 public:
 	MaterialEditor() = delete;
 	MaterialEditor(Core& core, Editor& editor, SelectionWindows& selectionWindows) noexcept;
@@ -37,10 +43,23 @@ public:
 	inline bool GetWindowState() const noexcept { return m_Opened; }
 
 private:
+	void SetupDiffuseSection();
+	void SetupAmbientSection();
+	void SetupSpecularSection();
+
+	void SetupSelectorBox(SelectorBoxType type);
+	void CalculateSectionNamesSizes();
+
+private:
 	Material* m_Target{ nullptr };
 	bool m_Opened = false;
 	bool m_WindowSizeReset = true;
 	ImVec2 m_CurrentWindowSize;
+
+private:
+	float m_DiffuseSectionOffset;
+	float m_AmbientSectionOffset;
+	float m_SpecularSectionOffset;
 
 private:
 	Core* m_Core							{ nullptr };

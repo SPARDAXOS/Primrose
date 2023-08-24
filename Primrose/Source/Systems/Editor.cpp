@@ -49,8 +49,6 @@ Editor::Editor(Core& core)
 
 	m_SelectionWindows = std::make_unique<SelectionWindows>(core, *this);
 	m_MaterialEditor = std::make_unique<MaterialEditor>(core, *this, *m_SelectionWindows);
-
-	//logger!
 }
 Editor::~Editor() {
 

@@ -107,6 +107,9 @@ void SelectionWindows::UpdateMaterialSelectorEntries() {
 	m_MaterialSelectorElementCursor = 0.0f;
 	m_MaterialSelectorLineElementsCount = 0;
 
+	//TODO: Rework GetTextureIcon(). Now it is used as simply get a texture2D for a texture asset and ALSO for editor textures like materials.
+	//-Editor textures are lot simpler to deal with and dont require asset info unlike the texture assets. So, it would make since to separate them and maybe
+	//-Use GetTextureIcon() for getting only editor textures while use RequestTexture() for getting textures for texture assets.
 	for (auto& Material : m_AssetManager->GetMaterialsStorage()) {
 
 
@@ -116,7 +119,7 @@ void SelectionWindows::UpdateMaterialSelectorEntries() {
 			//Error texture!
 			continue;
 		}
-
+		
 		void* TextureID = nullptr;
 		Texture2D* MaterialAssetTexture = m_Editor->GetIconTexture(Material->GetAsset()); //Will always or should always return a texture even if it doesnt find the correct one.
 		TextureID = (void*)(intptr_t)(MaterialAssetTexture->GetID());
