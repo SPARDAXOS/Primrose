@@ -166,6 +166,7 @@
     <ClCompile Include="Source\Components\SkeletalMeshComponent.cpp" />
     <ClCompile Include="Source\Components\SpotLightComponent.cpp" />
     <ClCompile Include="Source\Directory.cpp" />
+    <ClCompile Include="Source\Editor\DetailsWindow.cpp" />
     <ClCompile Include="Source\Editor\MaterialEditor.cpp" />
     <ClCompile Include="Source\Editor\SelectionWindows.cpp" />
     <ClCompile Include="Source\Mesh.cpp" />
@@ -211,6 +212,7 @@
     <ClInclude Include="Include\Components\SkeletalMeshComponent.hpp" />
     <ClInclude Include="Include\Components\SpotLightComponent.hpp" />
     <ClInclude Include="Include\Directory.hpp" />
+    <ClInclude Include="Include\Editor\DetailsWindow.hpp" />
     <ClInclude Include="Include\Editor\MaterialEditor.hpp" />
     <ClInclude Include="Include\Editor\SelectionWindows.hpp" />
     <ClInclude Include="Include\Material.hpp" />

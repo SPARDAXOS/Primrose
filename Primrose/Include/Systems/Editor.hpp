@@ -173,6 +173,8 @@ private:
 	void UpdateEditorInput();
 	void UpdateViewportCameraInput();
 
+	void InitializeSubSystems();
+
 private:
 	void AddHeirarchyEntry(GameObject* entry);
 	void AddFileExplorerEntry(Directory* entry);
@@ -268,6 +270,8 @@ private:
 	float m_CameraSpeedIncrease = 20.0f;
 
 	bool m_ViewportNavigationMode = false;
+
+	bool m_SubSystemsInitialized = false;
 
 private:
 	Texture2D* m_FolderTexture	 { nullptr };

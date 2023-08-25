@@ -85,11 +85,21 @@ void Editor::SaveEngineTexturesReferences() {
 		m_Logger->SystemLog("Failed to save reference to engine texture [Error]");
 
 }
+void Editor::InitializeSubSystems() {
+
+	m_MaterialEditor->CalculateSectionNamesOffsets();
+
+	m_SubSystemsInitialized = true;
+}
 
 void Editor::Render() {
 
 	StartFrame();
-	m_IsAnyWindowHovered = false;
+	
+	if (!m_SubSystemsInitialized) //Required since many Imgui functions cant be called before StartFrame()
+		InitializeSubSystems();
+
+	m_IsAnyWindowHovered = false; //Consider moving this to StartFrame() or something
 	m_Logger->NewFrame();
 
 	UpdateWindowPosition(); //NOTE: Currently updates sizes and positions
