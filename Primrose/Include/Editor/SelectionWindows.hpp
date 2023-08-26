@@ -36,8 +36,8 @@ public:
 	inline Texture2D** GetSpriteSelectorTarget() const noexcept { return m_SpriteSelectorTarget; }
 	inline Material**  GetMaterialSelectorTarget() const noexcept { return m_MaterialSelectorTarget; }
 
-	inline void ResetSpriteSelectorTarget() noexcept { m_SpriteSelectorTarget = nullptr; }
-	inline void ResetMaterialSelectorTarget() noexcept { m_MaterialSelectorTarget = nullptr; }
+	inline void ClearSpriteSelectorTarget() noexcept { m_SpriteSelectorTarget = nullptr; }
+	inline void ClearMaterialSelectorTarget() noexcept { m_MaterialSelectorTarget = nullptr; }
 
 private:
 	void UpdateSpriteSelectorEntries();

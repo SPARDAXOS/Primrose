@@ -5,10 +5,18 @@
 
 #include "Editor/SelectionWindows.hpp"
 #include "Editor/MaterialEditor.hpp"
+#include "Editor/DetailsWindow.hpp"
+#include "Editor/MainMenuBar.hpp"
+#include "Editor/ContentBrowser.hpp"
+#include "Editor/DebuggerWindow.hpp"
+#include "Editor/SystemDebuggerWindow.hpp"
+#include "Editor/HierarchyWindow.hpp"
 
 #include "Utility.hpp"
 #include "Math.hpp" //For color only
 
+
+//TODO: Most of these are not needed here anymore after cleanup!
 class Core;
 class Window;
 class EntityComponentSystem;
@@ -114,9 +122,6 @@ public:
 public:
 	[[nodiscard]] bool Update();
 
-public: //???
-	void SaveEngineTexturesReferences();
-
 public: //Reconsider these functions and whether they should be marked like this.
 	//INTERNAL USE ONLY
 	Texture2D* GetIconTexture(const Asset& asset) noexcept;
@@ -127,18 +132,23 @@ public: //Reconsider these functions and whether they should be marked like this
 	//INTERNAL USE ONLY
 	void AddSeparators(uint32 count);
 	//INTERNAL USE ONLY
-	void SetupContentBrowserStyle();
-	//INTERNAL USE ONLY
-	void ClearContentBrowserStyle();
-	//INTERNAL USE ONLY
 	inline ImVec2 GetUniqueScreenCenterPoint(ImVec2 windowSize) const noexcept {
-		return ImVec2(m_GUIViewport->Size.x / 2 - windowSize.x / 2, m_GUIViewport->Size.y / 2 - windowSize.y / 2);
+		return ImVec2(m_ImGuiViewport->Size.x / 2 - windowSize.x / 2, m_ImGuiViewport->Size.y / 2 - windowSize.y / 2);
 	}
 	//INTERNAL USE ONLY - By ref for EditorStyle..Editor
 	inline EditorStyle& GetEditorStyle() noexcept { return m_EditorStyle; }
 
 public:
-	inline ImGuiViewport* GetGUIViewport() const noexcept { return m_GUIViewport; }
+	[[nodiscard]] inline ImGuiViewport* GetGUIViewport() const noexcept { return m_ImGuiViewport; }
+	[[nodiscard]] inline SelectionWindows* GetSelectionWindows() const noexcept { return m_SelectionWindows.get(); }
+	[[nodiscard]] inline MaterialEditor* GetMaterialEditor() const noexcept { return m_MaterialEditor.get(); }
+	[[nodiscard]] inline DetailsWindow* GetDetailsWindow() const noexcept { return m_DetailsWindow.get(); }
+	[[nodiscard]] inline MainMenuBar* GetMainMenuBar() const noexcept { return m_MainMenuBar.get(); }
+	[[nodiscard]] inline ContentBrowser* GetContentBrowser() const noexcept { return m_ContentBrowser.get(); }
+	[[nodiscard]] inline DebuggerWindow* GetDebuggerWindow() const noexcept { return m_DebuggerWindow.get(); }
+	[[nodiscard]] inline SystemDebuggerWindow* GetSystemDebuggerWindow() const noexcept { return m_SystemDebuggerWindow.get(); }
+	[[nodiscard]] inline HierarchyWindow* GetHierarchyWindowWindow() const noexcept { return m_HierarchyWindow.get(); }
+	
 
 private:
 	void Render();
@@ -146,27 +156,7 @@ private:
 	void RenderFrame() const;
 
 private:
-	void RenderHeirarchyMenu();
-	void RenderAddGameObjectMenu();
-	void RenderDirectoryExplorer();
-	void RenderMainMenuBar();
 	void RenderViewportWindow();
-
-	//Details Menu
-	void RenderDetailsMenu();
-	void RenderInfoDetails();
-	void RenderTransformDetails();
-	void RenderSpriteRendererDetails();
-	void RenderSkeletalMeshDetails();
-	void RenderDirectionalLightDetails();
-	void RenderPointLightDetails();
-	void RenderSpotLightDetails();
-	void RenderAddComponentMenu();
-
-	void RenderContentWindows();
-	void RenderContentBrowser();
-	void RenderDebugLog();
-	void RenderSystemLog();
 
 
 private:
@@ -175,23 +165,6 @@ private:
 
 	void InitializeSubSystems();
 
-private:
-	void AddHeirarchyEntry(GameObject* entry);
-	void AddFileExplorerEntry(Directory* entry);
-
-private:
-	void NewContentBrowserFrame() noexcept;
-	void UpdateContentBrowserFolderEntries();
-	void UpdateContentBrowserAssetEntries();
-	void UpdateContentBrowserMenu();
-	void FlushContentTexts();
-
-private:
-	bool AddBlendModeSelectable(SourceBlendMode mode);
-	bool AddBlendModeSelectable(DestinationBlendMode mode);
-	bool AddAddressingModeSelectable(AddressingMode mode);
-	bool AddFilteringModeMinSelectable(FilteringModeMin mode);
-	bool AddFilteringModeMagSelectable(FilteringModeMag mode);
 
 private:
 
@@ -209,53 +182,17 @@ private:
 	bool IsPointInBoundingBox(ImVec2 point, ImVec2 position, ImVec2 size) const noexcept;
 
 private:
-	GameObject* m_SelectedGameObject	{ nullptr };
-	Directory* m_SelectedDirectory		{ nullptr };
 
 	bool m_IsAnyWindowHovered			{ false };
-	char m_NameInputBuffer[33];
-	char m_TagInputBuffer[33];
 
 private: 
-	ImVec2 m_DetailsWindowSize;
-	ImVec2 m_HierarchyWindowSize;
-	ImVec2 m_DirectoryExplorerWindowSize;
-	ImVec2 m_MainMenuBarSize;
-	ImVec2 m_NewContentWindowSize;
+	ImVec2 m_Size; //Bar?
+
+	ImVec2 m_NewStandaloneWindowSize;
 	
-
-	ImVec2 m_DetailsWindowPosition;
-	ImVec2 m_HierarchyWindowPosition;
-	
-
-	bool m_DetailsWindowOpened = true;
-	bool m_HeirarchyWindowOpened = true;
-	bool m_DirectoryExplorerWindowOpened = true;
-
-	bool m_DebugLogOpened = false;
-	bool m_SystemLogOpened = false;
-
 	ImVec2 m_ViewportSize;
 
-private: //Content Browser
-	ImVec2 m_ContentBrowserWindowSize;
-	ImVec2 m_ContentBrowserWindowPosition;
-
-	ImVec2 m_ContentBrowserElementSize{ 100.0f, 100.0f };
-	float m_ContentBrowserElementPadding = 50.0f;
-
-	bool m_ContentBrowserOpened = true;
-	bool m_IsContentBrowserWindowHovered = false;
-	bool m_OpenContentBrowserEditMenu = false;
-
-	bool m_ContentBrowserWindowReset = true;
-
-	Asset* m_AssetEditMenuTarget{ nullptr };
-	Directory* m_FolderEditMenuTarget{ nullptr };
-
 private:
-	bool m_DebugLogWindowReset = true;
-	bool m_SystemLogWindowReset = true;
 
 private:
 	Camera* m_ViewportCameraReference{ nullptr };
@@ -271,33 +208,24 @@ private:
 
 	bool m_ViewportNavigationMode = false;
 
+
 	bool m_SubSystemsInitialized = false;
 
-private:
-	Texture2D* m_FolderTexture	 { nullptr };
-	Texture2D* m_DebugTexture    { nullptr };
-	Texture2D* m_WarningTexture  { nullptr };
-	Texture2D* m_ErrorTexture    { nullptr };
-
-private:
-	float m_ContentElementCursor = 0.0f;
-	uint32 m_ContentLineElementsCount = 0;
-	std::vector<std::string> m_QueuedContentTexts; //Could use const char* instead
-
-	void* m_SelectedContentElement	{ nullptr };
-	bool m_FolderEntryOpened		{ false };
-
-private:
-	bool m_DirectoryExplorerEditorFilter = false;
 
 private:
 	EditorRedStyle m_EditorStyle;
 
 private:
-	std::unique_ptr<SelectionWindows> m_SelectionWindows	{ nullptr };
-	std::unique_ptr<MaterialEditor> m_MaterialEditor		{ nullptr };
+	std::unique_ptr<SelectionWindows> m_SelectionWindows				{ nullptr };
+	std::unique_ptr<MaterialEditor> m_MaterialEditor					{ nullptr };
+	std::unique_ptr<DetailsWindow> m_DetailsWindow						{ nullptr };
+	std::unique_ptr<MainMenuBar> m_MainMenuBar							{ nullptr };
+	std::unique_ptr<ContentBrowser> m_ContentBrowser					{ nullptr };
+	std::unique_ptr<DebuggerWindow> m_DebuggerWindow					{ nullptr };
+	std::unique_ptr<SystemDebuggerWindow> m_SystemDebuggerWindow		{ nullptr };
+	std::unique_ptr<HierarchyWindow> m_HierarchyWindow					{ nullptr };
 
-private:
+private: //Most of these are not needed here anymore!
 	Core* m_Core						{ nullptr };
 	Window* m_Window					{ nullptr };
 	EntityComponentSystem* m_ECS		{ nullptr };
@@ -309,7 +237,7 @@ private:
 	Logger* m_Logger					{ nullptr };
 
 private:
-	ImGuiContext* m_GUIContext		{ nullptr };
-	ImGuiViewport* m_GUIViewport	{ nullptr };
-	ImGuiIO* m_IO					{ nullptr };
+	ImGuiContext* m_ImGuiContext		{ nullptr };
+	ImGuiViewport* m_ImGuiViewport		{ nullptr };
+	ImGuiIO* m_IO						{ nullptr };
 };

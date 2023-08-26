@@ -202,7 +202,7 @@ void MaterialEditor::SetupSelectorBox(SelectorBoxType type) {
 	ImGui::SetCursorPosY(CurrentLineHeight - 2);
 	ImGui::Text(TextureName.data());
 }
-void MaterialEditor::CalculateSectionNamesOffsets() {
+void MaterialEditor::Init() {
 
 	m_NoneTextSize = ImGui::CalcTextSize("None");
 	m_DiffuseSectionOffset = ImGui::CalcTextSize("Diffuse").x;

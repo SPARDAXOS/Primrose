@@ -30,7 +30,7 @@ public:
 
 public:
 	void Render();
-
+	void Init();
 public:
 	inline void SetTarget(Material* target) noexcept { m_Target = target; }
 	inline void SetWindowState(bool state) noexcept {
@@ -42,7 +42,7 @@ public:
 	inline Material* GetTarget() const noexcept { return m_Target; }
 	inline bool GetWindowState() const noexcept { return m_Opened; }
 
-	void CalculateSectionNamesOffsets();
+
 
 private:
 	void SetupDiffuseSection();
