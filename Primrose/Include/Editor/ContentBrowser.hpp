@@ -7,6 +7,8 @@ class Editor;
 class AssetManager;
 class TextureStorage;
 class DetailsWindow;
+class DebugLogWindow;
+class SystemLogWindow;
 
 class Asset;
 class Directory;
@@ -25,47 +27,76 @@ public:
 	ContentBrowser& operator=(ContentBrowser&&) = delete;
 
 public:
+	void Update();
 	void Render();
 	void Init();
 
 public:
-	bool GetState() const noexcept { return m_ContentBrowserOpened; }
-	ImVec2 GetContentBrowserWindowSize() const noexcept { return m_ContentBrowserWindowSize; }
-	ImVec2 GetDirectoryExplorerWindowSize() const noexcept { return m_DirectoryExplorerWindowSize; }
-	bool IsContentBrowserWindowHovered() const noexcept { return m_ContentBrowserWindowHovered; }
+	inline void SetSelectedDirectory(Directory& directory) noexcept { m_SelectedDirectory = &directory; }
+
+	inline bool GetState() const noexcept { return m_ContentBrowserWindowOpened; }
+	inline bool& GetStateRef() noexcept { return m_ContentBrowserWindowOpened; }
+
+	inline ImVec2 GetContentBrowserWindowSize() const noexcept { return m_ContentBrowserWindowSize; }
+	inline ImVec2 GetDirectoryExplorerWindowSize() const noexcept { return m_DirectoryExplorerWindowSize; }
+	inline ImVec2 GetContentBrowserWindowDockSize() const noexcept { return m_ContentBrowserWindowDockSize; }
+	inline ImVec2 GetDirectoryExplorerWindowDockSize() const noexcept { return m_DirectoryExplorerWindowDockSize; }
+
+	inline ImVec2 GetContentBrowserWindowPosition() const noexcept { return m_ContentBrowserWindowPosition; }
+	inline ImVec2 GetDirectoryExplorerWindowPosition() const noexcept { return m_DirectoryExplorerWindowPosition; }
+	inline ImVec2 GetContentBrowserWindowDockPosition() const noexcept { return m_ContentBrowserWindowDockPosition; }
+	inline ImVec2 GetDirectoryExplorerWindowDockPosition() const noexcept { return m_DirectoryExplorerWindowDockPosition; }
+
+
+	inline bool IsContentBrowserWindowHovered() const noexcept { return m_ContentBrowserWindowHovered; }
+
+	inline void ResetWindow() noexcept { m_ContentBrowserWindowReset = true; } //?? hmmm
 
 private:
+	void RenderContentBrowser();
+	void RenderDirectoryExplorer();
+
 	void NewContentBrowserFrame() noexcept;
 	void UpdateContentBrowserFolderEntries();
 	void UpdateContentBrowserAssetEntries();
 	void UpdateContentBrowserMenu();
 	void FlushContentTexts();
 
-	void SetupContentBrowserStyle();
-	void ClearContentBrowserStyle();
-
-	void RenderContentBrowser();
-	void RenderDirectoryExplorer();
+	void SetupStyle();
+	void ClearStyle();
 
 private:
 	void AddFileExplorerEntry(Directory* entry);
 
 private:
-	ImVec2 m_ContentBrowserWindowSize; //Hmmmm.
+	ImVec2 m_ContentBrowserWindowDockPosition;
+	ImVec2 m_DirectoryExplorerWindowDockPosition;
+
+	ImVec2 m_ContentBrowserWindowDockSize;
+	ImVec2 m_DirectoryExplorerWindowDockSize;
+
+
 	ImVec2 m_ContentBrowserWindowPosition;
-	ImVec2 m_DirectoryExplorerWindowSize;
 	ImVec2 m_DirectoryExplorerWindowPosition;
+
+	ImVec2 m_ContentBrowserWindowSize; //Hmmmm.
+	ImVec2 m_DirectoryExplorerWindowSize;
+
+	bool m_ContentBrowserWindowReset = true;
+	bool m_DirectoryExplorerWindowReset = true;
+
+
 
 	ImVec2 m_ContentBrowserElementSize{ 100.0f, 100.0f };
 	float m_ContentBrowserElementPadding = 50.0f;
 
-	bool m_ContentBrowserOpened = true;
+	bool m_ContentBrowserWindowOpened = true;
 	bool m_DirectoryExplorerWindowOpened = true; //Should use the one above instead for both of them!
 
 	bool m_ContentBrowserWindowHovered = false;
 	bool m_OpenContentBrowserEditMenu = false;
 
-	bool m_ContentBrowserWindowReset = true;
+
 
 	Asset* m_AssetEditMenuTarget{ nullptr };
 	Directory* m_FolderEditMenuTarget{ nullptr };
@@ -99,4 +130,6 @@ private:
 	ImGuiViewport* m_ImGuiViewport		{ nullptr };
 	
 	DetailsWindow* m_DetailsWindow		{ nullptr };
+	DebugLogWindow* m_DebugLogWindow	{ nullptr };
+	SystemLogWindow* m_SystemLogWindow	{ nullptr };
 };

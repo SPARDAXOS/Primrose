@@ -2,12 +2,15 @@
 #include "Systems/Core.hpp"
 #include "Systems/Editor.hpp"
 
+#include "Editor/HierarchyWindow.hpp"
+#include "Editor/ContentBrowser.hpp"
+#include "Editor/DebugLogWindow.hpp"
+#include "Editor/SystemLogWindow.hpp"
+
 
 MainMenuBar::MainMenuBar(Core& core, Editor& editor) noexcept
 	:	m_Core(&core), m_Editor(&editor)
 {
-	m_ImGuiViewport = editor.GetGUIViewport();
-	m_DetailsWindow = editor.GetDetailsWindow();
 }
 
 
@@ -22,6 +25,15 @@ void MainMenuBar::Render() {
 	}
 
 	ImGui::EndMainMenuBar();
+}
+void MainMenuBar::Init() {
+
+	m_ImGuiViewport = &m_Editor->GetGUIViewport();
+	m_DetailsWindow = &m_Editor->GetDetailsWindow();
+	m_HierarchyWindow = &m_Editor->GetHierarchyWindow();
+	m_ContentBrowser = &m_Editor->GetContentBrowser();
+	m_DebugLogWindow = &m_Editor->GetDebugLogWindow();
+	m_SystemLogWindow = &m_Editor->GetSystemLogWindow();
 }
 
 void MainMenuBar::RenderFileMenu() {
@@ -39,21 +51,18 @@ void MainMenuBar::RenderFileMenu() {
 }
 void MainMenuBar::RenderWindowMenu() {
 
-	//Window
 	if (ImGui::BeginMenu("Window")) {
 
 		ImGui::MenuItem("Details", "CTRL + D", &m_DetailsWindow->GetStateRef());
-		ImGui::MenuItem("Heirarchy", "CTRL + D", &m_HeirarchyWindowOpened);
-		if (ImGui::MenuItem("Content Browser", "CTRL + D", &m_ContentBrowserOpened))
-			m_ContentBrowserWindowReset = true;
-		ImGui::MenuItem("Directory Explorer", "CTRL + D", &m_DirectoryExplorerWindowOpened);
+		ImGui::MenuItem("Heirarchy", "CTRL + D", &m_HierarchyWindow->GetStateRef());
+		if (ImGui::MenuItem("Content Browser", "CTRL + D", &m_ContentBrowser->GetStateRef()))
+			m_ContentBrowser->ResetWindow();
 
 		if (ImGui::BeginMenu("Logs")) {
-
-			if (ImGui::MenuItem("Debug Log", "CTRL + D", &m_DebugLogOpened))
-				m_DebugLogWindowReset = true;
-			if (ImGui::MenuItem("System Log", "CTRL + D", &m_SystemLogOpened))
-				m_SystemLogWindowReset = true;
+			if (ImGui::MenuItem("Debug Log", "CTRL + D", &m_DebugLogWindow->GetStateRef()))
+				m_DebugLogWindow->ResetWindow();
+			if (ImGui::MenuItem("System Log", "CTRL + D", &m_SystemLogWindow->GetStateRef()))
+				m_SystemLogWindow->ResetWindow();
 
 			ImGui::EndMenu();
 		}

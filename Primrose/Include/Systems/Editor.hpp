@@ -8,8 +8,8 @@
 #include "Editor/DetailsWindow.hpp"
 #include "Editor/MainMenuBar.hpp"
 #include "Editor/ContentBrowser.hpp"
-#include "Editor/DebuggerWindow.hpp"
-#include "Editor/SystemDebuggerWindow.hpp"
+#include "Editor/DebugLogWindow.hpp"
+#include "Editor/SystemLogWindow.hpp"
 #include "Editor/HierarchyWindow.hpp"
 
 #include "Utility.hpp"
@@ -121,6 +121,7 @@ public:
 
 public:
 	[[nodiscard]] bool Update();
+	[[nodiscard]] bool InitializeSubSystems();
 
 public: //Reconsider these functions and whether they should be marked like this.
 	//INTERNAL USE ONLY
@@ -138,64 +139,52 @@ public: //Reconsider these functions and whether they should be marked like this
 	//INTERNAL USE ONLY - By ref for EditorStyle..Editor
 	inline EditorStyle& GetEditorStyle() noexcept { return m_EditorStyle; }
 
+
+	void OpenAsset(Asset& asset);
+	inline ImVec2 GetNewStandaloneWindowSize() const noexcept { return m_NewStandaloneWindowSize; }
+	inline bool IsAnyWindowHovered() const noexcept { return m_IsAnyWindowHovered; }
+
 public:
-	[[nodiscard]] inline ImGuiViewport* GetGUIViewport() const noexcept { return m_ImGuiViewport; }
-	[[nodiscard]] inline SelectionWindows* GetSelectionWindows() const noexcept { return m_SelectionWindows.get(); }
-	[[nodiscard]] inline MaterialEditor* GetMaterialEditor() const noexcept { return m_MaterialEditor.get(); }
-	[[nodiscard]] inline DetailsWindow* GetDetailsWindow() const noexcept { return m_DetailsWindow.get(); }
-	[[nodiscard]] inline MainMenuBar* GetMainMenuBar() const noexcept { return m_MainMenuBar.get(); }
-	[[nodiscard]] inline ContentBrowser* GetContentBrowser() const noexcept { return m_ContentBrowser.get(); }
-	[[nodiscard]] inline DebuggerWindow* GetDebuggerWindow() const noexcept { return m_DebuggerWindow.get(); }
-	[[nodiscard]] inline SystemDebuggerWindow* GetSystemDebuggerWindow() const noexcept { return m_SystemDebuggerWindow.get(); }
-	[[nodiscard]] inline HierarchyWindow* GetHierarchyWindowWindow() const noexcept { return m_HierarchyWindow.get(); }
+	[[nodiscard]] inline ImGuiViewport& GetGUIViewport() const noexcept { return *m_ImGuiViewport; }
+	[[nodiscard]] inline SelectionWindows& GetSelectionWindows() const noexcept { return *m_SelectionWindows; }
+	[[nodiscard]] inline MaterialEditor& GetMaterialEditor() const noexcept { return *m_MaterialEditor; }
+	[[nodiscard]] inline DetailsWindow& GetDetailsWindow() const noexcept { return *m_DetailsWindow; }
+	[[nodiscard]] inline MainMenuBar& GetMainMenuBar() const noexcept { return *m_MainMenuBar; }
+	[[nodiscard]] inline ContentBrowser& GetContentBrowser() const noexcept { return *m_ContentBrowser; }
+	[[nodiscard]] inline DebugLogWindow& GetDebugLogWindow() const noexcept { return *m_DebugLogWindow; }
+	[[nodiscard]] inline SystemLogWindow& GetSystemLogWindow() const noexcept { return *m_SystemLogWindow; }
+	[[nodiscard]] inline HierarchyWindow& GetHierarchyWindow() const noexcept { return *m_HierarchyWindow; }
 	
 
 private:
 	void Render();
 	void StartFrame() const;
 	void RenderFrame() const;
+	void UpdateSubsystems();
 
 private:
-	void RenderViewportWindow();
-
+	void RenderViewportWindow(); //Move out when a proper ViewportWindow class is added.
 
 private:
-	void UpdateEditorInput();
 	void UpdateViewportCameraInput();
 
-	void InitializeSubSystems();
-
-
 private:
-
-	//Inline?
-	void SetSelectedGameObject(GameObject* object) noexcept;
-	void SetSelectedDirectory(Directory* directory) noexcept;
-
-	//inline void SetMaterialEditorTarget(Material* target) noexcept { m_MaterialEditorTarget = target; }
-
-	void OpenAsset(Asset& asset);
-
-private:
-	void UpdateWindowPosition();
-
 	bool IsPointInBoundingBox(ImVec2 point, ImVec2 position, ImVec2 size) const noexcept;
 
 private:
-
-	bool m_IsAnyWindowHovered			{ false };
+	bool m_IsAnyWindowHovered		{ false };
+	bool m_SubSystemsInitialized	{ false };
+	bool m_ViewportNavigationMode	{ false };
 
 private: 
-	ImVec2 m_Size; //Bar?
-
 	ImVec2 m_NewStandaloneWindowSize;
-	
+
+
+	ImVec2 m_Size; //Bar?
 	ImVec2 m_ViewportSize;
 
 private:
-
-private:
-	Camera* m_ViewportCameraReference{ nullptr };
+	Camera* m_ViewportCameraReference	{ nullptr };
 
 	float m_FreeLookSensitivity = 0.1f;
 	float m_FreeLookSpeed = 10.0f;
@@ -206,24 +195,18 @@ private:
 	float m_CameraSpeedDecrease = 20.0f;
 	float m_CameraSpeedIncrease = 20.0f;
 
-	bool m_ViewportNavigationMode = false;
-
-
-	bool m_SubSystemsInitialized = false;
-
-
 private:
 	EditorRedStyle m_EditorStyle;
 
 private:
-	std::unique_ptr<SelectionWindows> m_SelectionWindows				{ nullptr };
-	std::unique_ptr<MaterialEditor> m_MaterialEditor					{ nullptr };
-	std::unique_ptr<DetailsWindow> m_DetailsWindow						{ nullptr };
-	std::unique_ptr<MainMenuBar> m_MainMenuBar							{ nullptr };
-	std::unique_ptr<ContentBrowser> m_ContentBrowser					{ nullptr };
-	std::unique_ptr<DebuggerWindow> m_DebuggerWindow					{ nullptr };
-	std::unique_ptr<SystemDebuggerWindow> m_SystemDebuggerWindow		{ nullptr };
-	std::unique_ptr<HierarchyWindow> m_HierarchyWindow					{ nullptr };
+	std::unique_ptr<SelectionWindows> m_SelectionWindows	{ nullptr };
+	std::unique_ptr<MaterialEditor> m_MaterialEditor		{ nullptr };
+	std::unique_ptr<DetailsWindow> m_DetailsWindow			{ nullptr };
+	std::unique_ptr<MainMenuBar> m_MainMenuBar				{ nullptr };
+	std::unique_ptr<ContentBrowser> m_ContentBrowser		{ nullptr };
+	std::unique_ptr<DebugLogWindow> m_DebugLogWindow		{ nullptr };
+	std::unique_ptr<SystemLogWindow> m_SystemLogWindow		{ nullptr };
+	std::unique_ptr<HierarchyWindow> m_HierarchyWindow		{ nullptr };
 
 private: //Most of these are not needed here anymore!
 	Core* m_Core						{ nullptr };

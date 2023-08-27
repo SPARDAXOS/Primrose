@@ -5,6 +5,10 @@
 class Core;
 class Editor;
 class DetailsWindow;
+class HierarchyWindow;
+class ContentBrowser;
+class DebugLogWindow;
+class SystemLogWindow;
 
 class MainMenuBar final {
 public:
@@ -20,6 +24,7 @@ public:
 
 public:
 	void Render();
+	void Init();
 
 public:
 	ImVec2 GetSize() const noexcept { return m_Size; }
@@ -33,8 +38,12 @@ private:
 	ImVec2 m_Size;
 
 private:
-	Core* m_Core					{ nullptr };
-	Editor* m_Editor				{ nullptr };
-	ImGuiViewport* m_ImGuiViewport	{ nullptr };
-	DetailsWindow* m_DetailsWindow	{ nullptr };
+	Core* m_Core						{ nullptr };
+	Editor* m_Editor					{ nullptr };
+	ImGuiViewport* m_ImGuiViewport		{ nullptr };
+	DetailsWindow* m_DetailsWindow		{ nullptr };
+	HierarchyWindow* m_HierarchyWindow	{ nullptr };
+	ContentBrowser* m_ContentBrowser	{ nullptr };
+	DebugLogWindow* m_DebugLogWindow	{ nullptr };
+	SystemLogWindow* m_SystemLogWindow	{ nullptr };
 };

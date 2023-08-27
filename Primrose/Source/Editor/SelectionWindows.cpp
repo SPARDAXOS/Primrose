@@ -20,6 +20,10 @@ void SelectionWindows::Render() {
 	RenderSpriteSelector();
 	RenderMaterialSelector();
 }
+void SelectionWindows::Init() {
+
+	m_ImGuiViewport = &m_Editor->GetGUIViewport();
+}
 
 
 void SelectionWindows::UpdateSpriteSelectorEntries() {
@@ -27,7 +31,7 @@ void SelectionWindows::UpdateSpriteSelectorEntries() {
 
 	//NOTE: This applies to the content browser as well but this could be cleaned a lot more than this
 	m_Editor->AddSpacings(5);
-	m_Editor->SetupContentBrowserStyle();
+	SetupStyle();
 
 	m_SpriteSelectorElementCursor = 0.0f;
 	m_SpriteSelectorLineElementsCount = 0;
@@ -94,7 +98,7 @@ void SelectionWindows::UpdateSpriteSelectorEntries() {
 			Texture->Unbind();
 	}
 
-	m_Editor->ClearContentBrowserStyle();
+	ClearStyle();
 	FlushSpriteSelectorTexts();
 }
 void SelectionWindows::UpdateMaterialSelectorEntries() {
@@ -102,7 +106,7 @@ void SelectionWindows::UpdateMaterialSelectorEntries() {
 	//NOTE: This applies to the content browser as well but this could be cleaned a lot more than this
 
 	m_Editor->AddSpacings(5);
-	m_Editor->SetupContentBrowserStyle();
+	SetupStyle();
 
 	m_MaterialSelectorElementCursor = 0.0f;
 	m_MaterialSelectorLineElementsCount = 0;
@@ -169,7 +173,7 @@ void SelectionWindows::UpdateMaterialSelectorEntries() {
 		MaterialAssetTexture->Unbind();
 	}
 
-	m_Editor->ClearContentBrowserStyle();
+	ClearStyle();
 	FlushMaterialSelectorTexts();
 }
 
@@ -304,8 +308,20 @@ void SelectionWindows::FlushMaterialSelectorTexts() {
 void SelectionWindows::UpdateWindowPosition() {
 	//Consider making this vars maybe?
 	if (!m_SpriteSelectorOpened)
-		m_SpriteSelectorWindowSize = ImVec2(m_Editor->GetGUIViewport()->Size.x * 0.2f, m_Editor->GetGUIViewport()->Size.y * 0.6f);
+		m_SpriteSelectorWindowSize = ImVec2(m_ImGuiViewport->Size.x * 0.2f, m_ImGuiViewport->Size.y * 0.6f);
 
 	if (!m_MaterialSelectorOpened)
-		m_MaterialSelectorWindowSize = ImVec2(m_Editor->GetGUIViewport()->Size.x * 0.2f, m_Editor->GetGUIViewport()->Size.y * 0.6f);
+		m_MaterialSelectorWindowSize = ImVec2(m_ImGuiViewport->Size.x * 0.2f, m_ImGuiViewport->Size.y * 0.6f);
+}
+
+void SelectionWindows::SetupStyle() {
+
+	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.5f, 0.5f, 0.5f, 0.5f));
+	ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.3f, 0.3f, 0.3f, 0.5f));
+}
+void SelectionWindows::ClearStyle() {
+
+	//Make sure its the same amount of PushStyleColor() calls in SetupContentBrowserStyle();
+	ImGui::PopStyleColor(3);
 }

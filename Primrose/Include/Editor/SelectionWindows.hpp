@@ -26,6 +26,7 @@ public:
 public:
 	void Update();
 	void Render();
+	void Init();
 
 public:
 	inline void SetSpriteSelectorTarget(Texture2D*& target) noexcept { m_SpriteSelectorTarget = &target; }
@@ -50,6 +51,9 @@ private:
 	void FlushMaterialSelectorTexts();
 
 	void UpdateWindowPosition();
+
+	void SetupStyle();
+	void ClearStyle();
 
 private:
 	//Sprite Selector
@@ -79,6 +83,7 @@ private:
 private:
 	Core* m_Core						{ nullptr };
 	Editor* m_Editor					{ nullptr };
+	ImGuiViewport* m_ImGuiViewport		{ nullptr };
 	TextureStorage* m_TextureStorage	{ nullptr };
 	AssetManager* m_AssetManager		{ nullptr };
 };

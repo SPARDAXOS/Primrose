@@ -4,31 +4,76 @@
 #include "Systems/AssetManager.hpp"
 #include "Systems/TextureStorage.hpp"
 
+#include "Editor/DetailsWindow.hpp"
+#include "Editor/DebugLogWindow.hpp"
+#include "Editor/SystemLogWindow.hpp"
+
 
 ContentBrowser::ContentBrowser(Core& core, Editor& editor) noexcept
 	: m_Core(&core), m_Editor(&editor)
 {
 	m_AssetManager = core.GetAssetManager();
 	m_TextureStorage = core.GetTextureStorage();
-	m_ImGuiViewport = editor.GetGUIViewport();
-	m_DetailsWindow = editor.GetDetailsWindow();
 }
 
+void ContentBrowser::Update() {
+
+	if (IsContentBrowserWindowHovered() && !ImGui::IsAnyItemHovered()) {
+
+		if (m_SelectedContentElement != nullptr && ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+			m_SelectedContentElement = nullptr;
+
+		if (ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
+			m_Core->ErrorLog("Released");
+			//Short afterimage when deleting!
+			m_OpenContentBrowserEditMenu = true;
+		}
+	}
+}
 void ContentBrowser::Render() {
 
 	RenderContentBrowser();
 	RenderDirectoryExplorer();
 }
+void ContentBrowser::Init() {
+
+	//All asset icons 
+	//Unknown asset
+	//Error asset
+
+	m_ImGuiViewport = &m_Editor->GetGUIViewport();
+	m_DetailsWindow = &m_Editor->GetDetailsWindow();
+	m_DebugLogWindow = &m_Editor->GetDebugLogWindow();
+	m_SystemLogWindow = &m_Editor->GetSystemLogWindow();
+
+
+	if (!m_TextureStorage->GetEditorTexture2DByName("Folder.png", m_FolderTexture))
+		m_Core->SystemLog("Failed to save reference to engine texture [Folder]");
+
+	if (!m_TextureStorage->GetEditorTexture2DByName("MaterialAsset.png", m_MaterialAssetTexture))
+		m_Core->SystemLog("Failed to save reference to engine texture [Folder]");
+
+
+	//Needs to be reworked so both windows are in sync!
+	m_DirectoryExplorerWindowDockSize = ImVec2(m_ImGuiViewport->Size.x * 0.1f, m_ImGuiViewport->Size.y * 0.3f);
+	m_DirectoryExplorerWindowDockPosition = ImVec2(0.0f, m_ImGuiViewport->Size.y - m_DirectoryExplorerWindowDockSize.y);
+
+	m_ContentBrowserWindowDockSize = ImVec2(m_ImGuiViewport->Size.x - m_DetailsWindow->GetSize().x - m_DirectoryExplorerWindowDockSize.x, m_DirectoryExplorerWindowDockSize.y);
+	m_ContentBrowserWindowDockPosition = ImVec2(m_DirectoryExplorerWindowDockSize.x, m_ImGuiViewport->Size.y - m_ContentBrowserWindowDockSize.y);
+
+
+
+}
 
 void ContentBrowser::RenderContentBrowser() {
 
-	m_IsContentBrowserWindowHovered = false;
-	if (!m_ContentBrowserOpened)
+	m_ContentBrowserWindowHovered = false;
+	if (!m_ContentBrowserWindowOpened)
 		return;
 
 	bool m_IsOtherContentWindowOpened = false;
-	m_IsOtherContentWindowOpened |= m_DebugLogOpened;
-	m_IsOtherContentWindowOpened |= m_SystemLogOpened;
+	m_IsOtherContentWindowOpened |= m_DebugLogWindow->GetState();
+	m_IsOtherContentWindowOpened |= m_SystemLogWindow->GetState();
 
 	ImGuiWindowFlags Flags = 0;
 	Flags |= ImGuiWindowFlags_NoCollapse;
@@ -37,39 +82,40 @@ void ContentBrowser::RenderContentBrowser() {
 
 	//IMPORTANT NOTE: When it comes to the text offeset bug, check the alignment on the text by PushStyleVar(). update: that didnt do it i think.
 
+	//LATEST NOTE BEFORE REFACTORING: The reset bool is good and needed to make sure windows reset position. Whether the function to reset it is needed is questionable!
 	if (m_ContentBrowserWindowReset) {
 		m_ContentBrowserWindowReset = false;
 
 		if (!m_IsOtherContentWindowOpened) {
-			ImGui::SetNextWindowPos(m_ContentBrowserWindowPosition);
-			ImGui::SetNextWindowSize(m_ContentBrowserWindowSize);
+			ImGui::SetNextWindowPos(m_ContentBrowserWindowDockPosition);
+			ImGui::SetNextWindowSize(m_ContentBrowserWindowDockSize);
 			Flags |= ImGuiWindowFlags_NoMove; //Not working!!!
 		}
 		else {
-			ImGui::SetNextWindowPos(m_Editor->GetUniqueScreenCenterPoint(m_NewContentWindowSize));
-			ImGui::SetNextWindowSize(m_NewContentWindowSize);
+			ImGui::SetNextWindowPos(m_Editor->GetUniqueScreenCenterPoint(m_Editor->GetNewStandaloneWindowSize()));
+			ImGui::SetNextWindowSize(m_Editor->GetNewStandaloneWindowSize());
 		}
 	}
 
-	if (ImGui::Begin("Content Browser", &m_ContentBrowserOpened, Flags)) {
+	if (ImGui::Begin("Content Browser", &m_ContentBrowserWindowOpened, Flags)) {
 		m_Editor->CheckForHoveredWindows();
 		if (ImGui::IsWindowHovered())
-			m_IsContentBrowserWindowHovered = true;
+			m_ContentBrowserWindowHovered = true;
 
 		if (m_SelectedDirectory != nullptr) {
 			m_Editor->AddSpacings(5);
-			SetupContentBrowserStyle();
+			SetupStyle();
 			NewContentBrowserFrame();
 			UpdateContentBrowserFolderEntries();
 			if (!m_FolderEntryOpened)
 				UpdateContentBrowserAssetEntries();
 
 			FlushContentTexts();
-			ClearContentBrowserStyle();
+			ClearStyle();
 		}
 
 		m_ContentBrowserWindowSize = ImGui::GetWindowSize();
-
+		m_ContentBrowserWindowPosition = ImGui::GetWindowPos();
 	}
 	ImGui::End();
 
@@ -80,53 +126,73 @@ void ContentBrowser::RenderDirectoryExplorer() {
 	if (!m_DirectoryExplorerWindowOpened)
 		return;
 
-	//All these calls to setting the position and size will be removed!
-	ImGui::SetNextWindowSize(m_DirectoryExplorerWindowSize);
-	ImGui::SetNextWindowPos(ImVec2(0.0f, m_ImGuiViewport->Size.y - m_DirectoryExplorerWindowSize.y));
+	bool m_IsOtherContentWindowOpened = false;
+	m_IsOtherContentWindowOpened |= m_DebugLogWindow->GetState();
+	m_IsOtherContentWindowOpened |= m_SystemLogWindow->GetState();
+
 
 	ImGuiWindowFlags Flags = 0;
 	Flags |= ImGuiWindowFlags_NoCollapse;
 	Flags |= ImGuiWindowFlags_AlwaysVerticalScrollbar;
 	Flags |= ImGuiWindowFlags_MenuBar;
 
-	ImGui::Begin("Directory Explorer", &m_DirectoryExplorerWindowOpened, Flags);
-	m_Editor->CheckForHoveredWindows();
+	//Confusing mess
+	//All these calls to setting the position and size will be removed!
+	ImGui::SetNextWindowSize(ImVec2(m_DirectoryExplorerWindowSize.x, m_ContentBrowserWindowSize.y));
+	ImGui::SetNextWindowPos(ImVec2(0.0f, m_ImGuiViewport->Size.y - m_DirectoryExplorerWindowSize.y));
 
+	if (m_DirectoryExplorerWindowReset) {
+		m_ContentBrowserWindowReset = false;
 
-	if (ImGui::BeginMenuBar()) {
-		//Editor Filter
-		ImGui::SetWindowFontScale(0.95f);
-		const auto TextSize = ImGui::CalcTextSize("Editor");
-		ImGui::Selectable("Editor", &m_DirectoryExplorerEditorFilter, 0, TextSize);
-		ImGui::SetWindowFontScale(1.0f);
-
-
-		ImGui::EndMenuBar();
+		if (!m_IsOtherContentWindowOpened) {
+			ImGui::SetNextWindowPos(m_DirectoryExplorerWindowDockPosition);
+			ImGui::SetNextWindowSize(m_DirectoryExplorerWindowDockSize);
+			Flags |= ImGuiWindowFlags_NoMove; //Not working!!!
+		}
+		else {
+			ImGui::SetNextWindowPos(m_Editor->GetUniqueScreenCenterPoint(m_Editor->GetNewStandaloneWindowSize()));
+			ImGui::SetNextWindowSize(m_Editor->GetNewStandaloneWindowSize());
+		}
 	}
 
 
+	if (ImGui::Begin("Directory Explorer", &m_DirectoryExplorerWindowOpened, Flags)) {
+		m_Editor->CheckForHoveredWindows();
 
-	auto ProjectRoot = m_AssetManager->GetProjectRoot();
-	if (ProjectRoot == nullptr) {
-		m_Core->SystemLog("m_AssetManagerReference->GetProjectRoot() returned null! - RenderDirectoryExplorer()");
-		return;
-	}
-	if (m_SelectedDirectory == nullptr) //Set default directory if not set
-		m_SelectedDirectory = ProjectRoot;
-	AddFileExplorerEntry(ProjectRoot);
+		if (ImGui::BeginMenuBar()) {
+			//Editor Filter
+			ImGui::SetWindowFontScale(0.95f);
+			const auto TextSize = ImGui::CalcTextSize("Editor");
+			ImGui::Selectable("Editor", &m_DirectoryExplorerEditorFilter, 0, TextSize);
+			ImGui::SetWindowFontScale(1.0f);
 
-	//TODO: Could be enabled by filter
-	//TODO: Do something about the assets then cause they will not be loaded from the correct texture storage for the editor. Content Browser!
 
-	if (m_DirectoryExplorerEditorFilter) {
-		auto EditorRoot = m_AssetManager->GetEditorRoot();
-		if (EditorRoot == nullptr) {
-			m_Core->SystemLog("m_AssetManagerReference->GetEditorRoot() returned null! - RenderDirectoryExplorer()");
+			ImGui::EndMenuBar();
+		}
+
+
+
+		auto ProjectRoot = m_AssetManager->GetProjectRoot();
+		if (ProjectRoot == nullptr) {
+			m_Core->SystemLog("m_AssetManagerReference->GetProjectRoot() returned null! - RenderDirectoryExplorer()");
 			return;
 		}
-		AddFileExplorerEntry(EditorRoot);
-	}
+		if (m_SelectedDirectory == nullptr) //Set default directory if not set
+			m_SelectedDirectory = ProjectRoot;
+		AddFileExplorerEntry(ProjectRoot);
 
+		//TODO: Could be enabled by filter
+		//TODO: Do something about the assets then cause they will not be loaded from the correct texture storage for the editor. Content Browser!
+
+		if (m_DirectoryExplorerEditorFilter) {
+			auto EditorRoot = m_AssetManager->GetEditorRoot();
+			if (EditorRoot == nullptr) {
+				m_Core->SystemLog("m_AssetManagerReference->GetEditorRoot() returned null! - RenderDirectoryExplorer()");
+				return;
+			}
+			AddFileExplorerEntry(EditorRoot);
+		}
+	}
 
 	ImGui::End();
 }
@@ -253,7 +319,7 @@ void ContentBrowser::UpdateContentBrowserAssetEntries() {
 
 		//TODO: Deal with in case it wasnt found! - Doesnt the function do that?
 		void* TextureID = nullptr;
-		const Texture2D* IconTexture = GetIconTexture(*Asset); //GetIconTexture Should probably be here then.
+		const Texture2D* IconTexture = m_Editor->GetIconTexture(*Asset); //GetIconTexture Should probably be here then.
 		if (IconTexture != nullptr) {
 			TextureID = (void*)(intptr_t)(IconTexture->GetID());
 			m_TextureStorage->SetActiveTextureUnit(TextureUnit::TEXTURE0);
@@ -287,7 +353,7 @@ void ContentBrowser::UpdateContentBrowserAssetEntries() {
 			//Select
 			if (m_SelectedContentElement == Asset) {
 				m_SelectedContentElement = nullptr;
-				OpenAsset(*Asset);
+				m_Editor->OpenAsset(*Asset);
 			}
 			else
 				m_SelectedContentElement = Asset;
@@ -379,7 +445,7 @@ void ContentBrowser::AddFileExplorerEntry(Directory* entry) {
 	if (ImGui::TreeNodeEx(entry->m_Path.filename().string().data(), Flags)) {
 
 		if (ImGui::IsItemClicked()) {
-			SetSelectedDirectory(entry);
+			SetSelectedDirectory(*entry);
 		}
 
 		if (!IsLeaf) {
@@ -392,38 +458,14 @@ void ContentBrowser::AddFileExplorerEntry(Directory* entry) {
 
 }
 
-void ContentBrowser::SetupContentBrowserStyle() {
+void ContentBrowser::SetupStyle() {
 
 	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
 	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.5f, 0.5f, 0.5f, 0.5f));
 	ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.3f, 0.3f, 0.3f, 0.5f));
 }
-void ContentBrowser::ClearContentBrowserStyle() {
+void ContentBrowser::ClearStyle() {
 
 	//Make sure its the same amount of PushStyleColor() calls in SetupContentBrowserStyle();
 	ImGui::PopStyleColor(3);
-}
-
-void ContentBrowser::Init() {
-
-	//All asset icons 
-	//Material
-	//Unknown asset
-	//Error asset
-
-
-
-	if (!m_TextureStorage->GetEditorTexture2DByName("Folder.png", m_FolderTexture))
-		m_Core->SystemLog("Failed to save reference to engine texture [Folder]");
-
-	if (!m_TextureStorage->GetEditorTexture2DByName("MaterialAsset.png", m_MaterialAssetTexture))
-		m_Core->SystemLog("Failed to save reference to engine texture [Folder]");
-
-
-	//Needs to be reworked so both windows are in sync!
-	m_DirectoryExplorerWindowSize = ImVec2(m_ImGuiViewport->Size.x * 0.1f, m_ImGuiViewport->Size.y * 0.3f);
-	m_DirectoryExplorerWindowPosition = ImVec2(0.0f, m_ImGuiViewport->Size.y - m_DirectoryExplorerWindowSize.y);
-
-	m_ContentBrowserWindowSize = ImVec2(m_ImGuiViewport->Size.x - m_DetailsWindow->GetSize().x - m_DirectoryExplorerWindowSize.x, m_DirectoryExplorerWindowSize.y);
-	m_ContentBrowserWindowPosition = ImVec2(m_DirectoryExplorerWindowSize.x, m_ImGuiViewport->Size.y - m_ContentBrowserWindowSize.y);
 }

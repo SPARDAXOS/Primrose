@@ -19,6 +19,7 @@ Editor::Editor(Core& core)
 	m_Logger = m_Core->GetLogger();
 	//Get folder texture?
 
+	//TODO: Break this into functions! Initialize DearIngui etc
 
 	IMGUI_CHECKVERSION();
 	m_ImGuiContext = ImGui::CreateContext();
@@ -46,14 +47,15 @@ Editor::Editor(Core& core)
 	ImGui_ImplGlfw_InitForOpenGL(m_Window->GetWindowResource().m_Handle, true);
 	ImGui_ImplOpenGL3_Init();
 
+	m_NewStandaloneWindowSize = ImVec2(m_ImGuiViewport->Size.x * 0.3f, m_ImGuiViewport->Size.y * 0.3f);
 
 	m_SelectionWindows = std::make_unique<SelectionWindows>(core, *this);
-	m_MaterialEditor = std::make_unique<MaterialEditor>(core, *this, *m_SelectionWindows); //Clean this
-	m_DetailsWindow = std::make_unique<DetailsWindow>(core, *this, *m_SelectionWindows); //Clean this
+	m_MaterialEditor = std::make_unique<MaterialEditor>(core, *this);
+	m_DetailsWindow = std::make_unique<DetailsWindow>(core, *this);
 	m_MainMenuBar = std::make_unique<MainMenuBar>(core, *this);
 	m_ContentBrowser = std::make_unique<ContentBrowser>(core, *this);
-	m_DebuggerWindow = std::make_unique<DebuggerWindow>(core, *this);
-	m_SystemDebuggerWindow = std::make_unique<SystemDebuggerWindow>(core, *this);
+	m_DebugLogWindow = std::make_unique<DebugLogWindow>(core, *this);
+	m_SystemLogWindow = std::make_unique<SystemLogWindow>(core, *this);
 	m_HierarchyWindow = std::make_unique<HierarchyWindow>(core, *this);
 }
 Editor::~Editor() {
@@ -66,40 +68,59 @@ Editor::~Editor() {
 
 [[nodiscard]] bool Editor::Update() {
 
-	m_SelectionWindows->Update();
-	
 	UpdateViewportCameraInput();
-	UpdateEditorInput();
 	Render();
-
 	return true;
 }
 
-void Editor::InitializeSubSystems() {
+bool Editor::InitializeSubSystems() {
+
+	//TODO: Implement proper error handling for this function and all the Init()s
+
+	if (m_SubSystemsInitialized) //Required since many Imgui functions cant be called before StartFrame()
+		return false;
 	//TODO: Unify the functions in all subsystems under one name. 
 	//TODO: Setup and rework error messages in all init functions!
+	//TODO: Recheck these since some of them are empty functions
+
+	//IMPORTANT NOTE: I WAS TESTING THE BUFFERSIZE FOR NAME AND TAG BY NOT ADDING -1 TO WHEN ITS USED!!!!!!
 	m_MaterialEditor->Init();
 	m_ContentBrowser->Init();
 	m_DetailsWindow->Init();
-	m_DebuggerWindow->Init();
-	m_SystemDebuggerWindow->Init();
+	m_DebugLogWindow->Init();
+	m_SystemLogWindow->Init();
 	m_HierarchyWindow->Init();
+	m_MainMenuBar->Init();
+	m_SelectionWindows->Init();
 
 	m_SubSystemsInitialized = true;
+
+	return true;
+}
+void Editor::UpdateSubsystems() {
+
+	m_MaterialEditor->Update();
+	m_SelectionWindows->Update(); //Add this for all since this is where i check input! and sometimes do other stuff!
+	m_ContentBrowser->Update();
+
+	//The input 
+	//NOTE: Needs to be after the render calls otherwise its always false cause the flag is reseted right on top of this function
+	//TODO: Deal with popups problem for ishovering check.
+	m_ContentBrowser->Update();
+	m_HierarchyWindow->Update();
 }
 
 void Editor::Render() {
 
 	StartFrame();
-	
-	if (!m_SubSystemsInitialized) //Required since many Imgui functions cant be called before StartFrame()
-		InitializeSubSystems();
+	UpdateSubsystems(); //Requires a call to StartFrame()
 
 	m_IsAnyWindowHovered = false; //Consider moving this to StartFrame() or something
-	m_Logger->NewFrame();
 
-	UpdateWindowPosition(); //NOTE: Currently updates sizes and positions
+
 	m_EditorStyle.Apply();
+
+
 
 	//Testing!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	//Physics* m_Physics = m_CoreReference->GetPhysics();
@@ -116,19 +137,14 @@ void Editor::Render() {
 
 
 	//ImGui::ShowDemoWindow();
-	//IMPORTANT NOTE: Make the size of each element in relation to the size of the viewport so they would scale with it
-	//TODO: All the menus sizes and positions are relative to each other. Make sure to make the values used relative to each other instead of relying on literals
 	m_DetailsWindow->Render();
 	m_HierarchyWindow->Render();
 
-	RenderAddGameObjectMenu();
-	//RenderDirectoryExplorer();
 	//RenderViewportWindow();
 	m_MainMenuBar->Render();
 	m_ContentBrowser->Render();
-	m_DebuggerWindow->Render();
-	m_SystemDebuggerWindow->Render();
-
+	m_DebugLogWindow->Render();
+	m_SystemLogWindow->Render();
 	m_SelectionWindows->Render();
 	m_MaterialEditor->Render();
 
@@ -196,44 +212,6 @@ void Editor::RenderViewportWindow() {
 }
 
 
-void Editor::UpdateEditorInput() {
-
-	//NOTE: Needs to be after the render calls otherwise its always false cause the flag is reseted right on top of this function
-
-	//TODO: Deal with popups problem for ishovering check.
-
-	//Unselect from hieracrchy
-	if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !ImGui::IsAnyItemHovered() && m_SelectedGameObject != nullptr && !m_IsAnyWindowHovered) {
-		//The only problem with this is that the IsAnyWindowHovered will not catch windows if a popup is open
-		SetSelectedGameObject(nullptr);
-	}
-
-	if (m_ContentBrowser->IsContentBrowserWindowHovered() && !ImGui::IsAnyItemHovered()){
-
-		if (m_SelectedContentElement != nullptr && ImGui::IsMouseReleased(ImGuiMouseButton_Left))
-			m_SelectedContentElement = nullptr;
-
-		if (ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
-			m_Core->ErrorLog("Released");
-			//Short afterimage when deleting!
-			m_OpenContentBrowserEditMenu = true;
-		}
-	}
-
-
-	//Delete selected from hieracrchy
-	if (ImGui::IsKeyReleased(ImGuiKey_Delete)) {
-		
-		//if (m_SelectedContentElement != nullptr) {
-		//	//Shit...
-		//}
-		if (m_SelectedGameObject != nullptr) {
-			m_SelectedGameObject->Destroy();
-			SetSelectedGameObject(nullptr);
-		}
-		
-	}
-}
 void Editor::UpdateViewportCameraInput() {
 
 	if (m_IsAnyWindowHovered)
@@ -334,10 +312,6 @@ void Editor::AddSeparators(uint32 count) {
 		ImGui::Separator();
 }
 
-void Editor::SetSelectedDirectory(Directory* directory) noexcept {
-
-	m_SelectedDirectory = directory;
-}
 void Editor::CheckForHoveredWindows() {
 
 	if (ImGui::IsWindowHovered())
@@ -403,35 +377,4 @@ bool Editor::IsPointInBoundingBox(ImVec2 point, ImVec2 position, ImVec2 size) co
 		YWithin = true;
 
 	return XWithin &= YWithin;
-}
-void Editor::UpdateWindowPosition() {
-	//NOTE: Seems like size then position cause a lot of positions depend on sizes
-	//NOTE: Any hardcoded values here such as 100 200 etc means the value has not been implemented in code yet. (percentage values are fine)
-	//NOTE: The percentage values can be changed safely and should be exposed later on
-	//NOTE: A lot of these if not all could be calculated only when needed since they are required only at window creation
-
-	//m_DirectoryExplorerWindowSize = ImVec2(m_GUIViewport->Size.x * 0.1f, m_GUIViewport->Size.y * 0.3f);
-	//m_DetailsWindowSize = ImVec2(m_GUIViewport->Size.x * 0.2f, m_GUIViewport->Size.y - m_Size.y);
-	
-	//lOOK AT CONTROL FLOW ESPECIALLY WITH HOW I SET THIS THEN. IT HAD A BUG BEFORE REGARDLESS
-	//if (!m_ContentBrowserOpened || m_ContentBrowserWindowSize.x == 0.0f && m_ContentBrowserWindowSize.y == 0.0f) //Second condition is for being true on first frame
-		//m_ContentBrowserWindowSize = ImVec2(m_GUIViewport->Size.x - m_DetailsWindowSize.x - m_DirectoryExplorerWindowSize.x, m_DirectoryExplorerWindowSize.y);
-
-
-	//NOTE: By the end of the cleanup, this function should be gone.
-
-	//Probably should be here with getters for the other classes to use!
-	m_NewStandaloneWindowSize = ImVec2(m_ImGuiViewport->Size.x * 0.3f, m_ImGuiViewport->Size.y * 0.3f);
-
-
-
-
-
-
-	//Consider making this vars maybe?
-
-
-	//m_ContentBrowserWindowPosition = ImVec2(m_DirectoryExplorerWindowSize.x, m_GUIViewport->Size.y - m_ContentBrowserWindowSize.y);
-	//m_DetailsWindowPosition = ImVec2(m_GUIViewport->Size.x - m_DetailsWindowSize.x, m_Size.y);
-
 }

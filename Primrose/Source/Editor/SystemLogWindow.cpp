@@ -1,46 +1,46 @@
-#include "Editor/SystemDebuggerWindow.hpp"
+#include "Editor/SystemLogWindow.hpp"
 
 #include "Systems/Core.hpp"
 #include "Systems/Editor.hpp"
 #include "Tools/Logger.hpp" //idk about this being a tool..
 #include "Systems/Time.hpp"
 
+#include "Editor/DebugLogWindow.hpp"
 
-SystemDebuggerWindow::SystemDebuggerWindow(Core& core, Editor& editor) noexcept
+
+SystemLogWindow::SystemLogWindow(Core& core, Editor& editor) noexcept
 	: m_Core(&core), m_Editor(&editor)
 {
 	m_Logger = core.GetLogger();
 	m_Time = core.GetTime();
-	m_ContentBrowser = editor.GetContentBrowser();
-	m_DebuggerWindow = editor.GetDebuggerWindow();
 }
 
 
 
-void SystemDebuggerWindow::Render() {
+void SystemLogWindow::Render() {
 
 	if (!m_Open)
 		return;
 
 	bool m_IsOtherContentWindowOpened = false;
 	m_IsOtherContentWindowOpened |= m_ContentBrowser->GetState();
-	m_IsOtherContentWindowOpened |= m_DebugLogOpened;
+	m_IsOtherContentWindowOpened |= m_DebugLogWindow->GetState();
 
 	ImGuiWindowFlags Flags = 0;
 	Flags |= ImGuiWindowFlags_NoCollapse;
 	Flags |= ImGuiWindowFlags_MenuBar;
 	Flags |= ImGuiWindowFlags_NoSavedSettings;
 
-	if (m_SystemLogWindowReset) {
-		m_SystemLogWindowReset = false;
+	if (m_WindowReset) {
+		m_WindowReset = false;
 
 		if (!m_IsOtherContentWindowOpened) {
-			ImGui::SetNextWindowPos(m_ContentBrowserWindowPosition);
-			ImGui::SetNextWindowSize(m_ContentBrowserWindowSize);
+			ImGui::SetNextWindowPos(m_ContentBrowser->GetContentBrowserWindowDockPosition());
+			ImGui::SetNextWindowSize(m_ContentBrowser->GetContentBrowserWindowDockSize());
 		}
 		else {
-			ImGui::SetNextWindowSize(m_NewStandaloneWindowSize);
-			ImGui::SetNextWindowPos(GetUniqueScreenCenterPoint(m_NewStandaloneWindowSize));
+			ImGui::SetNextWindowSize(m_Editor->GetNewStandaloneWindowSize());
+			ImGui::SetNextWindowPos(m_Editor->GetUniqueScreenCenterPoint(m_Editor->GetNewStandaloneWindowSize()));
 		}
 	}
 
@@ -88,7 +88,8 @@ void SystemDebuggerWindow::Render() {
 	}
 	ImGui::End();
 }
-void SystemDebuggerWindow::Init() {
+void SystemLogWindow::Init() {
 
+	m_ContentBrowser = &m_Editor->GetContentBrowser();
+	m_DebugLogWindow = &m_Editor->GetDebugLogWindow();
 }
-

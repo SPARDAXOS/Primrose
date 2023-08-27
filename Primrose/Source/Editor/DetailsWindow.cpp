@@ -7,13 +7,13 @@
 DetailsWindow::DetailsWindow(Core& core, Editor& editor) noexcept 
 	:	m_Core(&core), m_Editor(&editor)
 {
-	m_SelectionWindows = editor.GetSelectionWindows();
-	m_ImGuiViewport = editor.GetGUIViewport();
 }
 
 
 
 void DetailsWindow::Update() {
+
+
 
 }
 void DetailsWindow::Render() {
@@ -21,6 +21,7 @@ void DetailsWindow::Render() {
 	if (!m_Opened)
 		return;
 
+	UpdateTarget();
 
 	//TODO: Add the ability to reorder these one day
 
@@ -30,7 +31,7 @@ void DetailsWindow::Render() {
 
 
 
-	//Render GUI
+
 	//Note: Will also lock position and size - Use any func without the next to free it
 	ImGui::SetNextWindowSize(m_Size);
 	//ImGui::SetNextWindowPos(m_DetailsWindowPosition); //Disabled this after moving to class!!!!!!!!!!
@@ -58,8 +59,12 @@ void DetailsWindow::Render() {
 
 	ImGui::End();
 }
-
 void DetailsWindow::Init() {
+
+	m_SelectionWindows = &m_Editor->GetSelectionWindows();
+	m_HierarchyWindow = &m_Editor->GetHierarchyWindow();
+	m_ImGuiViewport = &m_Editor->GetGUIViewport();
+
 	m_Size = ImVec2(m_ImGuiViewport->Size.x * 0.2f, m_ImGuiViewport->Size.y - m_Size.y);
 	m_Position = ImVec2(m_ImGuiViewport->Size.x - m_Size.x, m_Size.y);
 }
@@ -69,7 +74,7 @@ void DetailsWindow::RenderInfoDetails() {
 	ImGui::Text("Name");
 	ImGui::SameLine(50.0f);
 	ImGui::SetNextItemWidth(100.0f);
-	if (ImGui::InputText("##ObjectName", m_NameInputBuffer, 32, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
+	if (ImGui::InputText("##ObjectName", m_NameInputBuffer, m_NameInputBufferSize - 1, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
 		m_Target->SetName(m_NameInputBuffer);
 	}
 
@@ -88,7 +93,7 @@ void DetailsWindow::RenderInfoDetails() {
 	ImGui::Text("Tag");
 	ImGui::SameLine(50.0f);
 	ImGui::SetNextItemWidth(100.0f);
-	if (ImGui::InputText("##ObjectTag", m_TagInputBuffer, 32, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
+	if (ImGui::InputText("##ObjectTag", m_TagInputBuffer, m_TagInputBufferSize - 1, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
 		m_Target->SetTag(m_TagInputBuffer);
 	}
 }
@@ -730,14 +735,21 @@ bool DetailsWindow::AddFilteringModeMagSelectable(FilteringModeMag mode) {
 		return false;
 }
 
-void DetailsWindow::SetTarget(GameObject* object) noexcept {
+void DetailsWindow::UpdateTarget() noexcept {
 
-	m_Target = object;
-	if (m_Target != nullptr) {
+	GameObject* CurrentTarget = m_HierarchyWindow->GetSelectedGameObject();
+	if (CurrentTarget == nullptr) {
+		m_Target = nullptr;
+		return;
+	}
+	else if (CurrentTarget != m_Target) {
+		m_Target = CurrentTarget;
 		strcpy_s(m_NameInputBuffer, m_Target->GetName().c_str());
 		strcpy_s(m_TagInputBuffer, m_Target->GetTag().c_str());
 	}
 
+
+	//This here is terrible and needs to be fully reworked!
 	//wot
 	//THIS WHOLE THING NEEDS TO BE REWORKED I THINK!
 	if (m_SelectionWindows->GetSpriteSelectorTarget() != nullptr) ////////????????? Material then...

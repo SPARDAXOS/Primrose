@@ -21,10 +21,11 @@ Core::Core() noexcept {
 }
 void Core::SetupCore() { // Sounds like 2 step initialization.
 
-	m_Window->SetWindowMode(WindowMode::WINDOWED);
+	m_Window->SetWindowMode(WindowMode::WINDOWED); //Temp
 	m_Renderer->CheckRendererAPIVersion();
 	m_AssetManager->LoadAssets();
-	m_Editor->SaveEngineTexturesReferences();
+	if (!m_Editor->InitializeSubSystems())
+		SystemLog("Primrose failed to initialize.");
 
 
 
@@ -121,6 +122,7 @@ void Core::UpdateSystems() {
 	//BUG: The aspect ratio maybe should be synced with the size of the screen?
 
 	m_Time->Update();
+	m_Logger->NewFrame();
 
 	//PollEvents
 	if (!m_Window->Update()) {

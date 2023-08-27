@@ -1,4 +1,4 @@
-#include "Editor/DebuggerWindow.hpp"
+#include "Editor/DebugLogWindow.hpp"
 
 #include "Systems/Core.hpp"
 #include "Systems/Editor.hpp"
@@ -6,44 +6,42 @@
 #include "Systems/Time.hpp"
 #include "Systems/TextureStorage.hpp"
 
-//?? no content browser? is doing these includes mandatory?
-#include "Editor/SystemDebuggerWindow.hpp"
+#include "Editor/ContentBrowser.hpp"
+#include "Editor/SystemLogWindow.hpp"
 
 
-DebuggerWindow::DebuggerWindow(Core& core, Editor& editor) noexcept 
+DebugLogWindow::DebugLogWindow(Core& core, Editor& editor) noexcept 
 	:	m_Core(&core), m_Editor(&editor)
 {
 	m_Logger = core.GetLogger();
 	m_TextureStorage = core.GetTextureStorage();
 	m_Time = core.GetTime();
-	m_ContentBrowser = editor.GetContentBrowser();
-	m_SystemDebuggerWindow = editor.GetSystemDebuggerWindow();
 }
 
-void DebuggerWindow::Render() {
+void DebugLogWindow::Render() {
 
 	if (!m_Open)
 		return;
 
 	bool m_IsOtherContentWindowOpened = false;
 	m_IsOtherContentWindowOpened |= m_ContentBrowser->GetState();
-	m_IsOtherContentWindowOpened |= m_SystemDebuggerWindow->GetState();
+	m_IsOtherContentWindowOpened |= m_SystemLogWindow->GetState();
 
 	ImGuiWindowFlags Flags = 0;
 	Flags |= ImGuiWindowFlags_NoCollapse;
 	Flags |= ImGuiWindowFlags_MenuBar;
 	Flags |= ImGuiWindowFlags_NoSavedSettings;
 
-	if (m_DebugLogWindowReset) {
-		m_DebugLogWindowReset = false;
+	if (m_WindowReset) {
+		m_WindowReset = false;
 
 		if (!m_IsOtherContentWindowOpened) {
-			ImGui::SetNextWindowPos(m_ContentBrowserWindowPosition);
-			ImGui::SetNextWindowSize(m_ContentBrowserWindowSize);
+			ImGui::SetNextWindowPos(m_ContentBrowser->GetContentBrowserWindowDockPosition());
+			ImGui::SetNextWindowSize(m_ContentBrowser->GetContentBrowserWindowDockSize());
 		}
 		else {
-			ImGui::SetNextWindowSize(m_NewStandaloneWindowSize);
-			ImGui::SetNextWindowPos(m_Editor->GetUniqueScreenCenterPoint(m_NewStandaloneWindowSize));
+			ImGui::SetNextWindowSize(m_Editor->GetNewStandaloneWindowSize());
+			ImGui::SetNextWindowPos(m_Editor->GetUniqueScreenCenterPoint(m_Editor->GetNewStandaloneWindowSize()));
 		}
 	}
 
@@ -200,7 +198,10 @@ void DebuggerWindow::Render() {
 
 }
 
-void DebuggerWindow::Init() {
+void DebugLogWindow::Init() {
+
+	m_ContentBrowser = &m_Editor->GetContentBrowser();
+	m_SystemLogWindow = &m_Editor->GetSystemLogWindow();
 
 	if (!m_TextureStorage->GetEditorTexture2DByName("Debug.png", m_DebugTexture))
 		m_Core->SystemLog("Failed to save reference to engine texture [Debug]");

@@ -19,7 +19,7 @@ private:
 	};
 public:
 	MaterialEditor() = delete;
-	MaterialEditor(Core& core, Editor& editor, SelectionWindows& selectionWindows) noexcept;
+	MaterialEditor(Core& core, Editor& editor) noexcept;
 	~MaterialEditor() = default;
 
 	MaterialEditor(const MaterialEditor&) = delete;
@@ -29,8 +29,10 @@ public:
 	MaterialEditor& operator=(MaterialEditor&&) = delete;
 
 public:
+	void Update();
 	void Render();
 	void Init();
+
 public:
 	inline void SetTarget(Material* target) noexcept { m_Target = target; }
 	inline void SetWindowState(bool state) noexcept {
@@ -55,6 +57,8 @@ private:
 	void ClearStyle();
 
 	void NewFrame() noexcept;
+
+	void CheckOffsets();
 
 private:
 	const float m_LineStartOffsetMultiplier = 0.05f;
@@ -85,4 +89,5 @@ private:
 	Core* m_Core							{ nullptr };
 	Editor* m_Editor						{ nullptr };
 	SelectionWindows* m_SelectionWindows	{ nullptr };
+	ImGuiViewport* m_ImGuiViewport			{ nullptr };
 };

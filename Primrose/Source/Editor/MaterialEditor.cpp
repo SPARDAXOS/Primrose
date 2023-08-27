@@ -4,11 +4,15 @@
 
 #include "Editor/SelectionWindows.hpp"
 
-MaterialEditor::MaterialEditor(Core& core, Editor& editor, SelectionWindows& selectionWindows) noexcept
-	: m_Core(&core), m_Editor(&editor), m_SelectionWindows(&selectionWindows)
+MaterialEditor::MaterialEditor(Core& core, Editor& editor) noexcept
+	: m_Core(&core), m_Editor(&editor)
 {
 }
 
+void MaterialEditor::Update() {
+
+	CheckOffsets();
+}
 void MaterialEditor::Render() {
 
 	if (!m_Opened || m_Target == nullptr)
@@ -21,7 +25,7 @@ void MaterialEditor::Render() {
 
 	if (m_WindowSizeReset) {
 		m_WindowSizeReset = false;
-		m_CurrentWindowSize = ImVec2(m_Editor->GetGUIViewport()->Size.x * 0.2f, m_Editor->GetGUIViewport()->Size.y * 0.6f); //Default Window Size
+		m_CurrentWindowSize = ImVec2(m_ImGuiViewport->Size.x * 0.2f, m_ImGuiViewport->Size.y * 0.6f); //Default Window Size
 		ImGui::SetNextWindowSize(m_CurrentWindowSize);
 		ImGui::SetNextWindowPos(m_Editor->GetUniqueScreenCenterPoint(m_CurrentWindowSize));
 	}
@@ -53,6 +57,11 @@ void MaterialEditor::Render() {
 		m_CurrentWindowSize = ImGui::GetWindowSize();
 	}
 	ImGui::End();
+}
+void MaterialEditor::Init() {
+
+	m_SelectionWindows = &m_Editor->GetSelectionWindows();
+	m_ImGuiViewport = &m_Editor->GetGUIViewport();
 }
 
 void MaterialEditor::SetupDiffuseSection() {
@@ -202,13 +211,6 @@ void MaterialEditor::SetupSelectorBox(SelectorBoxType type) {
 	ImGui::SetCursorPosY(CurrentLineHeight - 2);
 	ImGui::Text(TextureName.data());
 }
-void MaterialEditor::Init() {
-
-	m_NoneTextSize = ImGui::CalcTextSize("None");
-	m_DiffuseSectionOffset = ImGui::CalcTextSize("Diffuse").x;
-	m_AmbientSectionOffset = ImGui::CalcTextSize("Ambient").x;
-	m_SpecularSectionOffset = ImGui::CalcTextSize("Specular").x;
-}
 
 void MaterialEditor::ApplyStyle() {
 
@@ -230,4 +232,18 @@ void MaterialEditor::NewFrame() noexcept {
 
 	m_LineStartOffset = m_CurrentWindowSize.x * m_LineStartOffsetMultiplier;
 	m_NameToInputBoxPadding = m_CurrentWindowSize.x * m_NameToInputBoxPaddingMultiplier;
+}
+void MaterialEditor::CheckOffsets() {
+
+	if (m_NoneTextSize.x == 0.0f && m_NoneTextSize.y == 0.0f)
+		m_NoneTextSize = ImGui::CalcTextSize("None");
+
+	if (m_DiffuseSectionOffset == 0.0f)
+		m_DiffuseSectionOffset = ImGui::CalcTextSize("Diffuse").x;
+
+	if (m_AmbientSectionOffset == 0.0f)
+		m_AmbientSectionOffset = ImGui::CalcTextSize("Ambient").x;
+
+	if (m_SpecularSectionOffset == 0.0f)
+		m_SpecularSectionOffset = ImGui::CalcTextSize("Specular").x;
 }
