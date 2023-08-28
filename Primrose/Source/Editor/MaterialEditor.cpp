@@ -60,8 +60,8 @@ void MaterialEditor::Render() {
 }
 void MaterialEditor::Init() {
 
-	m_SelectionWindows = &m_Editor->GetSelectionWindows();
-	m_ImGuiViewport = &m_Editor->GetGUIViewport();
+	m_SelectionWindows = m_Editor->GetSelectionWindows();
+	m_ImGuiViewport = m_Editor->GetGUIViewport();
 }
 
 void MaterialEditor::SetupDiffuseSection() {

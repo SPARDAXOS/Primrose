@@ -145,16 +145,16 @@ public: //Reconsider these functions and whether they should be marked like this
 	inline bool IsAnyWindowHovered() const noexcept { return m_IsAnyWindowHovered; }
 
 public:
-	[[nodiscard]] inline ImGuiViewport& GetGUIViewport() const noexcept { return *m_ImGuiViewport; }
-	[[nodiscard]] inline SelectionWindows& GetSelectionWindows() const noexcept { return *m_SelectionWindows; }
-	[[nodiscard]] inline MaterialEditor& GetMaterialEditor() const noexcept { return *m_MaterialEditor; }
-	[[nodiscard]] inline DetailsWindow& GetDetailsWindow() const noexcept { return *m_DetailsWindow; }
-	[[nodiscard]] inline MainMenuBar& GetMainMenuBar() const noexcept { return *m_MainMenuBar; }
-	[[nodiscard]] inline ContentBrowser& GetContentBrowser() const noexcept { return *m_ContentBrowser; }
-	[[nodiscard]] inline DebugLogWindow& GetDebugLogWindow() const noexcept { return *m_DebugLogWindow; }
-	[[nodiscard]] inline SystemLogWindow& GetSystemLogWindow() const noexcept { return *m_SystemLogWindow; }
-	[[nodiscard]] inline HierarchyWindow& GetHierarchyWindow() const noexcept { return *m_HierarchyWindow; }
-	
+	[[nodiscard]] inline ImGuiViewport* GetGUIViewport() noexcept { return m_ImGuiViewport; }
+	[[nodiscard]] inline SelectionWindows* GetSelectionWindows() noexcept { return m_SelectionWindows.get(); }
+	[[nodiscard]] inline MaterialEditor* GetMaterialEditor() noexcept { return m_MaterialEditor.get(); }
+	[[nodiscard]] inline DetailsWindow* GetDetailsWindow() noexcept { return m_DetailsWindow.get(); }
+	[[nodiscard]] inline MainMenuBar* GetMainMenuBar() noexcept { return m_MainMenuBar.get(); }
+	[[nodiscard]] inline ContentBrowser* GetContentBrowser() noexcept { return m_ContentBrowser.get(); }
+	[[nodiscard]] inline DebugLogWindow* GetDebugLogWindow() noexcept { return m_DebugLogWindow.get(); }
+	[[nodiscard]] inline SystemLogWindow* GetSystemLogWindow() noexcept { return m_SystemLogWindow.get(); }
+	[[nodiscard]] inline HierarchyWindow* GetHierarchyWindow() noexcept { return m_HierarchyWindow.get(); }
+
 
 private:
 	void Render();

@@ -41,17 +41,17 @@ void HierarchyWindow::Render() {
 	if (!m_Open)
 		return;
 
+	m_Size = ImVec2(m_ImGuiViewport->Size.x * 0.1f, m_ImGuiViewport->Size.y - m_ContentBrowser->GetDirectoryExplorerWindowSize().y - m_Size.y); //ContentBrowser
+	m_Position = ImVec2(0.0f, m_Size.y);
+
 	RenderHierarchy();
 	RenderAddGameObjectMenu();
 }
 void HierarchyWindow::Init() {
 
-	m_ImGuiViewport = &m_Editor->GetGUIViewport();
-	m_ContentBrowser = &m_Editor->GetContentBrowser();
-	m_DetailsWindow = &m_Editor->GetDetailsWindow();
-
-	m_Size = ImVec2(m_ImGuiViewport->Size.x * 0.1f, m_ImGuiViewport->Size.y - m_ContentBrowser->GetDirectoryExplorerWindowSize().y - m_Size.y); //ContentBrowser
-	m_Position = ImVec2(0.0f, m_Size.y);
+	m_ImGuiViewport = m_Editor->GetGUIViewport();
+	m_ContentBrowser = m_Editor->GetContentBrowser();
+	m_DetailsWindow = m_Editor->GetDetailsWindow();
 }
 
 void HierarchyWindow::RenderHierarchy() {

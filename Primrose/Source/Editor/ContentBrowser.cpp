@@ -32,6 +32,13 @@ void ContentBrowser::Update() {
 }
 void ContentBrowser::Render() {
 
+	m_DirectoryExplorerWindowDockSize = ImVec2(m_ImGuiViewport->Size.x * 0.1f, m_ImGuiViewport->Size.y * 0.3f);
+	m_DirectoryExplorerWindowDockPosition = ImVec2(0.0f, m_ImGuiViewport->Size.y - m_DirectoryExplorerWindowDockSize.y); //this one
+
+	m_ContentBrowserWindowDockSize = ImVec2(m_ImGuiViewport->Size.x - m_DetailsWindow->GetSize().x - m_DirectoryExplorerWindowDockSize.x, m_DirectoryExplorerWindowDockSize.y);
+	m_ContentBrowserWindowDockPosition = ImVec2(m_DirectoryExplorerWindowDockSize.x, m_ImGuiViewport->Size.y - m_ContentBrowserWindowDockSize.y);
+
+
 	RenderContentBrowser();
 	RenderDirectoryExplorer();
 }
@@ -41,10 +48,10 @@ void ContentBrowser::Init() {
 	//Unknown asset
 	//Error asset
 
-	m_ImGuiViewport = &m_Editor->GetGUIViewport();
-	m_DetailsWindow = &m_Editor->GetDetailsWindow();
-	m_DebugLogWindow = &m_Editor->GetDebugLogWindow();
-	m_SystemLogWindow = &m_Editor->GetSystemLogWindow();
+	m_ImGuiViewport = m_Editor->GetGUIViewport();
+	m_DetailsWindow = m_Editor->GetDetailsWindow();
+	m_DebugLogWindow = m_Editor->GetDebugLogWindow();
+	m_SystemLogWindow = m_Editor->GetSystemLogWindow();
 
 
 	if (!m_TextureStorage->GetEditorTexture2DByName("Folder.png", m_FolderTexture))
@@ -52,17 +59,6 @@ void ContentBrowser::Init() {
 
 	if (!m_TextureStorage->GetEditorTexture2DByName("MaterialAsset.png", m_MaterialAssetTexture))
 		m_Core->SystemLog("Failed to save reference to engine texture [Folder]");
-
-
-	//Needs to be reworked so both windows are in sync!
-	m_DirectoryExplorerWindowDockSize = ImVec2(m_ImGuiViewport->Size.x * 0.1f, m_ImGuiViewport->Size.y * 0.3f);
-	m_DirectoryExplorerWindowDockPosition = ImVec2(0.0f, m_ImGuiViewport->Size.y - m_DirectoryExplorerWindowDockSize.y);
-
-	m_ContentBrowserWindowDockSize = ImVec2(m_ImGuiViewport->Size.x - m_DetailsWindow->GetSize().x - m_DirectoryExplorerWindowDockSize.x, m_DirectoryExplorerWindowDockSize.y);
-	m_ContentBrowserWindowDockPosition = ImVec2(m_DirectoryExplorerWindowDockSize.x, m_ImGuiViewport->Size.y - m_ContentBrowserWindowDockSize.y);
-
-
-
 }
 
 void ContentBrowser::RenderContentBrowser() {
@@ -80,6 +76,8 @@ void ContentBrowser::RenderContentBrowser() {
 	Flags |= ImGuiWindowFlags_NoSavedSettings;
 
 
+
+
 	//IMPORTANT NOTE: When it comes to the text offeset bug, check the alignment on the text by PushStyleVar(). update: that didnt do it i think.
 
 	//LATEST NOTE BEFORE REFACTORING: The reset bool is good and needed to make sure windows reset position. Whether the function to reset it is needed is questionable!
@@ -87,6 +85,14 @@ void ContentBrowser::RenderContentBrowser() {
 		m_ContentBrowserWindowReset = false;
 
 		if (!m_IsOtherContentWindowOpened) {
+
+			//One of them is not needed for this recalculation
+			//m_DirectoryExplorerWindowDockSize = ImVec2(m_ImGuiViewport->Size.x * 0.1f, m_ImGuiViewport->Size.y * 0.3f);
+			//m_DirectoryExplorerWindowDockPosition = ImVec2(0.0f, m_ImGuiViewport->Size.y - m_DirectoryExplorerWindowDockSize.y); //this one
+
+			//m_ContentBrowserWindowDockSize = ImVec2(m_ImGuiViewport->Size.x - m_DetailsWindow->GetSize().x - m_DirectoryExplorerWindowDockSize.x, m_DirectoryExplorerWindowDockSize.y);
+			//m_ContentBrowserWindowDockPosition = ImVec2(m_DirectoryExplorerWindowDockSize.x, m_ImGuiViewport->Size.y - m_ContentBrowserWindowDockSize.y);
+
 			ImGui::SetNextWindowPos(m_ContentBrowserWindowDockPosition);
 			ImGui::SetNextWindowSize(m_ContentBrowserWindowDockSize);
 			Flags |= ImGuiWindowFlags_NoMove; //Not working!!!
@@ -140,20 +146,20 @@ void ContentBrowser::RenderDirectoryExplorer() {
 	//All these calls to setting the position and size will be removed!
 	ImGui::SetNextWindowSize(ImVec2(m_DirectoryExplorerWindowSize.x, m_ContentBrowserWindowSize.y));
 	ImGui::SetNextWindowPos(ImVec2(0.0f, m_ImGuiViewport->Size.y - m_DirectoryExplorerWindowSize.y));
+	//Havent finished this!
+	//if (m_DirectoryExplorerWindowReset) {
+	//	m_DirectoryExplorerWindowReset = false;
 
-	if (m_DirectoryExplorerWindowReset) {
-		m_ContentBrowserWindowReset = false;
-
-		if (!m_IsOtherContentWindowOpened) {
-			ImGui::SetNextWindowPos(m_DirectoryExplorerWindowDockPosition);
-			ImGui::SetNextWindowSize(m_DirectoryExplorerWindowDockSize);
-			Flags |= ImGuiWindowFlags_NoMove; //Not working!!!
-		}
-		else {
-			ImGui::SetNextWindowPos(m_Editor->GetUniqueScreenCenterPoint(m_Editor->GetNewStandaloneWindowSize()));
-			ImGui::SetNextWindowSize(m_Editor->GetNewStandaloneWindowSize());
-		}
-	}
+	//	if (!m_IsOtherContentWindowOpened) {
+	//		ImGui::SetNextWindowPos(m_DirectoryExplorerWindowDockPosition);
+	//		ImGui::SetNextWindowSize(m_DirectoryExplorerWindowDockSize);
+	//		Flags |= ImGuiWindowFlags_NoMove; //Not working!!!
+	//	}
+	//	else {
+	//		ImGui::SetNextWindowPos(m_Editor->GetUniqueScreenCenterPoint(m_Editor->GetNewStandaloneWindowSize()));
+	//		ImGui::SetNextWindowSize(m_Editor->GetNewStandaloneWindowSize());
+	//	}
+	//}
 
 
 	if (ImGui::Begin("Directory Explorer", &m_DirectoryExplorerWindowOpened, Flags)) {

@@ -45,11 +45,11 @@ private:
 	Texture2D* m_ErrorTexture		{ nullptr };
 
 private:
-	Core* m_Core									{ nullptr };
-	Editor* m_Editor								{ nullptr };
-	Logger* m_Logger								{ nullptr };
-	TextureStorage* m_TextureStorage				{ nullptr };
-	Time* m_Time									{ nullptr };
-	ContentBrowser* m_ContentBrowser				{ nullptr };
+	Core* m_Core						{ nullptr };
+	Editor* m_Editor					{ nullptr };
+	Logger* m_Logger					{ nullptr };
+	TextureStorage* m_TextureStorage	{ nullptr };
+	Time* m_Time						{ nullptr };
+	ContentBrowser* m_ContentBrowser	{ nullptr };
 	SystemLogWindow* m_SystemLogWindow	{ nullptr };
 };

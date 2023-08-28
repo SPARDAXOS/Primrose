@@ -28,13 +28,14 @@ void DetailsWindow::Render() {
 
 	ImGuiWindowFlags Flags = 0;
 	Flags |= ImGuiWindowFlags_::ImGuiWindowFlags_NoCollapse;
-
-
-
-
 	//Note: Will also lock position and size - Use any func without the next to free it
+
+	//I think they need to be kept updated each frame to adjust to me resizing the window! i do need update positions function after all!
+	m_Size = ImVec2(m_ImGuiViewport->Size.x * 0.2f, m_ImGuiViewport->Size.y - m_Size.y);
+	m_Position = ImVec2(m_ImGuiViewport->Size.x - m_Size.x, m_Size.y);
+
 	ImGui::SetNextWindowSize(m_Size);
-	//ImGui::SetNextWindowPos(m_DetailsWindowPosition); //Disabled this after moving to class!!!!!!!!!!
+	ImGui::SetNextWindowPos(m_Position); //Disabled this after moving to class!!!!!!!!!!
 
 	if (ImGui::Begin("Details", &m_Opened, Flags)) {
 		m_Editor->CheckForHoveredWindows();
@@ -61,12 +62,9 @@ void DetailsWindow::Render() {
 }
 void DetailsWindow::Init() {
 
-	m_SelectionWindows = &m_Editor->GetSelectionWindows();
-	m_HierarchyWindow = &m_Editor->GetHierarchyWindow();
-	m_ImGuiViewport = &m_Editor->GetGUIViewport();
-
-	m_Size = ImVec2(m_ImGuiViewport->Size.x * 0.2f, m_ImGuiViewport->Size.y - m_Size.y);
-	m_Position = ImVec2(m_ImGuiViewport->Size.x - m_Size.x, m_Size.y);
+	m_SelectionWindows = m_Editor->GetSelectionWindows();
+	m_HierarchyWindow = m_Editor->GetHierarchyWindow();
+	m_ImGuiViewport = m_Editor->GetGUIViewport();
 }
 
 void DetailsWindow::RenderInfoDetails() {

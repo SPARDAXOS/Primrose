@@ -128,7 +128,7 @@ private:
 	AssetManager* m_AssetManager		{ nullptr };
 	TextureStorage* m_TextureStorage	{ nullptr };
 	ImGuiViewport* m_ImGuiViewport		{ nullptr };
-	
+
 	DetailsWindow* m_DetailsWindow		{ nullptr };
 	DebugLogWindow* m_DebugLogWindow	{ nullptr };
 	SystemLogWindow* m_SystemLogWindow	{ nullptr };

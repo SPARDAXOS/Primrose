@@ -9,14 +9,14 @@
 Editor::Editor(Core& core)
 	: m_Core(&core)
 {
-	m_Window = m_Core->GetWindow();
-	m_ECS = m_Core->GetECS();
-	m_TextureStorage = m_Core->GetTextureStorage();
-	m_AssetManager = m_Core->GetAssetManager();
-	m_Input = m_Core->GetInput();
-	m_Time = m_Core->GetTime();
-	m_Serializer = m_Core->GetSerializer();
-	m_Logger = m_Core->GetLogger();
+	m_Window = core.GetWindow();
+	m_ECS = core.GetECS();
+	m_TextureStorage = core.GetTextureStorage();
+	m_AssetManager = core.GetAssetManager();
+	m_Input = core.GetInput();
+	m_Time = core.GetTime();
+	m_Serializer = core.GetSerializer();
+	m_Logger = core.GetLogger();
 	//Get folder texture?
 
 	//TODO: Break this into functions! Initialize DearIngui etc
@@ -83,6 +83,9 @@ bool Editor::InitializeSubSystems() {
 	//TODO: Setup and rework error messages in all init functions!
 	//TODO: Recheck these since some of them are empty functions
 
+
+	//IMPORTANT NOTE: Switch to Unique Ptr references instead and ditch the two step initialization. This could be done for the core and the whole project really.
+
 	//IMPORTANT NOTE: I WAS TESTING THE BUFFERSIZE FOR NAME AND TAG BY NOT ADDING -1 TO WHEN ITS USED!!!!!!
 	m_MaterialEditor->Init();
 	m_ContentBrowser->Init();
@@ -99,9 +102,12 @@ bool Editor::InitializeSubSystems() {
 }
 void Editor::UpdateSubsystems() {
 
+
+	//Rename folder and these to modules?
 	m_MaterialEditor->Update();
 	m_SelectionWindows->Update(); //Add this for all since this is where i check input! and sometimes do other stuff!
 	m_ContentBrowser->Update();
+	m_DetailsWindow->Update();
 
 	//The input 
 	//NOTE: Needs to be after the render calls otherwise its always false cause the flag is reseted right on top of this function

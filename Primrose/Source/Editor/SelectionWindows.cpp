@@ -22,7 +22,7 @@ void SelectionWindows::Render() {
 }
 void SelectionWindows::Init() {
 
-	m_ImGuiViewport = &m_Editor->GetGUIViewport();
+	m_ImGuiViewport = m_Editor->GetGUIViewport();
 }
 
 

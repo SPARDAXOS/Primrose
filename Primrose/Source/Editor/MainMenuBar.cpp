@@ -11,6 +11,7 @@
 MainMenuBar::MainMenuBar(Core& core, Editor& editor) noexcept
 	:	m_Core(&core), m_Editor(&editor)
 {
+
 }
 
 
@@ -28,12 +29,12 @@ void MainMenuBar::Render() {
 }
 void MainMenuBar::Init() {
 
-	m_ImGuiViewport = &m_Editor->GetGUIViewport();
-	m_DetailsWindow = &m_Editor->GetDetailsWindow();
-	m_HierarchyWindow = &m_Editor->GetHierarchyWindow();
-	m_ContentBrowser = &m_Editor->GetContentBrowser();
-	m_DebugLogWindow = &m_Editor->GetDebugLogWindow();
-	m_SystemLogWindow = &m_Editor->GetSystemLogWindow();
+	m_ImGuiViewport = m_Editor->GetGUIViewport();
+	m_DetailsWindow = m_Editor->GetDetailsWindow();
+	m_HierarchyWindow = m_Editor->GetHierarchyWindow();
+	m_ContentBrowser = m_Editor->GetContentBrowser();
+	m_DebugLogWindow = m_Editor->GetDebugLogWindow();
+	m_SystemLogWindow = m_Editor->GetSystemLogWindow();
 }
 
 void MainMenuBar::RenderFileMenu() {

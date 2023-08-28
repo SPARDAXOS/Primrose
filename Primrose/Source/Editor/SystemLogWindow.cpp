@@ -90,6 +90,6 @@ void SystemLogWindow::Render() {
 }
 void SystemLogWindow::Init() {
 
-	m_ContentBrowser = &m_Editor->GetContentBrowser();
-	m_DebugLogWindow = &m_Editor->GetDebugLogWindow();
+	m_ContentBrowser = m_Editor->GetContentBrowser();
+	m_DebugLogWindow = m_Editor->GetDebugLogWindow();
 }

@@ -35,18 +35,18 @@ public:
 
 
 public:
-	[[nodiscard]] inline Renderer* GetRenderer() const noexcept { return m_Renderer.get(); }
-	[[nodiscard]] inline Window* GetWindow() const noexcept { return m_Window.get(); }
-	[[nodiscard]] inline TextureStorage* GetTextureStorage() const noexcept { return m_TextureStorage.get(); }
-	[[nodiscard]] inline EntityComponentSystem* GetECS() const noexcept { return m_ECS.get(); }
-	[[nodiscard]] inline AssetManager* GetAssetManager() const noexcept { return m_AssetManager.get(); }
-	[[nodiscard]] inline Time* GetTime() const noexcept { return m_Time.get(); }
-	[[nodiscard]] inline Input* GetInput() const noexcept { return m_Input.get(); }
-	[[nodiscard]] inline Editor* GetEditor() const noexcept { return m_Editor.get(); }
-	[[nodiscard]] inline Serializer* GetSerializer() const noexcept { return m_Serializer.get(); }
-	[[nodiscard]] inline Logger* GetLogger() const noexcept { return m_Logger.get(); }
-	[[nodiscard]] inline Physics* GetPhysics() const noexcept { return m_Physics.get(); }
-	[[nodiscard]] inline ModelStorage* GetModelStorage() const noexcept { return m_ModelStorage.get(); }
+	[[nodiscard]] inline Renderer* GetRenderer() noexcept { return m_Renderer.get(); }
+	[[nodiscard]] inline Window* GetWindow() noexcept { return m_Window.get(); }
+	[[nodiscard]] inline TextureStorage* GetTextureStorage() noexcept { return m_TextureStorage.get(); }
+	[[nodiscard]] inline EntityComponentSystem* GetECS() noexcept { return m_ECS.get(); }
+	[[nodiscard]] inline AssetManager* GetAssetManager() noexcept { return m_AssetManager.get(); }
+	[[nodiscard]] inline Time* GetTime() noexcept { return m_Time.get(); }
+	[[nodiscard]] inline Input* GetInput() noexcept { return m_Input.get(); }
+	[[nodiscard]] inline Editor* GetEditor() noexcept { return m_Editor.get(); }
+	[[nodiscard]] inline Serializer* GetSerializer() noexcept { return m_Serializer.get(); }
+	[[nodiscard]] inline Logger* GetLogger() noexcept { return m_Logger.get(); }
+	[[nodiscard]] inline Physics* GetPhysics() noexcept { return m_Physics.get(); }
+	[[nodiscard]] inline ModelStorage* GetModelStorage() noexcept { return m_ModelStorage.get(); }
 	
 
 public:
