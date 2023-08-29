@@ -87,13 +87,15 @@ bool Editor::InitializeSubSystems() {
 	//IMPORTANT NOTE: Switch to Unique Ptr references instead and ditch the two step initialization. This could be done for the core and the whole project really.
 
 	//IMPORTANT NOTE: I WAS TESTING THE BUFFERSIZE FOR NAME AND TAG BY NOT ADDING -1 TO WHEN ITS USED!!!!!!
+
+	m_MainMenuBar->Init();
+
 	m_MaterialEditor->Init();
 	m_ContentBrowser->Init();
 	m_DetailsWindow->Init();
 	m_DebugLogWindow->Init();
 	m_SystemLogWindow->Init();
 	m_HierarchyWindow->Init();
-	m_MainMenuBar->Init();
 	m_SelectionWindows->Init();
 
 	m_SubSystemsInitialized = true;
@@ -119,6 +121,9 @@ void Editor::UpdateSubsystems() {
 void Editor::Render() {
 
 	StartFrame();
+	//I should probably just do it here.
+
+
 	UpdateSubsystems(); //Requires a call to StartFrame()
 
 	m_IsAnyWindowHovered = false; //Consider moving this to StartFrame() or something
@@ -143,12 +148,13 @@ void Editor::Render() {
 
 
 	//ImGui::ShowDemoWindow();
+	m_MainMenuBar->Render();
 	m_DetailsWindow->Render();
+
+	m_ContentBrowser->Render();
 	m_HierarchyWindow->Render();
 
 	//RenderViewportWindow();
-	m_MainMenuBar->Render();
-	m_ContentBrowser->Render();
 	m_DebugLogWindow->Render();
 	m_SystemLogWindow->Render();
 	m_SelectionWindows->Render();

@@ -6,6 +6,7 @@ class Core;
 class Editor;
 class SelectionWindows;
 class HierarchyWindow;
+class MainMenuBar;
 
 class GameObject;
 
@@ -32,7 +33,6 @@ public:
 public:
 	void Update();
 	void Render();
-
 	void Init();
 
 public:
@@ -40,11 +40,16 @@ public:
 	inline bool GetState() const noexcept { return m_Opened; }
 	inline bool& GetStateRef() noexcept { return m_Opened; }
 
+	inline void ResetWindow() noexcept { m_ResetWindow = true; }
+
 	inline GameObject* GetTarget() const noexcept { return m_Target; }
 	inline void ClearTarget() noexcept { m_Target = nullptr; }
 	
-	inline ImVec2 GetPosition() const noexcept { return m_Position; }
-	inline ImVec2 GetSize() const noexcept { return m_Size; }
+	inline ImVec2 GetDockPosition() const noexcept { return m_DockPosition; }
+	inline ImVec2 GetDockSize() const noexcept { return m_DockSize; }
+
+	inline ImVec2 GetCurrentPosition() const noexcept { return m_CurrentPosition; }
+	inline ImVec2 GetCurrentSize() const noexcept { return m_CurrentSize; }
 
 	inline char* GetNameInputBuffer() noexcept { return m_NameInputBuffer; }
 	inline uint32 GetNameInputBufferSize() const noexcept { return m_NameInputBufferSize; }
@@ -73,11 +78,22 @@ private:
 	void UpdateTarget() noexcept;
 
 private:
+	void CheckViewportSize() noexcept;
+	void UpdateDockData() noexcept;
+
+private:
 	GameObject* m_Target	{ nullptr };
 	bool m_Opened = true;
+	bool m_ResetWindow = true;
+	bool m_ViewportUpdated = false;
 
-	ImVec2 m_Size;
-	ImVec2 m_Position;
+	ImVec2 m_DockSize;
+	ImVec2 m_DockPosition;
+
+	ImVec2 m_CurrentSize;
+	ImVec2 m_CurrentPosition;
+
+	ImVec2 m_LastViewportSize;
 
 	const uint32 m_NameInputBufferSize = 33;
 	const uint32 m_TagInputBufferSize = 33;
@@ -90,4 +106,5 @@ private:
 	ImGuiViewport* m_ImGuiViewport			{ nullptr };
 	SelectionWindows* m_SelectionWindows	{ nullptr };
 	HierarchyWindow* m_HierarchyWindow		{ nullptr };
+	MainMenuBar* m_MainMenuBar				{ nullptr };
 };

@@ -17,9 +17,13 @@ MainMenuBar::MainMenuBar(Core& core, Editor& editor) noexcept
 
 void MainMenuBar::Render() {
 
-	if (ImGui::BeginMainMenuBar()) {
-		m_Size = ImGui::GetWindowSize();
+	//TODO: Add some method for checking viewport size changes and update somw windows?
 
+	//Only first frame to get the bar size.
+	if (m_Size.x == 0.0f && m_Size.y == 0.0f)
+		m_Size = ImVec2(m_ImGuiViewport->Size.x, ImGui::GetFrameHeight());
+
+	if (ImGui::BeginMainMenuBar()) {
 		RenderFileMenu();
 		RenderWindowMenu();
 		RenderAboutMenu();

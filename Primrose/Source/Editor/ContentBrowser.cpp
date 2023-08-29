@@ -35,7 +35,7 @@ void ContentBrowser::Render() {
 	m_DirectoryExplorerWindowDockSize = ImVec2(m_ImGuiViewport->Size.x * 0.1f, m_ImGuiViewport->Size.y * 0.3f);
 	m_DirectoryExplorerWindowDockPosition = ImVec2(0.0f, m_ImGuiViewport->Size.y - m_DirectoryExplorerWindowDockSize.y); //this one
 
-	m_ContentBrowserWindowDockSize = ImVec2(m_ImGuiViewport->Size.x - m_DetailsWindow->GetSize().x - m_DirectoryExplorerWindowDockSize.x, m_DirectoryExplorerWindowDockSize.y);
+	m_ContentBrowserWindowDockSize = ImVec2(m_ImGuiViewport->Size.x - m_DetailsWindow->GetDockSize().x - m_DirectoryExplorerWindowDockSize.x, m_DirectoryExplorerWindowDockSize.y);
 	m_ContentBrowserWindowDockPosition = ImVec2(m_DirectoryExplorerWindowDockSize.x, m_ImGuiViewport->Size.y - m_ContentBrowserWindowDockSize.y);
 
 

@@ -46,6 +46,4 @@ private:
 	ContentBrowser* m_ContentBrowser	{ nullptr };
 	DebugLogWindow* m_DebugLogWindow	{ nullptr };
 	SystemLogWindow* m_SystemLogWindow	{ nullptr };
-
-	std::unique_ptr<HierarchyWindow>* TestPtr = nullptr;
 };
