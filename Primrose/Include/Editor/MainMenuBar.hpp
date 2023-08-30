@@ -27,7 +27,7 @@ public:
 	void Init();
 
 public:
-	ImVec2 GetSize() const noexcept { return m_Size; }
+	ImVec2 GetSize() const noexcept { return m_Size; } //Just write the values here!
 
 private:
 	void RenderFileMenu();

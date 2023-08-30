@@ -42,6 +42,10 @@ void DetailsWindow::Render() {
 
 	//NOTE: Regarding sizing. Reset for each window, otherwise update on viewport changes.
 	//It seems like these two serve the same purpose kinda.
+	//LAST NOTE: Currently, It changes size according to viewport changes and resets position too. It seems ok, its just the pos thing a bit weird.
+	//-Check out how engines do it for behavior reference. 
+	//Either do it by nums like details window is 60% and content is 40%. or do it by actually getting the size of the other window which creates the order problem.
+	//It might not be that big of a problem since this is not meant to be used by users
 	if (m_ResetWindow) {
 		m_ResetWindow = false;
 		ImGui::SetNextWindowSize(m_DockSize);
