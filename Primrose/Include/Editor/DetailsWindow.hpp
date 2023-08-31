@@ -45,11 +45,11 @@ public:
 	inline GameObject* GetTarget() const noexcept { return m_Target; }
 	inline void ClearTarget() noexcept { m_Target = nullptr; }
 	
-	inline ImVec2 GetDockPosition() const noexcept { return m_DockPosition; }
-	inline ImVec2 GetDockSize() const noexcept { return m_DockSize; }
+	inline ImVec2 GetDockPosition() const noexcept { return m_WindowDockPosition; }
+	inline ImVec2 GetDockSize() const noexcept { return m_WindowDockSize; }
 
-	inline ImVec2 GetCurrentPosition() const noexcept { return m_CurrentPosition; }
-	inline ImVec2 GetCurrentSize() const noexcept { return m_CurrentSize; }
+	inline ImVec2 GetCurrentPosition() const noexcept { return m_WindowCurrentPosition; }
+	inline ImVec2 GetCurrentSize() const noexcept { return m_WindowCurrentSize; }
 
 	inline char* GetNameInputBuffer() noexcept { return m_NameInputBuffer; }
 	inline uint32 GetNameInputBufferSize() const noexcept { return m_NameInputBufferSize; }
@@ -78,20 +78,19 @@ private:
 	void UpdateTarget() noexcept;
 
 private:
-	void CheckViewportSize() noexcept;
+	void CheckViewportChanges() noexcept;
 	void UpdateDockData() noexcept;
 
 private:
 	GameObject* m_Target	{ nullptr };
 	bool m_Opened = true;
-	bool m_ResetWindow = true;
-	bool m_ViewportUpdated = false;
+	bool m_ResetWindow = false;
 
-	ImVec2 m_DockSize;
-	ImVec2 m_DockPosition;
+	ImVec2 m_WindowDockSize;
+	ImVec2 m_WindowDockPosition;
 
-	ImVec2 m_CurrentSize;
-	ImVec2 m_CurrentPosition;
+	ImVec2 m_WindowCurrentSize;
+	ImVec2 m_WindowCurrentPosition;
 
 	ImVec2 m_LastViewportSize;
 

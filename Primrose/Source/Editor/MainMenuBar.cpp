@@ -58,8 +58,10 @@ void MainMenuBar::RenderWindowMenu() {
 
 	if (ImGui::BeginMenu("Window")) {
 
-		ImGui::MenuItem("Details", "CTRL + D", &m_DetailsWindow->GetStateRef());
-		ImGui::MenuItem("Heirarchy", "CTRL + D", &m_HierarchyWindow->GetStateRef());
+		if (ImGui::MenuItem("Details", "CTRL + D", &m_DetailsWindow->GetStateRef()))
+			m_DetailsWindow->ResetWindow();
+		if (ImGui::MenuItem("Heirarchy", "CTRL + D", &m_HierarchyWindow->GetStateRef()))
+			m_HierarchyWindow->ResetWindow();
 		if (ImGui::MenuItem("Content Browser", "CTRL + D", &m_ContentBrowser->GetStateRef()))
 			m_ContentBrowser->ResetWindow();
 
@@ -71,7 +73,6 @@ void MainMenuBar::RenderWindowMenu() {
 
 			ImGui::EndMenu();
 		}
-
 
 		ImGui::EndMenu();
 	}

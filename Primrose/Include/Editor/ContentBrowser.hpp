@@ -6,9 +6,9 @@ class Core;
 class Editor;
 class AssetManager;
 class TextureStorage;
-class DetailsWindow;
 class DebugLogWindow;
 class SystemLogWindow;
+class DetailsWindow;
 
 class Asset;
 class Directory;
@@ -34,23 +34,22 @@ public:
 public:
 	inline void SetSelectedDirectory(Directory& directory) noexcept { m_SelectedDirectory = &directory; }
 
-	inline bool GetState() const noexcept { return m_ContentBrowserWindowOpened; }
-	inline bool& GetStateRef() noexcept { return m_ContentBrowserWindowOpened; }
+	inline bool GetState() const noexcept { return m_Opened; }
+	inline bool& GetStateRef() noexcept { return m_Opened; }
 
-	inline ImVec2 GetContentBrowserWindowSize() const noexcept { return m_ContentBrowserWindowSize; }
-	inline ImVec2 GetDirectoryExplorerWindowSize() const noexcept { return m_DirectoryExplorerWindowSize; }
+	inline bool IsContentBrowserWindowHovered() const noexcept { return m_ContentBrowserWindowHovered; }
+	inline void ResetWindow() noexcept { m_ResetWindow = true; }
+
+
+	inline ImVec2 GetCurrentContentBrowserWindowSize() const noexcept { return m_ContentBrowserWindowCurrentSize; }
+	inline ImVec2 GetCurrentDirectoryExplorerWindowSize() const noexcept { return m_DirectoryExplorerWindowCurrentSize; }
 	inline ImVec2 GetContentBrowserWindowDockSize() const noexcept { return m_ContentBrowserWindowDockSize; }
 	inline ImVec2 GetDirectoryExplorerWindowDockSize() const noexcept { return m_DirectoryExplorerWindowDockSize; }
 
-	inline ImVec2 GetContentBrowserWindowPosition() const noexcept { return m_ContentBrowserWindowPosition; }
-	inline ImVec2 GetDirectoryExplorerWindowPosition() const noexcept { return m_DirectoryExplorerWindowPosition; }
+	inline ImVec2 GetCurrentContentBrowserWindowPosition() const noexcept { return m_ContentBrowserWindowCurrentPosition; }
+	inline ImVec2 GetCurrentDirectoryExplorerWindowPosition() const noexcept { return m_DirectoryExplorerWindowCurrentPosition; }
 	inline ImVec2 GetContentBrowserWindowDockPosition() const noexcept { return m_ContentBrowserWindowDockPosition; }
 	inline ImVec2 GetDirectoryExplorerWindowDockPosition() const noexcept { return m_DirectoryExplorerWindowDockPosition; }
-
-
-	inline bool IsContentBrowserWindowHovered() const noexcept { return m_ContentBrowserWindowHovered; }
-
-	inline void ResetWindow() noexcept { m_ContentBrowserWindowReset = true; } //?? hmmm
 
 private:
 	void RenderContentBrowser();
@@ -69,29 +68,37 @@ private:
 	void AddFileExplorerEntry(Directory* entry);
 
 private:
+	void CheckViewportChanges() noexcept;
+	void CheckWindowsChanges() noexcept;
+	void UpdateDockData() noexcept;
+
+private:
 	ImVec2 m_ContentBrowserWindowDockPosition;
 	ImVec2 m_DirectoryExplorerWindowDockPosition;
 
 	ImVec2 m_ContentBrowserWindowDockSize;
 	ImVec2 m_DirectoryExplorerWindowDockSize;
 
+	ImVec2 m_ContentBrowserWindowCurrentPosition;
+	ImVec2 m_DirectoryExplorerWindowCurrentPosition;
 
-	ImVec2 m_ContentBrowserWindowPosition;
-	ImVec2 m_DirectoryExplorerWindowPosition;
+	ImVec2 m_ContentBrowserWindowCurrentSize;
+	ImVec2 m_DirectoryExplorerWindowCurrentSize;
 
-	ImVec2 m_ContentBrowserWindowSize; //Hmmmm.
-	ImVec2 m_DirectoryExplorerWindowSize;
 
-	bool m_ContentBrowserWindowReset = true;
-	bool m_DirectoryExplorerWindowReset = true;
+
+	ImVec2 m_LastViewportSize;
+	ImVec2 m_LastDetailsWindowSize;
 
 
 
 	ImVec2 m_ContentBrowserElementSize{ 100.0f, 100.0f };
 	float m_ContentBrowserElementPadding = 50.0f;
 
-	bool m_ContentBrowserWindowOpened = true;
-	bool m_DirectoryExplorerWindowOpened = true; //Should use the one above instead for both of them!
+
+
+	bool m_ResetWindow = false;
+	bool m_Opened = true;
 
 	bool m_ContentBrowserWindowHovered = false;
 	bool m_OpenContentBrowserEditMenu = false;
@@ -128,8 +135,8 @@ private:
 	AssetManager* m_AssetManager		{ nullptr };
 	TextureStorage* m_TextureStorage	{ nullptr };
 	ImGuiViewport* m_ImGuiViewport		{ nullptr };
-
-	DetailsWindow* m_DetailsWindow		{ nullptr };
+	//Why the debug windows tho?
 	DebugLogWindow* m_DebugLogWindow	{ nullptr };
 	SystemLogWindow* m_SystemLogWindow	{ nullptr };
+	DetailsWindow* m_DetailsWindow		{ nullptr };
 };

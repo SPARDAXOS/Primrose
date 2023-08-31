@@ -79,14 +79,13 @@ bool Editor::InitializeSubSystems() {
 
 	if (m_SubSystemsInitialized) //Required since many Imgui functions cant be called before StartFrame()
 		return false;
-	//TODO: Unify the functions in all subsystems under one name. 
+
 	//TODO: Setup and rework error messages in all init functions!
-	//TODO: Recheck these since some of them are empty functions
 
-
-	//IMPORTANT NOTE: Switch to Unique Ptr references instead and ditch the two step initialization. This could be done for the core and the whole project really.
 
 	//IMPORTANT NOTE: I WAS TESTING THE BUFFERSIZE FOR NAME AND TAG BY NOT ADDING -1 TO WHEN ITS USED!!!!!!
+	//NOTE: Either keep this or make it so that it will do this in Update depending on a bool.
+
 
 	m_MainMenuBar->Init();
 
@@ -141,6 +140,17 @@ void Editor::Render() {
 	//std::cout << "X: " << Test.m_X << " Y: " << Test.m_Y << " Z: " << Test.m_Z << std::endl;
 
 
+	//FINAL NOTES REGARDING WINDOWS SIZING/POSITIONING PROBLEM
+	//-There is going to be an implicit order here when it comes to rendering. I could move the order to Update() tho! no you usually assum an implicit order dependency
+	//in render functions either way.
+	//I could have abstracted the sizes to their results in the getters instead of returning the member variable. However, this means calls to the getters before Init()
+	//-is called will crash or i would return 0,0. So the implicit order dependency is to be kept.
+
+
+	//It would be MainMenuBar->DetailsWindow then either ContentBrowser or HierarchyWindow. Depending which one decides the height of the other.
+	//Probably keep a Clockwise pattern to it.
+
+
 	//Main Docking Space
 	ImGuiDockNodeFlags Flags = 0;
 	Flags |= ImGuiDockNodeFlags_PassthruCentralNode;
@@ -150,9 +160,15 @@ void Editor::Render() {
 	//ImGui::ShowDemoWindow();
 	m_MainMenuBar->Render();
 	m_DetailsWindow->Render();
-
 	m_ContentBrowser->Render();
 	m_HierarchyWindow->Render();
+
+	//NOTE: There is a couple of connections that are not finished yet.
+	//Directory Explorer and Content Browser are not fully linked during resizing
+	//Hierarchy is not linked to Content Browser.
+	//The add button and the current size of the hierarchy window.
+	//Resize windows and try to find all user cases.
+
 
 	//RenderViewportWindow();
 	m_DebugLogWindow->Render();

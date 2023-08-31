@@ -22,23 +22,12 @@ void DetailsWindow::Render() {
 		return;
 
 	UpdateTarget();
-	CheckViewportSize();
-	UpdateDockData();
-
-	//TODO: Add the ability to reorder these one day
+	CheckViewportChanges();
 
 	ImGuiWindowFlags Flags = 0;
 	Flags |= ImGuiWindowFlags_::ImGuiWindowFlags_NoCollapse;
-	//Note: Will also lock position and size - Use any func without the next to free it
+	Flags |= ImGuiWindowFlags_::ImGuiWindowFlags_NoMove;
 
-	//MainMenubar is the basis.
-	//Details menu can easily be created from it.
-	//I can maybe create them in an order like that.
-
-	//It would be MainMenuBar->DetailsWindow then either ContentBrowser or HierarchyWindow. Depending which one decides the height of the other.
-	//Probably keep a Clockwise pattern to it.
-
-	//Separate it into Init() and UpdateDockData()
 
 	//NOTE: Regarding sizing. Reset for each window, otherwise update on viewport changes.
 	//It seems like these two serve the same purpose kinda.
@@ -46,18 +35,17 @@ void DetailsWindow::Render() {
 	//-Check out how engines do it for behavior reference. 
 	//Either do it by nums like details window is 60% and content is 40%. or do it by actually getting the size of the other window which creates the order problem.
 	//It might not be that big of a problem since this is not meant to be used by users
+	//Gotta see how the dependency works between content browser and hierarchy. It might look like how UE does it.
+
+
+
+	//This window is stationary. Special case!
 	if (m_ResetWindow) {
 		m_ResetWindow = false;
-		ImGui::SetNextWindowSize(m_DockSize);
-		ImGui::SetNextWindowPos(m_DockPosition);
+		UpdateDockData();
+		ImGui::SetNextWindowSize(m_WindowDockSize);
+		ImGui::SetNextWindowPos(m_WindowDockPosition);
 	}
-	if (m_ViewportUpdated) { //Dups but nearly works. Problem is that window size changes are not viewport related so it wont do it.
-		m_ViewportUpdated = false;
-		ImGui::SetNextWindowSize(m_DockSize);
-		ImGui::SetNextWindowPos(m_DockPosition);
-	}
-
-
 	if (ImGui::Begin("Details", &m_Opened, Flags)) {
 		m_Editor->CheckForHoveredWindows();
 
@@ -77,8 +65,8 @@ void DetailsWindow::Render() {
 			RenderAddComponentMenu();
 		}
 
-		m_CurrentPosition = ImGui::GetWindowPos();
-		m_CurrentSize = ImGui::GetWindowSize();
+		m_WindowCurrentPosition = ImGui::GetWindowPos();
+		m_WindowCurrentSize = ImGui::GetWindowSize();
 	}
 
 
@@ -246,7 +234,7 @@ void DetailsWindow::RenderSpriteRendererDetails() {
 			//Parameter Name
 			ImGui::Text("Sprite");
 			ElementTextSize = ImGui::CalcTextSize("Sprite");
-			ImGui::SameLine(ElementTextSize.x + (m_DockSize.x * 0.05f));
+			ImGui::SameLine(ElementTextSize.x + (m_WindowDockSize.x * 0.05f));
 
 			//Value Text Calculation
 			const Texture2D* Sprite = SelectedSpriteRenderer->GetSprite();
@@ -257,15 +245,15 @@ void DetailsWindow::RenderSpriteRendererDetails() {
 			ValueNameSize = ImGui::CalcTextSize(ValueName.data());
 
 			//Input Box
-			InputBoxSize = ImVec2(m_DockSize.x * 0.2f + ValueNameSize.x, 15.0f);
+			InputBoxSize = ImVec2(m_WindowDockSize.x * 0.2f + ValueNameSize.x, 15.0f);
 			if (ImGui::Button("##SpriteNameButton", InputBoxSize)) {
 				m_SelectionWindows->SetSpriteSelectorWindowState(true);
 				m_SelectionWindows->SetSpriteSelectorTarget(SelectedSpriteRenderer->GetSpriteRef());
 			}
 
 			//Value Name Text
-			ImGui::SameLine(ElementTextSize.x + (m_DockSize.x * 0.05f));
-			ValueNameTextPosition.x = (ElementTextSize.x + (m_DockSize.x * 0.05f) + InputBoxSize.x / 2) - (ValueNameSize.x / 2);
+			ImGui::SameLine(ElementTextSize.x + (m_WindowDockSize.x * 0.05f));
+			ValueNameTextPosition.x = (ElementTextSize.x + (m_WindowDockSize.x * 0.05f) + InputBoxSize.x / 2) - (ValueNameSize.x / 2);
 			ValueNameTextPosition.y = ((ImGui::GetCursorPosY() - InputBoxSize.y / 2) + ValueNameSize.y / 2) - 2; //Offset by -2 to make it look better!
 			ImGui::SetCursorPos(ValueNameTextPosition);
 			ImGui::Text(ValueName.data());
@@ -275,7 +263,7 @@ void DetailsWindow::RenderSpriteRendererDetails() {
 			//Parameter Name
 			ImGui::Text("Material");
 			ElementTextSize = ImGui::CalcTextSize("Material");
-			ImGui::SameLine(ElementTextSize.x + (m_DockSize.x * 0.05f));
+			ImGui::SameLine(ElementTextSize.x + (m_WindowDockSize.x * 0.05f));
 
 			//Value Text Calculation
 			const Material* Material = SelectedSpriteRenderer->GetMaterial();
@@ -286,15 +274,15 @@ void DetailsWindow::RenderSpriteRendererDetails() {
 			ValueNameSize = ImGui::CalcTextSize(ValueName.data());
 
 			//Input Box
-			InputBoxSize = ImVec2(m_DockSize.x * 0.2f + ValueNameSize.x, 15.0f);
+			InputBoxSize = ImVec2(m_WindowDockSize.x * 0.2f + ValueNameSize.x, 15.0f);
 			if (ImGui::Button("##MaterialNameButton", InputBoxSize)) {
 				m_SelectionWindows->SetMaterialSelectorWindowState(true);
 				m_SelectionWindows->SetMaterialSelectorTarget(SelectedSpriteRenderer->GetMaterialRef());
 			}
 
 			//Value Name Text
-			ImGui::SameLine(ElementTextSize.x + (m_DockSize.x * 0.05f));
-			ValueNameTextPosition.x = (ElementTextSize.x + (m_DockSize.x * 0.05f) + InputBoxSize.x / 2) - (ValueNameSize.x / 2);
+			ImGui::SameLine(ElementTextSize.x + (m_WindowDockSize.x * 0.05f));
+			ValueNameTextPosition.x = (ElementTextSize.x + (m_WindowDockSize.x * 0.05f) + InputBoxSize.x / 2) - (ValueNameSize.x / 2);
 			ValueNameTextPosition.y = ((ImGui::GetCursorPosY() - InputBoxSize.y / 2) + ValueNameSize.y / 2) - 2; //Offset by -2 to make it look better!
 			ImGui::SetCursorPos(ValueNameTextPosition);
 			ImGui::Text(ValueName.data());
@@ -568,7 +556,7 @@ void DetailsWindow::RenderDirectionalLightDetails() {
 			//Tint
 			ImGui::Text("Tint");
 			ElementTextSize = ImGui::CalcTextSize("Tint");
-			ImGui::SameLine(ElementTextSize.x + (m_DockSize.x * 0.05f));
+			ImGui::SameLine(ElementTextSize.x + (m_WindowDockSize.x * 0.05f));
 			Color CurrentColor = SelectedDirectionalLight->m_Tint;
 			if (ImGui::ColorEdit4("##TintPicker", &CurrentColor.m_R, ImGuiColorEditFlags_NoInputs)) {
 				SelectedDirectionalLight->m_Tint = CurrentColor;
@@ -577,8 +565,8 @@ void DetailsWindow::RenderDirectionalLightDetails() {
 			//Intensity
 			ImGui::Text("Intensity");
 			ElementTextSize = ImGui::CalcTextSize("Intensity");
-			ImGui::SameLine(ElementTextSize.x + (m_DockSize.x * 0.05f));
-			ImGui::SetNextItemWidth(m_DockSize.x * 0.4f);
+			ImGui::SameLine(ElementTextSize.x + (m_WindowDockSize.x * 0.05f));
+			ImGui::SetNextItemWidth(m_WindowDockSize.x * 0.4f);
 			ImGui::SliderFloat("##Intensity", &SelectedDirectionalLight->m_Intensity, 0.0f, 10.0f);
 
 		}
@@ -597,7 +585,7 @@ void DetailsWindow::RenderPointLightDetails() {
 			//Tint
 			ImGui::Text("Tint");
 			ElementTextSize = ImGui::CalcTextSize("Tint");
-			ImGui::SameLine(ElementTextSize.x + (m_DockSize.x * 0.05f));
+			ImGui::SameLine(ElementTextSize.x + (m_WindowDockSize.x * 0.05f));
 			Color CurrentColor = SelectedPointLight->m_Tint;
 			if (ImGui::ColorEdit4("##TintPicker", &CurrentColor.m_R, ImGuiColorEditFlags_NoInputs)) {
 				SelectedPointLight->m_Tint = CurrentColor;
@@ -606,22 +594,22 @@ void DetailsWindow::RenderPointLightDetails() {
 			//Intensity
 			ImGui::Text("Intensity");
 			ElementTextSize = ImGui::CalcTextSize("Intensity");
-			ImGui::SameLine(ElementTextSize.x + (m_DockSize.x * 0.05f));
-			ImGui::SetNextItemWidth(m_DockSize.x * 0.4f);
+			ImGui::SameLine(ElementTextSize.x + (m_WindowDockSize.x * 0.05f));
+			ImGui::SetNextItemWidth(m_WindowDockSize.x * 0.4f);
 			ImGui::SliderFloat("##Intensity", &SelectedPointLight->m_Intensity, 0.0f, 10.0f);
 
 			//Attenuation
 			ImGui::Text("Attenuation");
 			ElementTextSize = ImGui::CalcTextSize("Attenuation");
-			ImGui::SameLine(ElementTextSize.x + (m_DockSize.x * 0.05f));
-			ImGui::SetNextItemWidth(m_DockSize.x * 0.4f);
+			ImGui::SameLine(ElementTextSize.x + (m_WindowDockSize.x * 0.05f));
+			ImGui::SetNextItemWidth(m_WindowDockSize.x * 0.4f);
 			ImGui::SliderFloat("##Attenuation", &SelectedPointLight->m_Attenuation, 0.0f, 10.0f);
 
 			//SourceRadius
 			ImGui::Text("Source Radius");
 			ElementTextSize = ImGui::CalcTextSize("Source Radius");
-			ImGui::SameLine(ElementTextSize.x + (m_DockSize.x * 0.05f));
-			ImGui::SetNextItemWidth(m_DockSize.x * 0.4f);
+			ImGui::SameLine(ElementTextSize.x + (m_WindowDockSize.x * 0.05f));
+			ImGui::SetNextItemWidth(m_WindowDockSize.x * 0.4f);
 			ImGui::SliderFloat("##Source Radius", &SelectedPointLight->m_SourceRadius, 0.0f, 10.0f);
 		}
 	}
@@ -637,7 +625,7 @@ void DetailsWindow::RenderSpotLightDetails() {
 			//Tint
 			ImGui::Text("Tint");
 			ElementTextSize = ImGui::CalcTextSize("Tint");
-			ImGui::SameLine(ElementTextSize.x + (m_DockSize.x * 0.05f));
+			ImGui::SameLine(ElementTextSize.x + (m_WindowDockSize.x * 0.05f));
 			Color CurrentColor = SelectedSpotLight->m_Tint;
 			if (ImGui::ColorEdit4("##TintPicker", &CurrentColor.m_R, ImGuiColorEditFlags_NoInputs)) {
 				SelectedSpotLight->m_Tint = CurrentColor;
@@ -646,36 +634,36 @@ void DetailsWindow::RenderSpotLightDetails() {
 			//Intensity
 			ImGui::Text("Intensity");
 			ElementTextSize = ImGui::CalcTextSize("Intensity");
-			ImGui::SameLine(ElementTextSize.x + (m_DockSize.x * 0.05f));
-			ImGui::SetNextItemWidth(m_DockSize.x * 0.4f);
+			ImGui::SameLine(ElementTextSize.x + (m_WindowDockSize.x * 0.05f));
+			ImGui::SetNextItemWidth(m_WindowDockSize.x * 0.4f);
 			ImGui::SliderFloat("##Intensity", &SelectedSpotLight->m_Intensity, 0.0f, 10.0f);
 
 			//Inner Cutoff Angle
 			ImGui::Text("Inner Cutoff Angle");
 			ElementTextSize = ImGui::CalcTextSize("Inner Cutoff Angle");
-			ImGui::SameLine(ElementTextSize.x + (m_DockSize.x * 0.05f));
-			ImGui::SetNextItemWidth(m_DockSize.x * 0.4f);
+			ImGui::SameLine(ElementTextSize.x + (m_WindowDockSize.x * 0.05f));
+			ImGui::SetNextItemWidth(m_WindowDockSize.x * 0.4f);
 			ImGui::SliderFloat("##Inner Cutoff Angle", &SelectedSpotLight->m_InnerCutoffAngle, 1.0f, 180.0f);
 
 			//Outer Cutoff Angle
 			ImGui::Text("Outer Cutoff Angle");
 			ElementTextSize = ImGui::CalcTextSize("Outer Cutoff Angle");
-			ImGui::SameLine(ElementTextSize.x + (m_DockSize.x * 0.05f));
-			ImGui::SetNextItemWidth(m_DockSize.x * 0.4f);
+			ImGui::SameLine(ElementTextSize.x + (m_WindowDockSize.x * 0.05f));
+			ImGui::SetNextItemWidth(m_WindowDockSize.x * 0.4f);
 			ImGui::SliderFloat("##Outer Cutoff Angle", &SelectedSpotLight->m_OuterCutoffAngle, 1.0f, 180.0f);
 
 			//Attenuation
 			ImGui::Text("Attenuation");
 			ElementTextSize = ImGui::CalcTextSize("Attenuation");
-			ImGui::SameLine(ElementTextSize.x + (m_DockSize.x * 0.05f));
-			ImGui::SetNextItemWidth(m_DockSize.x * 0.4f);
+			ImGui::SameLine(ElementTextSize.x + (m_WindowDockSize.x * 0.05f));
+			ImGui::SetNextItemWidth(m_WindowDockSize.x * 0.4f);
 			ImGui::SliderFloat("##Attenuation", &SelectedSpotLight->m_Attenuation, 0.0f, 10.0f);
 
 			//SourceRadius
 			ImGui::Text("Source Radius");
 			ElementTextSize = ImGui::CalcTextSize("Source Radius");
-			ImGui::SameLine(ElementTextSize.x + (m_DockSize.x * 0.05f));
-			ImGui::SetNextItemWidth(m_DockSize.x * 0.4f);
+			ImGui::SameLine(ElementTextSize.x + (m_WindowDockSize.x * 0.05f));
+			ImGui::SetNextItemWidth(m_WindowDockSize.x * 0.4f);
 			ImGui::SliderFloat("##Source Radius", &SelectedSpotLight->m_SourceRadius, 0.0f, 10.0f);
 
 		}
@@ -685,7 +673,7 @@ void DetailsWindow::RenderAddComponentMenu() {
 
 	ImGui::Separator();
 	m_Editor->AddSpacings(6);
-	ImGui::SameLine((m_DockSize.x / 2) - 75.0f);
+	ImGui::SameLine((m_WindowDockSize.x / 2) - 75.0f);
 	if (ImGui::Button("Add Component", ImVec2(150.0f, 20.0f))) {
 		ImVec2 PopupPosition = { ImGui::GetMousePos().x - 75, ImGui::GetMousePos().y }; //75 - Half box width
 		ImGui::SetNextWindowPos(PopupPosition);
@@ -779,18 +767,12 @@ void DetailsWindow::UpdateTarget() noexcept {
 		m_SelectionWindows->ClearSpriteSelectorTarget();
 }
 void DetailsWindow::UpdateDockData() noexcept {
-	//Check viewport changes only. If so then change dock positions? no reset?
-	// Maybe do another reset after init is finished or something cause i need all windows to have their positions calculated before i adjust!
-	//I think they need to be kept updated each frame to adjust to me resizing the window! i do need update positions function after all!
-	//m_DockSize = ImVec2(m_ImGuiViewport->Size.x * 0.2f, m_ImGuiViewport->Size.y - m_MainMenuBar->GetSize().y - m_ContentBrowser->GetContentBrowserWindowDockSize().y); //? wot also no content browser
-	//m_DockPosition = ImVec2(m_ImGuiViewport->Size.x - m_DockSize.x, m_MainMenuBar->GetSize().y);
-	m_DockSize = ImVec2(m_ImGuiViewport->Size.x * 0.2f, m_ImGuiViewport->Size.y - m_MainMenuBar->GetSize().y); //? wot also no content browser
-	m_DockPosition = ImVec2(m_ImGuiViewport->Size.x - m_DockSize.x, m_MainMenuBar->GetSize().y);
+	m_WindowDockSize = ImVec2(m_ImGuiViewport->Size.x * 0.2f, m_ImGuiViewport->Size.y - m_MainMenuBar->GetSize().y); //? wot also no content browser
+	m_WindowDockPosition = ImVec2(m_ImGuiViewport->Size.x - m_WindowDockSize.x, m_MainMenuBar->GetSize().y);
 }
-void DetailsWindow::CheckViewportSize() noexcept {
-
+void DetailsWindow::CheckViewportChanges() noexcept {
 	if (m_ImGuiViewport->Size.x != m_LastViewportSize.x || m_ImGuiViewport->Size.y != m_LastViewportSize.y) {
-		m_ViewportUpdated = true;
+		m_ResetWindow = true;
 		m_LastViewportSize = m_ImGuiViewport->Size;
 	}
 }

@@ -4,10 +4,6 @@
 #include "Systems/AssetManager.hpp"
 #include "Systems/TextureStorage.hpp"
 
-#include "Editor/DetailsWindow.hpp"
-#include "Editor/DebugLogWindow.hpp"
-#include "Editor/SystemLogWindow.hpp"
-
 
 ContentBrowser::ContentBrowser(Core& core, Editor& editor) noexcept
 	: m_Core(&core), m_Editor(&editor)
@@ -32,15 +28,19 @@ void ContentBrowser::Update() {
 }
 void ContentBrowser::Render() {
 
-	m_DirectoryExplorerWindowDockSize = ImVec2(m_ImGuiViewport->Size.x * 0.1f, m_ImGuiViewport->Size.y * 0.3f);
-	m_DirectoryExplorerWindowDockPosition = ImVec2(0.0f, m_ImGuiViewport->Size.y - m_DirectoryExplorerWindowDockSize.y); //this one
+	if (!m_Opened)
+		return;
 
-	m_ContentBrowserWindowDockSize = ImVec2(m_ImGuiViewport->Size.x - m_DetailsWindow->GetDockSize().x - m_DirectoryExplorerWindowDockSize.x, m_DirectoryExplorerWindowDockSize.y);
-	m_ContentBrowserWindowDockPosition = ImVec2(m_DirectoryExplorerWindowDockSize.x, m_ImGuiViewport->Size.y - m_ContentBrowserWindowDockSize.y);
+	CheckViewportChanges();
+	CheckWindowsChanges();
+	if (m_ResetWindow)
+		UpdateDockData();
 
-
-	RenderContentBrowser();
 	RenderDirectoryExplorer();
+	RenderContentBrowser();
+
+	if (m_ResetWindow)
+		m_ResetWindow = false;
 }
 void ContentBrowser::Init() {
 
@@ -49,9 +49,9 @@ void ContentBrowser::Init() {
 	//Error asset
 
 	m_ImGuiViewport = m_Editor->GetGUIViewport();
-	m_DetailsWindow = m_Editor->GetDetailsWindow();
 	m_DebugLogWindow = m_Editor->GetDebugLogWindow();
 	m_SystemLogWindow = m_Editor->GetSystemLogWindow();
+	m_DetailsWindow = m_Editor->GetDetailsWindow();
 
 
 	if (!m_TextureStorage->GetEditorTexture2DByName("Folder.png", m_FolderTexture))
@@ -64,46 +64,24 @@ void ContentBrowser::Init() {
 void ContentBrowser::RenderContentBrowser() {
 
 	m_ContentBrowserWindowHovered = false;
-	if (!m_ContentBrowserWindowOpened)
-		return;
 
 	bool m_IsOtherContentWindowOpened = false;
 	m_IsOtherContentWindowOpened |= m_DebugLogWindow->GetState();
 	m_IsOtherContentWindowOpened |= m_SystemLogWindow->GetState();
 
+
 	ImGuiWindowFlags Flags = 0;
 	Flags |= ImGuiWindowFlags_NoCollapse;
 	Flags |= ImGuiWindowFlags_NoSavedSettings;
-
-
+	Flags |= ImGuiWindowFlags_NoMove;
 
 
 	//IMPORTANT NOTE: When it comes to the text offeset bug, check the alignment on the text by PushStyleVar(). update: that didnt do it i think.
-
-	//LATEST NOTE BEFORE REFACTORING: The reset bool is good and needed to make sure windows reset position. Whether the function to reset it is needed is questionable!
-	if (m_ContentBrowserWindowReset) {
-		m_ContentBrowserWindowReset = false;
-
-		if (!m_IsOtherContentWindowOpened) {
-
-			//One of them is not needed for this recalculation
-			//m_DirectoryExplorerWindowDockSize = ImVec2(m_ImGuiViewport->Size.x * 0.1f, m_ImGuiViewport->Size.y * 0.3f);
-			//m_DirectoryExplorerWindowDockPosition = ImVec2(0.0f, m_ImGuiViewport->Size.y - m_DirectoryExplorerWindowDockSize.y); //this one
-
-			//m_ContentBrowserWindowDockSize = ImVec2(m_ImGuiViewport->Size.x - m_DetailsWindow->GetSize().x - m_DirectoryExplorerWindowDockSize.x, m_DirectoryExplorerWindowDockSize.y);
-			//m_ContentBrowserWindowDockPosition = ImVec2(m_DirectoryExplorerWindowDockSize.x, m_ImGuiViewport->Size.y - m_ContentBrowserWindowDockSize.y);
-
-			ImGui::SetNextWindowPos(m_ContentBrowserWindowDockPosition);
-			ImGui::SetNextWindowSize(m_ContentBrowserWindowDockSize);
-			Flags |= ImGuiWindowFlags_NoMove; //Not working!!!
-		}
-		else {
-			ImGui::SetNextWindowPos(m_Editor->GetUniqueScreenCenterPoint(m_Editor->GetNewStandaloneWindowSize()));
-			ImGui::SetNextWindowSize(m_Editor->GetNewStandaloneWindowSize());
-		}
+	if (m_ResetWindow) {
+		ImGui::SetNextWindowSize(m_ContentBrowserWindowDockSize);
+		ImGui::SetNextWindowPos(m_ContentBrowserWindowDockPosition);
 	}
-
-	if (ImGui::Begin("Content Browser", &m_ContentBrowserWindowOpened, Flags)) {
+	if (ImGui::Begin("Content Browser", nullptr, Flags)) {
 		m_Editor->CheckForHoveredWindows();
 		if (ImGui::IsWindowHovered())
 			m_ContentBrowserWindowHovered = true;
@@ -120,17 +98,14 @@ void ContentBrowser::RenderContentBrowser() {
 			ClearStyle();
 		}
 
-		m_ContentBrowserWindowSize = ImGui::GetWindowSize();
-		m_ContentBrowserWindowPosition = ImGui::GetWindowPos();
+		m_ContentBrowserWindowCurrentSize = ImGui::GetWindowSize();
+		m_ContentBrowserWindowCurrentPosition = ImGui::GetWindowPos();
 	}
 	ImGui::End();
 
 	UpdateContentBrowserMenu();
 }
 void ContentBrowser::RenderDirectoryExplorer() {
-
-	if (!m_DirectoryExplorerWindowOpened)
-		return;
 
 	bool m_IsOtherContentWindowOpened = false;
 	m_IsOtherContentWindowOpened |= m_DebugLogWindow->GetState();
@@ -139,30 +114,17 @@ void ContentBrowser::RenderDirectoryExplorer() {
 
 	ImGuiWindowFlags Flags = 0;
 	Flags |= ImGuiWindowFlags_NoCollapse;
+	Flags |= ImGuiWindowFlags_NoSavedSettings;
 	Flags |= ImGuiWindowFlags_AlwaysVerticalScrollbar;
+	Flags |= ImGuiWindowFlags_NoMove;
 	Flags |= ImGuiWindowFlags_MenuBar;
 
-	//Confusing mess
-	//All these calls to setting the position and size will be removed!
-	ImGui::SetNextWindowSize(ImVec2(m_DirectoryExplorerWindowSize.x, m_ContentBrowserWindowSize.y));
-	ImGui::SetNextWindowPos(ImVec2(0.0f, m_ImGuiViewport->Size.y - m_DirectoryExplorerWindowSize.y));
-	//Havent finished this!
-	//if (m_DirectoryExplorerWindowReset) {
-	//	m_DirectoryExplorerWindowReset = false;
 
-	//	if (!m_IsOtherContentWindowOpened) {
-	//		ImGui::SetNextWindowPos(m_DirectoryExplorerWindowDockPosition);
-	//		ImGui::SetNextWindowSize(m_DirectoryExplorerWindowDockSize);
-	//		Flags |= ImGuiWindowFlags_NoMove; //Not working!!!
-	//	}
-	//	else {
-	//		ImGui::SetNextWindowPos(m_Editor->GetUniqueScreenCenterPoint(m_Editor->GetNewStandaloneWindowSize()));
-	//		ImGui::SetNextWindowSize(m_Editor->GetNewStandaloneWindowSize());
-	//	}
-	//}
-
-
-	if (ImGui::Begin("Directory Explorer", &m_DirectoryExplorerWindowOpened, Flags)) {
+	if (m_ResetWindow) {
+		ImGui::SetNextWindowSize(m_DirectoryExplorerWindowDockSize);
+		ImGui::SetNextWindowPos(m_DirectoryExplorerWindowDockPosition);
+	}
+	if (ImGui::Begin("Directory Explorer", &m_Opened, Flags)) {
 		m_Editor->CheckForHoveredWindows();
 
 		if (ImGui::BeginMenuBar()) {
@@ -198,6 +160,9 @@ void ContentBrowser::RenderDirectoryExplorer() {
 			}
 			AddFileExplorerEntry(EditorRoot);
 		}
+
+		m_DirectoryExplorerWindowCurrentSize = ImGui::GetWindowSize();
+		m_DirectoryExplorerWindowCurrentPosition = ImGui::GetWindowPos();
 	}
 
 	ImGui::End();
@@ -251,7 +216,7 @@ void ContentBrowser::UpdateContentBrowserFolderEntries() {
 
 		//Calculate position and check if new line is necessary
 		m_ContentElementCursor = (m_ContentBrowserElementPadding * (m_ContentLineElementsCount + 1)) + m_ContentBrowserElementSize.x * m_ContentLineElementsCount;
-		if (m_ContentElementCursor + m_ContentBrowserElementSize.x >= m_ContentBrowserWindowSize.x) {
+		if (m_ContentElementCursor + m_ContentBrowserElementSize.x >= m_ContentBrowserWindowCurrentSize.x) {
 			FlushContentTexts();
 			m_ContentElementCursor = m_ContentBrowserElementPadding;
 			m_ContentLineElementsCount = 0; //This means its a new line!
@@ -339,7 +304,7 @@ void ContentBrowser::UpdateContentBrowserAssetEntries() {
 
 		//Calculate position and check if new line is necessary
 		m_ContentElementCursor = (m_ContentBrowserElementPadding * (m_ContentLineElementsCount + 1)) + m_ContentBrowserElementSize.x * m_ContentLineElementsCount;
-		if (m_ContentElementCursor + m_ContentBrowserElementSize.x >= m_ContentBrowserWindowSize.x) {
+		if (m_ContentElementCursor + m_ContentBrowserElementSize.x >= m_ContentBrowserWindowCurrentSize.x) {
 
 			FlushContentTexts();
 			m_ContentElementCursor = m_ContentBrowserElementPadding;
@@ -474,4 +439,27 @@ void ContentBrowser::ClearStyle() {
 
 	//Make sure its the same amount of PushStyleColor() calls in SetupContentBrowserStyle();
 	ImGui::PopStyleColor(3);
+}
+
+void ContentBrowser::UpdateDockData() noexcept {
+
+	m_DirectoryExplorerWindowDockSize = ImVec2(m_ImGuiViewport->Size.x * 0.1f, m_ImGuiViewport->Size.y * 0.3f);
+
+	//Requires m_DirectoryExplorerWindowDockSize.y to be updated first
+
+	m_ContentBrowserWindowDockSize = ImVec2(m_ImGuiViewport->Size.x - m_DirectoryExplorerWindowDockSize.x - m_DetailsWindow->GetCurrentSize().x, m_DirectoryExplorerWindowDockSize.y);
+	m_ContentBrowserWindowDockPosition = ImVec2(m_DirectoryExplorerWindowDockSize.x, m_ImGuiViewport->Size.y - m_DirectoryExplorerWindowDockSize.y);
+	m_DirectoryExplorerWindowDockPosition = ImVec2(0.0f, m_ImGuiViewport->Size.y - m_DirectoryExplorerWindowDockSize.y);
+}
+void ContentBrowser::CheckViewportChanges() noexcept {
+	if (m_ImGuiViewport->Size.x != m_LastViewportSize.x || m_ImGuiViewport->Size.y != m_LastViewportSize.y) {
+		m_ResetWindow = true;
+		m_LastViewportSize = m_ImGuiViewport->Size;
+	}
+}
+void ContentBrowser::CheckWindowsChanges() noexcept {
+	if (m_DetailsWindow->GetCurrentSize().x != m_LastDetailsWindowSize.x || m_DetailsWindow->GetCurrentSize().y != m_LastDetailsWindowSize.y) {
+		m_ResetWindow = true;
+		m_LastDetailsWindowSize = m_DetailsWindow->GetCurrentSize();
+	}
 }

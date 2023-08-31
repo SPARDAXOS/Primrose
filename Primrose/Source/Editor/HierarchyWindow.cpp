@@ -2,8 +2,7 @@
 #include "Systems/Core.hpp"
 #include "Systems/Editor.hpp"
 #include "Systems/EntityComponentSystem.hpp"
-#include "Editor/ContentBrowser.hpp"
-#include "Editor/DetailsWindow.hpp"
+
 
 #include "GameObject.hpp"
 
@@ -41,15 +40,21 @@ void HierarchyWindow::Render() {
 	if (!m_Open)
 		return;
 
-	m_Size = ImVec2(m_ImGuiViewport->Size.x * 0.1f, m_ImGuiViewport->Size.y - m_ContentBrowser->GetDirectoryExplorerWindowSize().y - m_Size.y); //ContentBrowser
-	m_Position = ImVec2(0.0f, m_Size.y);
+	CheckViewportChanges();
+	CheckWindowsChanges();
+	if (m_ResetWindow)
+		UpdateDockData();
 
 	RenderHierarchy();
-	RenderAddGameObjectMenu();
+	RenderAddButtonMenu();
+
+	if (m_ResetWindow)
+		m_ResetWindow = false;
 }
 void HierarchyWindow::Init() {
 
 	m_ImGuiViewport = m_Editor->GetGUIViewport();
+	m_MainMenuBar = m_Editor->GetMainMenuBar();
 	m_ContentBrowser = m_Editor->GetContentBrowser();
 	m_DetailsWindow = m_Editor->GetDetailsWindow();
 }
@@ -57,12 +62,15 @@ void HierarchyWindow::Init() {
 void HierarchyWindow::RenderHierarchy() {
 
 	ImGuiWindowFlags Flags = 0;
-	Flags |= ImGuiWindowFlags_::ImGuiWindowFlags_NoCollapse;
-
-	ImGui::SetNextWindowSize(m_Size);
-	ImGui::SetNextWindowPos(m_Position);
-
+	Flags |= ImGuiWindowFlags_NoCollapse;
+	Flags |= ImGuiWindowFlags_NoMove;
 	//ImGuiWindowFlags_NoBringToFrontOnFocus
+
+
+	if (m_ResetWindow) {
+		ImGui::SetNextWindowSize(m_HierarchyWindowDockSize);
+		ImGui::SetNextWindowPos(m_HierarchyWindowDockPosition);
+	}
 	if (ImGui::Begin("Heirarchy", &m_Open, Flags)) {
 		m_Editor->CheckForHoveredWindows();
 
@@ -72,11 +80,14 @@ void HierarchyWindow::RenderHierarchy() {
 			if (!m_ECS->IsReserved(GameObjects.at(i)->GetObjectID()) && GameObjects.at(i)->GetParent() == nullptr)
 				AddHeirarchyEntry(GameObjects.at(i));
 		}
+
+		m_HierarchyWindowCurrentSize = ImGui::GetWindowSize();
+		m_HierarchyWindowCurrentPosition = ImGui::GetWindowPos();
 	}
 
 	ImGui::End();
 }
-void HierarchyWindow::RenderAddGameObjectMenu() {
+void HierarchyWindow::RenderAddButtonMenu() {
 
 	ImGuiWindowFlags Flags = 0;
 	Flags |= ImGuiWindowFlags_NoTitleBar;
@@ -87,11 +98,12 @@ void HierarchyWindow::RenderAddGameObjectMenu() {
 	Flags |= ImGuiWindowFlags_NoFocusOnAppearing;
 	Flags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
 
-	//NOTE: This whole calculation thing here needs to be redone.
 
-	ImGui::SetNextWindowSize(ImVec2(100.0f, 0.0f)); //As big as the button
-	ImGui::SetNextWindowPos(ImVec2(m_Position.x + m_Size.x - 25.0f, -7.5f + m_Size.y)); //BUG: Even after all this hardcoding this is still slightly off. It is visible
 	
+	if (m_ResetWindow) {
+		ImGui::SetNextWindowSize(m_AddButtonDockSize);
+		ImGui::SetNextWindowPos(m_AddButtonDockPosition);
+	}
 	if (ImGui::Begin("##AddGameObjectMenu", &m_Open, Flags)) {
 		m_Editor->CheckForHoveredWindows();
 
@@ -126,6 +138,8 @@ void HierarchyWindow::RenderAddGameObjectMenu() {
 			ImGui::EndPopup();
 		}
 
+		m_AddButtonCurrentSize = ImGui::GetWindowSize();
+		m_AddButtonCurrentPosition = ImGui::GetWindowPos();
 	}
 
 	ImGui::End();
@@ -256,5 +270,29 @@ void HierarchyWindow::AddHeirarchyEntry(GameObject* entry) {
 	if (PushedStyles > 0) {
 		ImGui::PopStyleVar();
 		PushedStyles--;
+	}
+}
+
+
+void HierarchyWindow::UpdateDockData() noexcept {
+
+	//NOTE: This whole calculation thing here needs to be redone.
+
+	m_HierarchyWindowDockSize = ImVec2(m_ImGuiViewport->Size.x * 0.1f, m_ImGuiViewport->Size.y - m_ContentBrowser->GetCurrentDirectoryExplorerWindowSize().y - m_MainMenuBar->GetSize().y);
+	m_HierarchyWindowDockPosition = ImVec2(0.0f, m_MainMenuBar->GetSize().y);
+
+	m_AddButtonDockSize = ImVec2(100.0f, 0.0f); //As big as the button
+	m_AddButtonDockPosition = ImVec2(m_HierarchyWindowDockPosition.x + m_HierarchyWindowDockSize.x - 25.0f, -7.5f + m_MainMenuBar->GetSize().y);//BUG: Even after all this hardcoding this is still slightly off. It is visible
+}
+void HierarchyWindow::CheckViewportChanges() noexcept {
+	if (m_ImGuiViewport->Size.x != m_LastViewportSize.x || m_ImGuiViewport->Size.y != m_LastViewportSize.y) {
+		m_ResetWindow = true;
+		m_LastViewportSize = m_ImGuiViewport->Size;
+	}
+}
+void HierarchyWindow::CheckWindowsChanges() noexcept {
+	if (m_ContentBrowser->GetCurrentContentBrowserWindowSize().x != m_LastContentBrowserWindowSize.x || m_ContentBrowser->GetCurrentContentBrowserWindowSize().y != m_LastContentBrowserWindowSize.y) {
+		m_ResetWindow = true;
+		m_LastContentBrowserWindowSize = m_ContentBrowser->GetCurrentContentBrowserWindowSize();
 	}
 }
