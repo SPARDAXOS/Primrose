@@ -69,13 +69,29 @@ private:
 	void RenderDirectoryExplorer();
 
 	void RenderContent();
+	void RenderFolderEditMenu();
+	void RenderAssetEditMenu();
 
-	void NewContentBrowserFrame() noexcept;
 	void UpdateContentBrowserFolderEntries();
 	void UpdateContentBrowserAssetEntries();
-	void UpdateContentBrowserMenu();
+	void RenderContentBrowserEditMenu();
+
+
+private:
+	void NewContentBrowserFrame() noexcept;
 	void FlushContentEntriesTexts();
 
+
+	void CreateFolderEntry(Directory& folder, void* textureID);
+	void CreateAssetEntry(Asset& asset, void* textureID);
+	void AddContentElementTextEntry(const std::string& text);
+
+	void UpdateContentElementCursor() noexcept;
+
+	void CheckFolderEditMenu(Directory& folder);
+	void CheckAssetEditMenu(Asset& asset);
+
+private:
 	Texture2D* GetAssetTexture(const Asset& asset) noexcept;
 
 	void SetupStyle();

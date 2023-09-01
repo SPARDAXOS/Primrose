@@ -42,6 +42,8 @@ void ContentBrowser::Render() {
 	RenderDirectoryExplorer();
 	RenderContentBrowser();
 
+
+
 	if (m_ResetWindow)
 		m_ResetWindow = false;
 	if (m_LinkedWindowsResized)
@@ -100,15 +102,16 @@ void ContentBrowser::RenderContentBrowser() {
 		if (ImGui::IsWindowHovered())
 			m_ContentBrowserWindowHovered = true;
 
-		if (m_SelectedDirectory != nullptr)
-			RenderContent();
+		RenderContent();
+		RenderFolderEditMenu();
+		RenderAssetEditMenu();
 
 		m_ContentBrowserWindowCurrentSize = ImGui::GetWindowSize();
 		m_ContentBrowserWindowCurrentPosition = ImGui::GetWindowPos();
 	}
 	ImGui::End();
 
-	UpdateContentBrowserMenu();
+	RenderContentBrowserEditMenu();
 }
 void ContentBrowser::RenderDirectoryExplorer() {
 
@@ -173,48 +176,95 @@ void ContentBrowser::RenderDirectoryExplorer() {
 	ImGui::End();
 }
 void ContentBrowser::RenderContent() {
+	
+	if (!m_SelectedDirectory)
+		return;
 
-	m_Editor->AddSpacings(5);
+	m_Editor->AddSpacings(5); //Add own member function here or in helper class instead and remove it from the editor class
 	SetupStyle();
 	NewContentBrowserFrame();
 	UpdateContentBrowserFolderEntries();
-	if (!m_FolderEntryOpened)
+	if (!m_FolderEntryOpened) //No point rendering asset entries if a folder was just opened.
 		UpdateContentBrowserAssetEntries();
 
 	FlushContentEntriesTexts();
 	ClearStyle();
 }
+void ContentBrowser::RenderFolderEditMenu() {
 
-void ContentBrowser::NewContentBrowserFrame() noexcept {
+	if (!m_FolderEditMenuTarget)
+		return;
 
-	//TODO: Maybe move these in and try to minimize these weird variables being member variables
-	m_ContentElementCursor = 0.0f; //Reseted before FolderEntries and used in both FolderEntries and AssetEntries.
-	m_ContentLineElementsCount = 0;
-	m_FolderEntryOpened = false;
-}
-void ContentBrowser::UpdateContentBrowserMenu() {
+	//NOTE: I put it here since once the asset is delete in this func, I shouldnt do anything else with it!
 
-	//Shit name for the function. This is the edit menu for the content browser.
-	//Open Popup
-	if (m_OpenContentBrowserEditMenu) {
-		if (!ImGui::IsPopupOpen("##ContentBrowserMenu"))
-			ImGui::OpenPopup("##ContentBrowserMenu");
-		m_OpenContentBrowserEditMenu = false;
-	}
+	//Needs to be in the Begin() that called BeginPopup() for this popup menu!
+	//TODO: the size could be made into a member variable
+	ImGui::SetNextWindowSize(ImVec2(200.0f, 100.0f));
+	if (ImGui::BeginPopup(m_FolderEditMenuTarget->m_Name.data())) {
+		ImGui::SeparatorText(std::string("Edit: " + m_FolderEditMenuTarget->m_Name).data());
 
-	//Render Popup
-	if (ImGui::BeginPopup("##ContentBrowserMenu")) {
-
-		ImGui::SeparatorText("Add new...");
-		if (ImGui::MenuItem("New folder")) {
-			m_AssetManager->CreateNewFolder(*m_SelectedDirectory);
+		if (ImGui::MenuItem("Rename")) {
+			//Not Made Yet!
 		}
-		else if (ImGui::MenuItem("Material")) {
-			m_AssetManager->CreateAsset(AssetType::MATERIAL, *m_SelectedDirectory);
-		}
+		if (ImGui::MenuItem("Delete"))
+			m_AssetManager->RemoveDirectory(*m_FolderEditMenuTarget);
 
 		ImGui::EndPopup();
 	}
+}
+void ContentBrowser::RenderAssetEditMenu() {
+
+	if (!m_AssetEditMenuTarget)
+		return;
+
+	//NOTE: I put it here since once the asset is delete in this func, I shouldnt do anything else with it!
+	//I dont need the bool
+	//TODO: This could be moved into its own function and the size could be made into a member variable
+
+	ImGui::SetNextWindowSize(ImVec2(200.0f, 100.0f));
+	if (ImGui::BeginPopup(m_AssetEditMenuTarget->m_Name.data())) {
+		ImGui::SeparatorText(std::string("Edit: " + m_AssetEditMenuTarget->m_Name).data());
+
+		if (ImGui::MenuItem("Rename")) {
+
+		}
+		if (ImGui::MenuItem("Delete")) {
+			m_AssetManager->RemoveAsset(*m_AssetEditMenuTarget);
+			m_AssetEditMenuTarget = nullptr; //Check how all of these target bool in this class are managed and bug test it!
+		}
+
+		//TODO: Clean up to avoid after image
+
+		ImGui::EndPopup();
+	}
+}
+void ContentBrowser::RenderContentBrowserEditMenu() {
+
+	if (m_OpenContentBrowserEditMenu) {
+		if (!ImGui::IsPopupOpen("##ContentBrowserMenu"))
+			ImGui::OpenPopup("##ContentBrowserMenu");
+		m_OpenContentBrowserEditMenu = false; //hmm, its an order... Maybe just update the bool if the pop is not open?
+	}
+
+	if (ImGui::BeginPopup("##ContentBrowserMenu")) {
+		ImGui::SeparatorText("Add new...");
+
+		if (ImGui::MenuItem("New folder"))
+			m_AssetManager->CreateNewFolder(*m_SelectedDirectory);
+		else if (ImGui::MenuItem("Material"))
+			m_AssetManager->CreateAsset(AssetType::MATERIAL, *m_SelectedDirectory);
+
+
+		ImGui::EndPopup();
+	}
+	//
+}
+
+void ContentBrowser::NewContentBrowserFrame() noexcept {
+	//Reseted before FolderEntries and used in both FolderEntries and AssetEntries.
+	m_ContentElementCursor = 0.0f; 
+	m_ContentLineElementsCount = 0;
+	m_FolderEntryOpened = false;
 }
 void ContentBrowser::UpdateContentBrowserFolderEntries() {
 
@@ -230,74 +280,13 @@ void ContentBrowser::UpdateContentBrowserFolderEntries() {
 	}
 
 	for (auto& Folder : m_SelectedDirectory->m_Folders) {
+		UpdateContentElementCursor();
+		CreateFolderEntry(*Folder, TextureID);
+		if (m_FolderEntryOpened) //To bail out since the rest of the entries arent needed for drawing anymore.
+			break;
 
-		std::string ID = "##" + Folder->m_Name;
-		bool AppliedStyle = false;
-
-		//Calculate position and check if new line is necessary
-		m_ContentElementCursor = (m_ContentBrowserElementPadding * (m_ContentLineElementsCount + 1)) + m_ContentBrowserElementSize.x * m_ContentLineElementsCount;
-		if (m_ContentElementCursor + m_ContentBrowserElementSize.x >= m_ContentBrowserWindowCurrentSize.x) {
-			FlushContentEntriesTexts();
-			m_ContentElementCursor = m_ContentBrowserElementPadding;
-			m_ContentLineElementsCount = 0; //This means its a new line!
-		}
-
-		//Apply selected style
-		if (m_SelectedContentElement == Folder) {
-			AppliedStyle = true;
-			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5f, 0.5f, 0.5f, 0.6f));
-		}
-
-
-		//Render content
-		ImGui::SameLine(m_ContentElementCursor);
-		if (ImGui::ImageButton(ID.data(), TextureID, m_ContentBrowserElementSize)) {
-			if (m_SelectedContentElement == Folder) {
-				m_SelectedDirectory = Folder;
-				m_SelectedContentElement = nullptr;
-				ImGui::PopStyleColor();
-				m_FolderEntryOpened = true;
-				break;
-			}
-			else
-				m_SelectedContentElement = Folder;
-		}
-
-		//Pop selected style
-		if (AppliedStyle)
-			ImGui::PopStyleColor();
-
-		//Book keeping
-		m_QueuedContentTexts.push_back(Folder->m_Name);
-		m_ContentLineElementsCount++;
-
-
-		//Edit Menu - IsItemHovered() checks last submitted item so this needs to be afterwards
-		if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) && ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
-			if (m_SelectedContentElement != Folder)
-				m_SelectedContentElement = Folder;
-
-			m_FolderEditMenuTarget = Folder;
-			ImGui::OpenPopup(m_FolderEditMenuTarget->m_Name.data());
-		}
-
-		//NOTE: I put it here since once the asset is delete in this func, I shouldnt do anything else with it!
-		if (m_FolderEditMenuTarget == Folder) {
-
-			//TODO: This could be moved into its own function and the size could be made into a member variable
-			ImGui::SetNextWindowSize(ImVec2(200.0f, 100.0f));
-			if (ImGui::BeginPopup(m_FolderEditMenuTarget->m_Name.data())) {
-
-				ImGui::SeparatorText(std::string("Edit: " + Folder->m_Name).data());
-				if (ImGui::MenuItem("Rename")) {
-
-				}
-				if (ImGui::MenuItem("Delete"))
-					m_AssetManager->RemoveDirectory(*Folder);
-
-				ImGui::EndPopup();
-			}
-		}
+		AddContentElementTextEntry(Folder->m_Name);
+		CheckFolderEditMenu(*Folder); //Should be at the end since it can delete the folder.
 	}
 
 	//Unbind texture
@@ -309,92 +298,21 @@ void ContentBrowser::UpdateContentBrowserFolderEntries() {
 void ContentBrowser::UpdateContentBrowserAssetEntries() {
 
 	for (auto& Asset : m_SelectedDirectory->m_Assets) {
-
-		//Bind Texture
 		void* TextureID = nullptr;
-		const Texture2D* IconTexture = GetAssetTexture(*Asset); //Guarantees a return texture.
-		if (IconTexture != nullptr) {
-			TextureID = (void*)(intptr_t)(IconTexture->GetID());
+		const Texture2D* TargetTexture = GetAssetTexture(*Asset); //Guarantees a return texture.
+		if (TargetTexture != nullptr) {
+			TextureID = (void*)(intptr_t)(TargetTexture->GetID());
 			m_TextureStorage->SetActiveTextureUnit(TextureUnit::TEXTURE0);
-			IconTexture->Bind();
+			TargetTexture->Bind();
 		}
 
+		UpdateContentElementCursor();
+		CreateAssetEntry(*Asset, TextureID);
+		if (TargetTexture != nullptr)
+			TargetTexture->Unbind();
 
-		std::string ID = "##" + Asset->m_Name;
-		bool AppliedStyle = false;
-
-
-		//Calculate position and check if new line is necessary
-		m_ContentElementCursor = (m_ContentBrowserElementPadding * (m_ContentLineElementsCount + 1)) + m_ContentBrowserElementSize.x * m_ContentLineElementsCount;
-		if (m_ContentElementCursor + m_ContentBrowserElementSize.x >= m_ContentBrowserWindowCurrentSize.x) {
-			FlushContentEntriesTexts();
-			m_ContentElementCursor = m_ContentBrowserElementPadding;
-			m_ContentLineElementsCount = 0; //This means its a new line!
-		}
-
-
-		//Apply selected style
-		if (m_SelectedContentElement == Asset) {
-			AppliedStyle = true;
-			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5f, 0.5f, 0.5f, 0.6f));
-		}
-
-		//Render content
-		ImGui::SameLine(m_ContentElementCursor);
-		if (ImGui::ImageButton(ID.data(), TextureID, m_ContentBrowserElementSize)) {
-
-			//Select
-			if (m_SelectedContentElement == Asset) {
-				m_SelectedContentElement = nullptr;
-				m_Editor->OpenAsset(*Asset);
-			}
-			else
-				m_SelectedContentElement = Asset;
-		}
-
-
-		//Pop selected style
-		if (AppliedStyle)
-			ImGui::PopStyleColor();
-
-		m_QueuedContentTexts.push_back(Asset->m_NameWithoutExtension);
-		m_ContentLineElementsCount++;
-
-		//Unbind Texture
-		if (IconTexture != nullptr)
-			IconTexture->Unbind();
-
-
-
-		//Edit Menu - IsItemHovered() checks last submitted item so this needs to be afterwards
-		if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) && ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
-			if (m_SelectedContentElement != Asset)
-				m_SelectedContentElement = Asset;
-
-			m_AssetEditMenuTarget = Asset;
-			ImGui::OpenPopup(m_AssetEditMenuTarget->m_Name.data());
-		}
-
-		//NOTE: I put it here since once the asset is delete in this func, I shouldnt do anything else with it!
-		//I dont need the bool
-		if (m_AssetEditMenuTarget == Asset) {
-
-			//TODO: This could be moved into its own function and the size could be made into a member variable
-			ImGui::SetNextWindowSize(ImVec2(200.0f, 100.0f));
-			if (ImGui::BeginPopup(m_AssetEditMenuTarget->m_Name.data())) {
-
-				ImGui::SeparatorText(std::string("Edit: " + Asset->m_Name).data());
-				if (ImGui::MenuItem("Rename")) {
-
-				}
-				if (ImGui::MenuItem("Delete"))
-					m_AssetManager->RemoveAsset(*Asset);
-
-				//TODO: Clean up to avoid after image
-
-				ImGui::EndPopup();
-			}
-		}
+		AddContentElementTextEntry(Asset->m_NameWithoutExtension);
+		CheckAssetEditMenu(*Asset);
 	}
 }
 void ContentBrowser::FlushContentEntriesTexts() {
@@ -423,6 +341,95 @@ void ContentBrowser::FlushContentEntriesTexts() {
 
 	m_QueuedContentTexts.clear();
 	m_Editor->AddSpacings(3);
+}
+
+
+void ContentBrowser::CreateFolderEntry(Directory& folder, void* textureID) {
+
+	bool AppliedSelectedStyle = false;
+	std::string ID = "##" + folder.m_Name;
+
+	//Apply selected style
+	if (m_SelectedContentElement == &folder) {
+		AppliedSelectedStyle = true;
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5f, 0.5f, 0.5f, 0.6f));
+	}
+
+	//Render content
+	ImGui::SameLine(m_ContentElementCursor);
+	if (ImGui::ImageButton(ID.data(), textureID, m_ContentBrowserElementSize)) {
+		if (m_SelectedContentElement == &folder) { //If was already selected.
+			m_SelectedDirectory = &folder;
+			m_SelectedContentElement = nullptr;
+			m_FolderEntryOpened = true;
+		}
+		else
+			m_SelectedContentElement = &folder;
+	}
+
+	//Pop selected style
+	if (AppliedSelectedStyle)
+		ImGui::PopStyleColor();
+}
+void ContentBrowser::CreateAssetEntry(Asset& asset, void* textureID) {
+
+	//NOTE: The only difference between this and the folder version is what happens when you open it. Maybe use enum and combine them?
+
+	bool AppliedSelectedStyle = false;
+	std::string ID = "##" + asset.m_Name;
+
+	//Apply selected style
+	if (m_SelectedContentElement == &asset) {
+		AppliedSelectedStyle = true;
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5f, 0.5f, 0.5f, 0.6f));
+	}
+
+	//Render content
+	ImGui::SameLine(m_ContentElementCursor);
+	if (ImGui::ImageButton(ID.data(), textureID, m_ContentBrowserElementSize)) {
+		if (m_SelectedContentElement == &asset) {
+			m_SelectedContentElement = nullptr;
+			m_Editor->OpenAsset(asset); //hmmmm
+		}
+		else
+			m_SelectedContentElement = &asset;
+	}
+
+	//Pop selected style
+	if (AppliedSelectedStyle)
+		ImGui::PopStyleColor();
+}
+
+void ContentBrowser::AddContentElementTextEntry(const std::string& text) {
+	m_QueuedContentTexts.push_back(text);
+	m_ContentLineElementsCount++;
+}
+void ContentBrowser::UpdateContentElementCursor() noexcept {
+
+	//Calculate position and check if new line is necessary
+	m_ContentElementCursor = (m_ContentBrowserElementPadding * (m_ContentLineElementsCount + 1)) + m_ContentBrowserElementSize.x * m_ContentLineElementsCount;
+	if (m_ContentElementCursor + m_ContentBrowserElementSize.x >= m_ContentBrowserWindowCurrentSize.x) {
+		FlushContentEntriesTexts();
+		m_ContentElementCursor = m_ContentBrowserElementPadding;
+		m_ContentLineElementsCount = 0; //This means its a new line!
+	}
+}
+
+void ContentBrowser::CheckFolderEditMenu(Directory& folder) {
+	//IsItemHovered() checks last submitted item so this needs to be after the button entry
+	if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) && ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
+		m_SelectedContentElement = &folder;
+		m_FolderEditMenuTarget = &folder;
+		ImGui::OpenPopup(m_FolderEditMenuTarget->m_Name.data());
+	}
+}
+void ContentBrowser::CheckAssetEditMenu(Asset& asset) {
+	//IsItemHovered() checks last submitted item so this needs to be after the button entry
+	if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) && ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
+		m_SelectedContentElement = &asset;
+		m_AssetEditMenuTarget = &asset;
+		ImGui::OpenPopup(m_AssetEditMenuTarget->m_Name.data());
+	}
 }
 
 Texture2D* ContentBrowser::GetAssetTexture(const Asset& asset) noexcept {
