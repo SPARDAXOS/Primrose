@@ -33,20 +33,23 @@ void ContentBrowser::Render() {
 
 	CheckViewportChanges();
 	CheckWindowsChanges();
+
 	if (m_ResetWindow)
-		UpdateDockData();
+		UpdateWindowDockData();
+	if (m_LinkedWindowsResized)
+		UpdateWindowCurrentData();
 
 	RenderDirectoryExplorer();
 	RenderContentBrowser();
 
 	if (m_ResetWindow)
 		m_ResetWindow = false;
+	if (m_LinkedWindowsResized)
+		m_LinkedWindowsResized = false;
 }
 void ContentBrowser::Init() {
 
 	//All asset icons 
-	//Unknown asset
-	//Error asset
 
 	m_ImGuiViewport = m_Editor->GetGUIViewport();
 	m_DebugLogWindow = m_Editor->GetDebugLogWindow();
@@ -55,10 +58,16 @@ void ContentBrowser::Init() {
 
 
 	if (!m_TextureStorage->GetEditorTexture2DByName("Folder.png", m_FolderTexture))
-		m_Core->SystemLog("Failed to save reference to engine texture [Folder]");
+		m_Core->SystemLog("ContentBrowser failed to save reference to engine texture [Folder.png]");
+
+	if (!m_TextureStorage->GetEditorTexture2DByName("MissingTexture.png", m_MissingTexture))
+		m_Core->SystemLog("ContentBrowser failed to save reference to engine texture [MissingTexture.png]");
+
+	if (!m_TextureStorage->GetEditorTexture2DByName("UnknownAsset.png", m_UnknownAssetTexture))
+		m_Core->SystemLog("ContentBrowser failed to save reference to engine texture [UnknownAsset.png]");
 
 	if (!m_TextureStorage->GetEditorTexture2DByName("MaterialAsset.png", m_MaterialAssetTexture))
-		m_Core->SystemLog("Failed to save reference to engine texture [Folder]");
+		m_Core->SystemLog("ContentBrowser failed to save reference to engine texture [MaterialAsset.png]");
 }
 
 void ContentBrowser::RenderContentBrowser() {
@@ -77,26 +86,22 @@ void ContentBrowser::RenderContentBrowser() {
 
 
 	//IMPORTANT NOTE: When it comes to the text offeset bug, check the alignment on the text by PushStyleVar(). update: that didnt do it i think.
+	if (m_LinkedWindowsResized) {
+		ImGui::SetNextWindowSize(m_ContentBrowserWindowCurrentSize);
+		ImGui::SetNextWindowPos(m_ContentBrowserWindowCurrentPosition);
+	}
 	if (m_ResetWindow) {
 		ImGui::SetNextWindowSize(m_ContentBrowserWindowDockSize);
 		ImGui::SetNextWindowPos(m_ContentBrowserWindowDockPosition);
 	}
 	if (ImGui::Begin("Content Browser", nullptr, Flags)) {
 		m_Editor->CheckForHoveredWindows();
+
 		if (ImGui::IsWindowHovered())
 			m_ContentBrowserWindowHovered = true;
 
-		if (m_SelectedDirectory != nullptr) {
-			m_Editor->AddSpacings(5);
-			SetupStyle();
-			NewContentBrowserFrame();
-			UpdateContentBrowserFolderEntries();
-			if (!m_FolderEntryOpened)
-				UpdateContentBrowserAssetEntries();
-
-			FlushContentTexts();
-			ClearStyle();
-		}
+		if (m_SelectedDirectory != nullptr)
+			RenderContent();
 
 		m_ContentBrowserWindowCurrentSize = ImGui::GetWindowSize();
 		m_ContentBrowserWindowCurrentPosition = ImGui::GetWindowPos();
@@ -167,11 +172,23 @@ void ContentBrowser::RenderDirectoryExplorer() {
 
 	ImGui::End();
 }
+void ContentBrowser::RenderContent() {
+
+	m_Editor->AddSpacings(5);
+	SetupStyle();
+	NewContentBrowserFrame();
+	UpdateContentBrowserFolderEntries();
+	if (!m_FolderEntryOpened)
+		UpdateContentBrowserAssetEntries();
+
+	FlushContentEntriesTexts();
+	ClearStyle();
+}
 
 void ContentBrowser::NewContentBrowserFrame() noexcept {
 
 	//TODO: Maybe move these in and try to minimize these weird variables being member variables
-	m_ContentElementCursor = 0.0f;
+	m_ContentElementCursor = 0.0f; //Reseted before FolderEntries and used in both FolderEntries and AssetEntries.
 	m_ContentLineElementsCount = 0;
 	m_FolderEntryOpened = false;
 }
@@ -201,12 +218,15 @@ void ContentBrowser::UpdateContentBrowserMenu() {
 }
 void ContentBrowser::UpdateContentBrowserFolderEntries() {
 
-	//TODO: Implement some countermeasure in case the texture was not found
 	//Bind texture
 	void* TextureID = nullptr;
 	if (m_FolderTexture) {
 		m_FolderTexture->Bind();
 		TextureID = (void*)(intptr_t)(m_FolderTexture->GetID());
+	}
+	else {
+		m_MissingTexture->Bind();
+		TextureID = (void*)(intptr_t)(m_MissingTexture->GetID());
 	}
 
 	for (auto& Folder : m_SelectedDirectory->m_Folders) {
@@ -217,7 +237,7 @@ void ContentBrowser::UpdateContentBrowserFolderEntries() {
 		//Calculate position and check if new line is necessary
 		m_ContentElementCursor = (m_ContentBrowserElementPadding * (m_ContentLineElementsCount + 1)) + m_ContentBrowserElementSize.x * m_ContentLineElementsCount;
 		if (m_ContentElementCursor + m_ContentBrowserElementSize.x >= m_ContentBrowserWindowCurrentSize.x) {
-			FlushContentTexts();
+			FlushContentEntriesTexts();
 			m_ContentElementCursor = m_ContentBrowserElementPadding;
 			m_ContentLineElementsCount = 0; //This means its a new line!
 		}
@@ -283,14 +303,16 @@ void ContentBrowser::UpdateContentBrowserFolderEntries() {
 	//Unbind texture
 	if (m_FolderTexture)
 		m_FolderTexture->Unbind();
+	else
+		m_MissingTexture->Unbind();
 }
 void ContentBrowser::UpdateContentBrowserAssetEntries() {
 
 	for (auto& Asset : m_SelectedDirectory->m_Assets) {
 
-		//TODO: Deal with in case it wasnt found! - Doesnt the function do that?
+		//Bind Texture
 		void* TextureID = nullptr;
-		const Texture2D* IconTexture = m_Editor->GetIconTexture(*Asset); //GetIconTexture Should probably be here then.
+		const Texture2D* IconTexture = GetAssetTexture(*Asset); //Guarantees a return texture.
 		if (IconTexture != nullptr) {
 			TextureID = (void*)(intptr_t)(IconTexture->GetID());
 			m_TextureStorage->SetActiveTextureUnit(TextureUnit::TEXTURE0);
@@ -305,11 +327,11 @@ void ContentBrowser::UpdateContentBrowserAssetEntries() {
 		//Calculate position and check if new line is necessary
 		m_ContentElementCursor = (m_ContentBrowserElementPadding * (m_ContentLineElementsCount + 1)) + m_ContentBrowserElementSize.x * m_ContentLineElementsCount;
 		if (m_ContentElementCursor + m_ContentBrowserElementSize.x >= m_ContentBrowserWindowCurrentSize.x) {
-
-			FlushContentTexts();
+			FlushContentEntriesTexts();
 			m_ContentElementCursor = m_ContentBrowserElementPadding;
 			m_ContentLineElementsCount = 0; //This means its a new line!
 		}
+
 
 		//Apply selected style
 		if (m_SelectedContentElement == Asset) {
@@ -335,11 +357,14 @@ void ContentBrowser::UpdateContentBrowserAssetEntries() {
 		if (AppliedStyle)
 			ImGui::PopStyleColor();
 
-		m_QueuedContentTexts.push_back(Asset->m_Name);
+		m_QueuedContentTexts.push_back(Asset->m_NameWithoutExtension);
 		m_ContentLineElementsCount++;
 
+		//Unbind Texture
 		if (IconTexture != nullptr)
 			IconTexture->Unbind();
+
+
 
 		//Edit Menu - IsItemHovered() checks last submitted item so this needs to be afterwards
 		if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) && ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
@@ -372,7 +397,7 @@ void ContentBrowser::UpdateContentBrowserAssetEntries() {
 		}
 	}
 }
-void ContentBrowser::FlushContentTexts() {
+void ContentBrowser::FlushContentEntriesTexts() {
 
 	if (m_QueuedContentTexts.size() == 0)
 		return;
@@ -384,10 +409,12 @@ void ContentBrowser::FlushContentTexts() {
 
 		std::string ElementName = m_QueuedContentTexts.at(Index);
 
-		ImVec2 TextSize = ImGui::CalcTextSize(ElementName.data());
+		const ImVec2 TextSize = ImGui::CalcTextSize(ElementName.data());
 		CurrentX = (m_ContentBrowserElementPadding * (Index + 1)) + m_ContentBrowserElementSize.x * Index; //Same pos as content
-		CurrentX += m_ContentBrowserElementSize.x / 2.0f; //Shift it by button half button size
-		CurrentX -= TextSize.x / 2.0f; //Shift it back by text half width
+		CurrentX += m_ContentBrowserElementSize.x / 2;
+		CurrentX -= TextSize.x / 2;
+
+		CurrentX += 5; //+5 seems to align it better under the button.
 		//TODO: Fix the positioning, it is slightly off still.
 
 		ImGui::SameLine(CurrentX);
@@ -396,6 +423,29 @@ void ContentBrowser::FlushContentTexts() {
 
 	m_QueuedContentTexts.clear();
 	m_Editor->AddSpacings(3);
+}
+
+Texture2D* ContentBrowser::GetAssetTexture(const Asset& asset) noexcept {
+
+	switch (asset.m_Type) {
+	case AssetType::TEXTURE: {
+
+		Texture2D* TargetTexture;
+		if (!m_TextureStorage->GetTexture2DByName(asset.m_Name, TargetTexture))
+			return m_MissingTexture;
+		return TargetTexture;
+
+	}break;
+	case AssetType::MATERIAL: {
+
+		if (m_MaterialAssetTexture == nullptr)
+			return m_MissingTexture;
+		return m_MaterialAssetTexture;
+
+	}break;
+	default:
+		return m_UnknownAssetTexture;
+	}
 }
 
 void ContentBrowser::AddFileExplorerEntry(Directory* entry) {
@@ -441,15 +491,24 @@ void ContentBrowser::ClearStyle() {
 	ImGui::PopStyleColor(3);
 }
 
-void ContentBrowser::UpdateDockData() noexcept {
+void ContentBrowser::UpdateWindowDockData() noexcept {
 
 	m_DirectoryExplorerWindowDockSize = ImVec2(m_ImGuiViewport->Size.x * 0.1f, m_ImGuiViewport->Size.y * 0.3f);
 
 	//Requires m_DirectoryExplorerWindowDockSize.y to be updated first
-
-	m_ContentBrowserWindowDockSize = ImVec2(m_ImGuiViewport->Size.x - m_DirectoryExplorerWindowDockSize.x - m_DetailsWindow->GetCurrentSize().x, m_DirectoryExplorerWindowDockSize.y);
+	m_ContentBrowserWindowDockSize = ImVec2(m_ImGuiViewport->Size.x - m_DirectoryExplorerWindowDockSize.x - m_DetailsWindow->GetDockSize().x, m_DirectoryExplorerWindowDockSize.y);
 	m_ContentBrowserWindowDockPosition = ImVec2(m_DirectoryExplorerWindowDockSize.x, m_ImGuiViewport->Size.y - m_DirectoryExplorerWindowDockSize.y);
 	m_DirectoryExplorerWindowDockPosition = ImVec2(0.0f, m_ImGuiViewport->Size.y - m_DirectoryExplorerWindowDockSize.y);
+}
+void ContentBrowser::UpdateWindowCurrentData() noexcept {
+
+	// Breaks stuff.
+	//m_DirectoryExplorerWindowCurrentSize = ImVec2(m_ImGuiViewport->Size.x * 0.1f, m_ImGuiViewport->Size.y * 0.3f); //hmmm This is the source of size
+
+	//Requires m_DirectoryExplorerWindowCurrentSize.y to be updated first
+	m_ContentBrowserWindowCurrentSize = ImVec2(m_ImGuiViewport->Size.x - m_DirectoryExplorerWindowCurrentSize.x - m_DetailsWindow->GetCurrentSize().x, m_DirectoryExplorerWindowCurrentSize.y);
+	m_ContentBrowserWindowCurrentPosition = ImVec2(m_DirectoryExplorerWindowCurrentSize.x, m_ImGuiViewport->Size.y - m_DirectoryExplorerWindowCurrentSize.y);
+	m_DirectoryExplorerWindowCurrentPosition = ImVec2(0.0f, m_ImGuiViewport->Size.y - m_DirectoryExplorerWindowCurrentSize.y);
 }
 void ContentBrowser::CheckViewportChanges() noexcept {
 	if (m_ImGuiViewport->Size.x != m_LastViewportSize.x || m_ImGuiViewport->Size.y != m_LastViewportSize.y) {
@@ -459,7 +518,8 @@ void ContentBrowser::CheckViewportChanges() noexcept {
 }
 void ContentBrowser::CheckWindowsChanges() noexcept {
 	if (m_DetailsWindow->GetCurrentSize().x != m_LastDetailsWindowSize.x || m_DetailsWindow->GetCurrentSize().y != m_LastDetailsWindowSize.y) {
-		m_ResetWindow = true;
+		m_LinkedWindowsResized = true;
 		m_LastDetailsWindowSize = m_DetailsWindow->GetCurrentSize();
 	}
 }
+

@@ -40,14 +40,27 @@ public:
 	inline bool IsContentBrowserWindowHovered() const noexcept { return m_ContentBrowserWindowHovered; }
 	inline void ResetWindow() noexcept { m_ResetWindow = true; }
 
+public:
+	inline ImVec2 GetTotalCurrentSize() const noexcept { 
+		ImVec2 Total;
+		Total.x = m_ContentBrowserWindowCurrentSize.x + m_DirectoryExplorerWindowCurrentSize.x;
+		Total.y = m_ContentBrowserWindowCurrentSize.y + m_DirectoryExplorerWindowCurrentSize.y;
+		return Total;
+	}
+	inline ImVec2 GetTotalDockSize() const noexcept { 
+		ImVec2 Total;
+		Total.x = m_ContentBrowserWindowDockSize.x + m_DirectoryExplorerWindowDockSize.x;
+		Total.y = m_ContentBrowserWindowDockSize.y + m_DirectoryExplorerWindowDockSize.y;
+		return Total;
+	}
 
-	inline ImVec2 GetCurrentContentBrowserWindowSize() const noexcept { return m_ContentBrowserWindowCurrentSize; }
-	inline ImVec2 GetCurrentDirectoryExplorerWindowSize() const noexcept { return m_DirectoryExplorerWindowCurrentSize; }
+	inline ImVec2 GetContentBrowserWindowCurrentSize() const noexcept { return m_ContentBrowserWindowCurrentSize; }
+	inline ImVec2 GetDirectoryExplorerWindowCurrentSize() const noexcept { return m_DirectoryExplorerWindowCurrentSize; }
 	inline ImVec2 GetContentBrowserWindowDockSize() const noexcept { return m_ContentBrowserWindowDockSize; }
 	inline ImVec2 GetDirectoryExplorerWindowDockSize() const noexcept { return m_DirectoryExplorerWindowDockSize; }
 
-	inline ImVec2 GetCurrentContentBrowserWindowPosition() const noexcept { return m_ContentBrowserWindowCurrentPosition; }
-	inline ImVec2 GetCurrentDirectoryExplorerWindowPosition() const noexcept { return m_DirectoryExplorerWindowCurrentPosition; }
+	inline ImVec2 GetContentBrowserWindowCurrentPosition() const noexcept { return m_ContentBrowserWindowCurrentPosition; }
+	inline ImVec2 GetDirectoryExplorerWindowCurrentPosition() const noexcept { return m_DirectoryExplorerWindowCurrentPosition; }
 	inline ImVec2 GetContentBrowserWindowDockPosition() const noexcept { return m_ContentBrowserWindowDockPosition; }
 	inline ImVec2 GetDirectoryExplorerWindowDockPosition() const noexcept { return m_DirectoryExplorerWindowDockPosition; }
 
@@ -55,11 +68,15 @@ private:
 	void RenderContentBrowser();
 	void RenderDirectoryExplorer();
 
+	void RenderContent();
+
 	void NewContentBrowserFrame() noexcept;
 	void UpdateContentBrowserFolderEntries();
 	void UpdateContentBrowserAssetEntries();
 	void UpdateContentBrowserMenu();
-	void FlushContentTexts();
+	void FlushContentEntriesTexts();
+
+	Texture2D* GetAssetTexture(const Asset& asset) noexcept;
 
 	void SetupStyle();
 	void ClearStyle();
@@ -70,7 +87,8 @@ private:
 private:
 	void CheckViewportChanges() noexcept;
 	void CheckWindowsChanges() noexcept;
-	void UpdateDockData() noexcept;
+	void UpdateWindowDockData() noexcept;
+	void UpdateWindowCurrentData() noexcept;
 
 private:
 	ImVec2 m_ContentBrowserWindowDockPosition;
@@ -98,6 +116,7 @@ private:
 
 
 	bool m_ResetWindow = false;
+	bool m_LinkedWindowsResized = false;
 	bool m_Opened = true;
 
 	bool m_ContentBrowserWindowHovered = false;
@@ -121,8 +140,10 @@ private:
 	Directory* m_SelectedDirectory{ nullptr };
 
 private:
-	Texture2D* m_FolderTexture{ nullptr };
-	Texture2D* m_MaterialAssetTexture{ nullptr };
+	Texture2D* m_FolderTexture			{ nullptr };
+	Texture2D* m_MissingTexture			{ nullptr };
+	Texture2D* m_UnknownAssetTexture	{ nullptr };
+	Texture2D* m_MaterialAssetTexture	{ nullptr };
 
 private:
 	bool m_DirectoryExplorerEditorFilter = false;
@@ -135,7 +156,6 @@ private:
 	AssetManager* m_AssetManager		{ nullptr };
 	TextureStorage* m_TextureStorage	{ nullptr };
 	ImGuiViewport* m_ImGuiViewport		{ nullptr };
-	//Why the debug windows tho?
 	DebugLogWindow* m_DebugLogWindow	{ nullptr };
 	SystemLogWindow* m_SystemLogWindow	{ nullptr };
 	DetailsWindow* m_DetailsWindow		{ nullptr };

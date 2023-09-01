@@ -50,7 +50,7 @@ private:
 	void FlushSpriteSelectorTexts();
 	void FlushMaterialSelectorTexts();
 
-	void UpdateWindowPosition();
+	void CheckViewportChanges();
 
 	void SetupStyle();
 	void ClearStyle();
@@ -78,7 +78,9 @@ private:
 	std::vector<std::string> m_QueuedMaterialSelectorTexts; //Could use const char* instead
 	void* m_SelectedMaterialSelectorElement{ nullptr };
 
-
+private:
+	Texture2D* m_MaterialAssetTexture	{ nullptr };
+	Texture2D* m_MissingTexture			{ nullptr };
 
 private:
 	Core* m_Core						{ nullptr };

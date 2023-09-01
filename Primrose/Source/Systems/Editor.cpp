@@ -341,56 +341,8 @@ void Editor::AddSeparators(uint32 count) {
 }
 
 void Editor::CheckForHoveredWindows() {
-
 	if (ImGui::IsWindowHovered())
 		m_IsAnyWindowHovered = true;
-}
-Texture2D* Editor::GetIconTexture(const Asset& asset) noexcept {
-
-	Texture2D* IconTexture;
-
-	//TODO: Set the alpha blending for these icons cause transparency is borked currenrtly.
-
-	switch (asset.m_Type)
-	{
-	case AssetType::TEXTURE: {
-
-		if (asset.m_EditorAsset) {
-			if (!m_TextureStorage->GetEditorTexture2DByName(asset.m_Name, IconTexture)) {
-				if (!m_TextureStorage->GetEditorTexture2DByName("Error.png", IconTexture))
-					return nullptr;
-				return IconTexture;
-			}
-		}
-		else {
-			if (!m_TextureStorage->GetTexture2DByName(asset.m_Name, IconTexture)) {
-				if (!m_TextureStorage->GetEditorTexture2DByName("Error.png", IconTexture))
-					return nullptr;
-				return IconTexture;
-			}
-		}
-
-		return IconTexture;
-	}break;
-	case AssetType::MATERIAL: {
-
-		if (!m_TextureStorage->GetEditorTexture2DByName("MaterialAsset.png", IconTexture)) {
-			if (!m_TextureStorage->GetEditorTexture2DByName("Error.png", IconTexture))
-				return nullptr;
-			return IconTexture;
-		}
-
-		return IconTexture;
-	}break;
-	default:
-		if (m_TextureStorage->GetEditorTexture2DByName("Unknown.png", IconTexture))
-			return IconTexture;
-		else {
-			if (!m_TextureStorage->GetEditorTexture2DByName("Error.png", IconTexture))
-				return nullptr;
-			return IconTexture;
-		}
-	}
 }
 
 

@@ -125,8 +125,6 @@ public:
 
 public: //Reconsider these functions and whether they should be marked like this.
 	//INTERNAL USE ONLY
-	Texture2D* GetIconTexture(const Asset& asset) noexcept;
-	//INTERNAL USE ONLY
 	void CheckForHoveredWindows();
 	//INTERNAL USE ONLY
 	void AddSpacings(uint32 count);

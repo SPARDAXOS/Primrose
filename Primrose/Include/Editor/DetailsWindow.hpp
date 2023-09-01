@@ -6,6 +6,7 @@ class Core;
 class Editor;
 class SelectionWindows;
 class HierarchyWindow;
+class ContentBrowser;
 class MainMenuBar;
 
 class GameObject;
@@ -79,12 +80,15 @@ private:
 
 private:
 	void CheckViewportChanges() noexcept;
-	void UpdateDockData() noexcept;
+	void CheckWindowsChanges() noexcept;
+	void UpdateWindowDockData() noexcept;
+	void UpdateWindowCurrentData() noexcept;
 
 private:
 	GameObject* m_Target	{ nullptr };
 	bool m_Opened = true;
 	bool m_ResetWindow = false;
+	bool m_LinkedWindowsResized = false;
 
 	ImVec2 m_WindowDockSize;
 	ImVec2 m_WindowDockPosition;
@@ -93,6 +97,9 @@ private:
 	ImVec2 m_WindowCurrentPosition;
 
 	ImVec2 m_LastViewportSize;
+	ImVec2 m_LastContentBrowserWindowSize;
+
+
 
 	const uint32 m_NameInputBufferSize = 33;
 	const uint32 m_TagInputBufferSize = 33;
@@ -104,6 +111,7 @@ private:
 	Editor* m_Editor						{ nullptr };
 	ImGuiViewport* m_ImGuiViewport			{ nullptr };
 	SelectionWindows* m_SelectionWindows	{ nullptr };
-	HierarchyWindow* m_HierarchyWindow		{ nullptr };
+	ContentBrowser* m_ContentBrowser		{ nullptr };
+	HierarchyWindow* m_HierarchyWindow		{ nullptr }; //?
 	MainMenuBar* m_MainMenuBar				{ nullptr };
 };

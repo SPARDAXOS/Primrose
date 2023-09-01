@@ -23,6 +23,7 @@ void DetailsWindow::Render() {
 
 	UpdateTarget();
 	CheckViewportChanges();
+	CheckWindowsChanges();
 
 	ImGuiWindowFlags Flags = 0;
 	Flags |= ImGuiWindowFlags_::ImGuiWindowFlags_NoCollapse;
@@ -39,10 +40,18 @@ void DetailsWindow::Render() {
 
 
 
-	//This window is stationary. Special case!
+	//This way it will always be only the dock pos being reset.
+	//I should add a separate pos reset for linked windows resizing.
+
+	if (m_LinkedWindowsResized) {
+		m_LinkedWindowsResized = false;
+		UpdateWindowCurrentData();
+		ImGui::SetNextWindowSize(m_WindowCurrentSize);
+		ImGui::SetNextWindowPos(m_WindowCurrentPosition);
+	}
 	if (m_ResetWindow) {
 		m_ResetWindow = false;
-		UpdateDockData();
+		UpdateWindowDockData();
 		ImGui::SetNextWindowSize(m_WindowDockSize);
 		ImGui::SetNextWindowPos(m_WindowDockPosition);
 	}
@@ -78,6 +87,7 @@ void DetailsWindow::Init() {
 	m_HierarchyWindow = m_Editor->GetHierarchyWindow();
 	m_MainMenuBar = m_Editor->GetMainMenuBar();
 	m_ImGuiViewport = m_Editor->GetGUIViewport();
+	m_ContentBrowser = m_Editor->GetContentBrowser();
 }
 
 void DetailsWindow::RenderInfoDetails() {
@@ -766,13 +776,26 @@ void DetailsWindow::UpdateTarget() noexcept {
 	if (m_SelectionWindows->GetSpriteSelectorTarget() != nullptr) ////////????????? Material then...
 		m_SelectionWindows->ClearSpriteSelectorTarget();
 }
-void DetailsWindow::UpdateDockData() noexcept {
+
+
+void DetailsWindow::UpdateWindowDockData() noexcept {
 	m_WindowDockSize = ImVec2(m_ImGuiViewport->Size.x * 0.2f, m_ImGuiViewport->Size.y - m_MainMenuBar->GetSize().y); //? wot also no content browser
 	m_WindowDockPosition = ImVec2(m_ImGuiViewport->Size.x - m_WindowDockSize.x, m_MainMenuBar->GetSize().y);
+}
+void DetailsWindow::UpdateWindowCurrentData() noexcept {
+	m_WindowCurrentSize.x = m_ImGuiViewport->Size.x - (m_ContentBrowser->GetDirectoryExplorerWindowCurrentSize().x + m_ContentBrowser->GetContentBrowserWindowCurrentSize().x);
+	m_WindowCurrentSize.y = m_ImGuiViewport->Size.y - m_MainMenuBar->GetSize().y;
+	m_WindowCurrentPosition = ImVec2(m_ImGuiViewport->Size.x - m_WindowCurrentSize.x, m_MainMenuBar->GetSize().y);
 }
 void DetailsWindow::CheckViewportChanges() noexcept {
 	if (m_ImGuiViewport->Size.x != m_LastViewportSize.x || m_ImGuiViewport->Size.y != m_LastViewportSize.y) {
 		m_ResetWindow = true;
 		m_LastViewportSize = m_ImGuiViewport->Size;
+	}
+}
+void DetailsWindow::CheckWindowsChanges() noexcept {
+	if (m_ContentBrowser->GetContentBrowserWindowCurrentSize().x != m_LastContentBrowserWindowSize.x || m_ContentBrowser->GetContentBrowserWindowCurrentSize().y != m_LastContentBrowserWindowSize.y) {
+		m_LinkedWindowsResized = true;
+		m_LastContentBrowserWindowSize = m_ContentBrowser->GetContentBrowserWindowCurrentSize();
 	}
 }

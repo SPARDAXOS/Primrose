@@ -278,7 +278,7 @@ void HierarchyWindow::UpdateDockData() noexcept {
 
 	//NOTE: This whole calculation thing here needs to be redone.
 
-	m_HierarchyWindowDockSize = ImVec2(m_ImGuiViewport->Size.x * 0.1f, m_ImGuiViewport->Size.y - m_ContentBrowser->GetCurrentDirectoryExplorerWindowSize().y - m_MainMenuBar->GetSize().y);
+	m_HierarchyWindowDockSize = ImVec2(m_ImGuiViewport->Size.x * 0.1f, m_ImGuiViewport->Size.y - m_ContentBrowser->GetDirectoryExplorerWindowCurrentSize().y - m_MainMenuBar->GetSize().y);
 	m_HierarchyWindowDockPosition = ImVec2(0.0f, m_MainMenuBar->GetSize().y);
 
 	m_AddButtonDockSize = ImVec2(100.0f, 0.0f); //As big as the button
@@ -291,8 +291,8 @@ void HierarchyWindow::CheckViewportChanges() noexcept {
 	}
 }
 void HierarchyWindow::CheckWindowsChanges() noexcept {
-	if (m_ContentBrowser->GetCurrentContentBrowserWindowSize().x != m_LastContentBrowserWindowSize.x || m_ContentBrowser->GetCurrentContentBrowserWindowSize().y != m_LastContentBrowserWindowSize.y) {
+	if (m_ContentBrowser->GetContentBrowserWindowCurrentSize().x != m_LastContentBrowserWindowSize.x || m_ContentBrowser->GetContentBrowserWindowCurrentSize().y != m_LastContentBrowserWindowSize.y) {
 		m_ResetWindow = true;
-		m_LastContentBrowserWindowSize = m_ContentBrowser->GetCurrentContentBrowserWindowSize();
+		m_LastContentBrowserWindowSize = m_ContentBrowser->GetContentBrowserWindowCurrentSize();
 	}
 }
