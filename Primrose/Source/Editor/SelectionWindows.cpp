@@ -168,7 +168,16 @@ void SelectionWindows::UpdateSpriteSelectorEntries() {
 				*m_SpriteSelectorTarget = Texture;
 				m_SpriteSelectorTarget = nullptr;
 
+				if (m_ChangesCheckTarget) //It would construct an unnecessary otherwise
+					CheckChanges(Texture->GetName().data());
+
 				ImGui::CloseCurrentPopup();
+
+				//Pop selected style
+				if (AppliedStyle)
+					ImGui::PopStyleColor();
+				break;
+				//TODO: BREAK OUT OF THE LOOP. THIs and the other function boith need major refactors like the content browser
 			}
 			else
 				m_SelectedSpriteSelectorElement = Texture;
@@ -212,6 +221,8 @@ void SelectionWindows::UpdateMaterialSelectorEntries() {
 
 	for (auto& Material : m_AssetManager->GetMaterialsStorage()) {
 
+		//IMPORTANT NOTE: Refactor this just like the content browser.
+
 
 		//Calculate element per line depending on window size
 		//This is possible but idk...
@@ -220,7 +231,7 @@ void SelectionWindows::UpdateMaterialSelectorEntries() {
 		}
 		
 
-		std::string Name = Material->GetAsset().m_Name.data();
+		std::string Name = Material->GetAsset().m_NameWithoutExtension.data();
 		std::string ID = "##" + Name;
 		bool AppliedStyle = false;
 
@@ -246,6 +257,9 @@ void SelectionWindows::UpdateMaterialSelectorEntries() {
 
 				*m_MaterialSelectorTarget = Material;
 				m_MaterialSelectorTarget = nullptr;
+
+				if (m_ChangesCheckTarget) //It would construct an unnecessary otherwise
+					CheckChanges(Material->GetAsset().m_Name);
 
 				ImGui::CloseCurrentPopup();
 			}
@@ -325,6 +339,19 @@ void SelectionWindows::FlushMaterialSelectorTexts() {
 	m_Editor->AddSpacings(3);
 }
 
+void SelectionWindows::CheckChanges(const std::string& newName) noexcept {
+
+	if (!m_ChangesCheckTarget)
+		return;
+
+	if (m_ChangesCheckName != newName)
+		*m_ChangesCheckTarget = true;
+	else
+		*m_ChangesCheckTarget = false;
+
+	m_ChangesCheckName = "";
+	m_ChangesCheckTarget = nullptr;
+}
 void SelectionWindows::CheckViewportChanges() {
 
 	if (!m_SpriteSelectorOpened)
@@ -333,6 +360,7 @@ void SelectionWindows::CheckViewportChanges() {
 	if (!m_MaterialSelectorOpened)
 		m_MaterialSelectorWindowSize = ImVec2(m_ImGuiViewport->Size.x * 0.2f, m_ImGuiViewport->Size.y * 0.6f);
 }
+
 
 void SelectionWindows::SetupStyle() {
 

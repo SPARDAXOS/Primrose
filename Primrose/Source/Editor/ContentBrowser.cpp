@@ -65,6 +65,9 @@ void ContentBrowser::Init() {
 	if (!m_TextureStorage->GetEditorTexture2DByName("MissingTexture.png", m_MissingTexture))
 		m_Core->SystemLog("ContentBrowser failed to save reference to engine texture [MissingTexture.png]");
 
+	if (!m_TextureStorage->GetEditorTexture2DByName("UnsavedChanges.png", m_UnsavedChangesTexture))
+		m_Core->SystemLog("ContentBrowser failed to save reference to engine texture [UnsavedChanges.png]");
+
 	if (!m_TextureStorage->GetEditorTexture2DByName("UnknownAsset.png", m_UnknownAssetTexture))
 		m_Core->SystemLog("ContentBrowser failed to save reference to engine texture [UnknownAsset.png]");
 
@@ -105,13 +108,13 @@ void ContentBrowser::RenderContentBrowser() {
 		RenderContent();
 		RenderFolderEditMenu();
 		RenderAssetEditMenu();
+		RenderContentBrowserEditMenu();
 
 		m_ContentBrowserWindowCurrentSize = ImGui::GetWindowSize();
 		m_ContentBrowserWindowCurrentPosition = ImGui::GetWindowPos();
 	}
-	ImGui::End();
 
-	RenderContentBrowserEditMenu();
+	ImGui::End();
 }
 void ContentBrowser::RenderDirectoryExplorer() {
 
@@ -206,11 +209,14 @@ void ContentBrowser::RenderFolderEditMenu() {
 		if (ImGui::MenuItem("Rename")) {
 			//Not Made Yet!
 		}
-		if (ImGui::MenuItem("Delete"))
-			m_AssetManager->RemoveDirectory(*m_FolderEditMenuTarget);
+		if (ImGui::MenuItem("Delete")) {
+			m_AssetManager->RemoveDirectory(*m_FolderEditMenuTarget); 
+		}
 
 		ImGui::EndPopup();
 	}
+	else
+		m_FolderEditMenuTarget = nullptr;
 }
 void ContentBrowser::RenderAssetEditMenu() {
 
@@ -223,20 +229,24 @@ void ContentBrowser::RenderAssetEditMenu() {
 
 	ImGui::SetNextWindowSize(ImVec2(200.0f, 100.0f));
 	if (ImGui::BeginPopup(m_AssetEditMenuTarget->m_Name.data())) {
-		ImGui::SeparatorText(std::string("Edit: " + m_AssetEditMenuTarget->m_Name).data());
+		ImGui::SeparatorText(std::string("Edit: " + m_AssetEditMenuTarget->m_NameWithoutExtension).data());
 
 		if (ImGui::MenuItem("Rename")) {
 
 		}
+		if (ImGui::MenuItem("Save")) {
+			m_AssetManager->SaveAsset(*m_AssetEditMenuTarget);
+		}
 		if (ImGui::MenuItem("Delete")) {
 			m_AssetManager->RemoveAsset(*m_AssetEditMenuTarget);
-			m_AssetEditMenuTarget = nullptr; //Check how all of these target bool in this class are managed and bug test it!
 		}
 
 		//TODO: Clean up to avoid after image
 
 		ImGui::EndPopup();
 	}
+	else
+		m_AssetEditMenuTarget = nullptr; 	//Check how all of these target bool in this class are managed and bug test it!
 }
 void ContentBrowser::RenderContentBrowserEditMenu() {
 
@@ -285,7 +295,7 @@ void ContentBrowser::UpdateContentBrowserFolderEntries() {
 		if (m_FolderEntryOpened) //To bail out since the rest of the entries arent needed for drawing anymore.
 			break;
 
-		AddContentElementTextEntry(Folder->m_Name);
+		AddContentElementDataEntry(Folder->m_Name, false); //Folder cant be saved
 		CheckFolderEditMenu(*Folder); //Should be at the end since it can delete the folder.
 	}
 
@@ -311,18 +321,65 @@ void ContentBrowser::UpdateContentBrowserAssetEntries() {
 		if (TargetTexture != nullptr)
 			TargetTexture->Unbind();
 
-		AddContentElementTextEntry(Asset->m_NameWithoutExtension);
+		AddContentElementDataEntry(Asset->m_NameWithoutExtension, Asset->m_UnsavedChanges);
 		CheckAssetEditMenu(*Asset);
 	}
 }
 void ContentBrowser::FlushContentEntriesTexts() {
 
+
+	//Break into 2 functions. One for saving icons, one for texts and change this func name to FlushContentEntriesData or something
+	//Before the spacing down here, move up a bit then place an icon.
+	//The save icon is stored in a buffer similar to texts except its bools
+	//Store for each entry, if true then display image, if not then dont.
+	//Add entry to the function that adds text entries or make its own function. But to keep track i need to track folders too so i need to do it in the smame func
+	//Change that funcs name then to entrydata or something? 
+	//Save ref to UnsavedChanges.png.
+	//Editor textures are bugged. Toggle filter and look around!
+
+	//Bind texture
+	void* TextureID = nullptr;
+	if (m_UnsavedChangesTexture) {
+		m_UnsavedChangesTexture->Bind();
+		TextureID = (void*)(intptr_t)(m_UnsavedChangesTexture->GetID());
+	}
+	else {
+		m_MissingTexture->Bind();
+		TextureID = (void*)(intptr_t)(m_MissingTexture->GetID());
+	}
+
+	float CurrentX = 0.0f;
+	for (uint32 Index = 0; Index < m_UnsavedChangesEntries.size(); Index++) {
+		if (!m_UnsavedChangesEntries.at(Index))
+			continue;
+
+		CurrentX = (m_ContentBrowserElementPadding * (Index + 1)) + m_ContentBrowserElementSize.x * Index; //Same pos as content
+		ImGui::SameLine();
+		ImGui::SetCursorPos(ImVec2(CurrentX, ImGui::GetCursorPosY()));
+
+		ImVec4 Color;
+		Color.x = m_UnsavedChangesIconColor.m_R;
+		Color.y = m_UnsavedChangesIconColor.m_G;
+		Color.z = m_UnsavedChangesIconColor.m_B;
+		Color.w = m_UnsavedChangesIconColor.m_A;
+		ImGui::Image(TextureID, m_UnsavedChangesIconSize, ImVec2(0, 0), ImVec2(1, 1), Color);
+	}
+
+	//Unbind texture
+	if (m_UnsavedChangesTexture)
+		m_UnsavedChangesTexture->Unbind();
+	else
+		m_MissingTexture->Unbind();
+
+	m_UnsavedChangesEntries.clear();
+
+
+
 	if (m_QueuedContentTexts.size() == 0)
 		return;
 
-	m_Editor->AddSpacings(1);
-	float CurrentX = 0.0f;
 
+	m_Editor->AddSpacings(1);
 	for (uint32 Index = 0; Index < m_QueuedContentTexts.size(); Index++) {
 
 		std::string ElementName = m_QueuedContentTexts.at(Index);
@@ -400,8 +457,9 @@ void ContentBrowser::CreateAssetEntry(Asset& asset, void* textureID) {
 		ImGui::PopStyleColor();
 }
 
-void ContentBrowser::AddContentElementTextEntry(const std::string& text) {
+void ContentBrowser::AddContentElementDataEntry(const std::string& text, bool unsavedChanges) {
 	m_QueuedContentTexts.push_back(text);
+	m_UnsavedChangesEntries.push_back(unsavedChanges);
 	m_ContentLineElementsCount++;
 }
 void ContentBrowser::UpdateContentElementCursor() noexcept {

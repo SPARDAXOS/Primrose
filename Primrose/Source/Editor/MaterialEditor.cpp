@@ -79,7 +79,8 @@ void MaterialEditor::SetupAmbientSection() {
 	ImGui::Text("Strength");
 	ImGui::SameLine(DistanceToInputBox); //Aligned with the current sprite selector box
 	ImGui::SetNextItemWidth(m_CurrentAmbientSelectorBoxSize.x);
-	ImGui::InputFloat("##AmbientStrength", &m_Target->m_AmbientStrength);
+	if (ImGui::InputFloat("##AmbientStrength", &m_Target->m_AmbientStrength))
+		m_Target->GetAsset().m_UnsavedChanges = true;
 
 	ImGui::Separator();
 }
@@ -93,14 +94,16 @@ void MaterialEditor::SetupSpecularSection() {
 	ImGui::Text("Strength");
 	ImGui::SameLine(DistanceToInputBox);
 	ImGui::SetNextItemWidth(m_CurrentSpecularSelectorBoxSize.x);
-	ImGui::InputFloat("##SpecularStrength", &m_Target->m_SpecularStrength);
+	if (ImGui::InputFloat("##SpecularStrength", &m_Target->m_SpecularStrength))
+		m_Target->GetAsset().m_UnsavedChanges = true;
 
 	//Shininess
 	ImGui::SetCursorPos(ImVec2(m_LineStartOffset, ImGui::GetCursorPos().y));
 	ImGui::Text("Shininess");
 	ImGui::SameLine(DistanceToInputBox);
 	ImGui::SetNextItemWidth(m_CurrentSpecularSelectorBoxSize.x);
-	ImGui::InputInt("##SpecularShininess", &m_Target->m_SpecularShininess);
+	if (ImGui::InputInt("##SpecularShininess", &m_Target->m_SpecularShininess))
+		m_Target->GetAsset().m_UnsavedChanges = true;
 
 	ImGui::Separator();
 }
@@ -112,7 +115,8 @@ void MaterialEditor::SetupSelectorBox(SelectorBoxType type) {
 	const float NameToSelectorBoxPadding = m_CurrentWindowSize.x * m_NameToInputBoxPaddingMultiplier;
 
 	ImVec2 TextureNameTextSize;
-	std::string TextureName;
+	std::string TextureNameWithoutExtension;
+	std::string TextureName = "None";
 
 	float DistanceToSelectorBox = 0.0f;
 	const float CurrentLineHeight = ImGui::GetCursorPos().y;
@@ -130,11 +134,12 @@ void MaterialEditor::SetupSelectorBox(SelectorBoxType type) {
 
 		//Texture Name
 		if (m_Target->m_Diffuse != nullptr) {
-			TextureName = m_Target->m_Diffuse->GetNameWithoutExtension();
-			TextureNameTextSize = ImGui::CalcTextSize(TextureName.data());
+			TextureNameWithoutExtension = m_Target->m_Diffuse->GetNameWithoutExtension();
+			TextureNameTextSize = ImGui::CalcTextSize(TextureNameWithoutExtension.data());
+			TextureName = m_Target->m_Diffuse->GetName();
 		}
 		else {
-			TextureName = "None";
+			TextureNameWithoutExtension = "None";
 			TextureNameTextSize = m_NoneTextSize;
 		}
 
@@ -143,6 +148,7 @@ void MaterialEditor::SetupSelectorBox(SelectorBoxType type) {
 		if (ImGui::Button("##DiffuseSelector", m_CurrentDiffuseSelectorBoxSize)) {
 			m_SelectionWindows->SetSpriteSelectorWindowState(true);
 			m_SelectionWindows->SetSpriteSelectorTarget(m_Target->m_Diffuse);
+			m_SelectionWindows->SetChangesCheckData(m_Target->GetAsset().m_UnsavedChanges, TextureName);
 		}
 		ImGui::SameLine(DistanceToSelectorBox + (m_CurrentDiffuseSelectorBoxSize.x / 2) - (TextureNameTextSize.x / 2));
 
@@ -158,11 +164,12 @@ void MaterialEditor::SetupSelectorBox(SelectorBoxType type) {
 
 		//Texture Name
 		if (m_Target->m_Ambient != nullptr) {
-			TextureName = m_Target->m_Ambient->GetNameWithoutExtension();
-			TextureNameTextSize = ImGui::CalcTextSize(TextureName.data());
+			TextureNameWithoutExtension = m_Target->m_Ambient->GetNameWithoutExtension();
+			TextureNameTextSize = ImGui::CalcTextSize(TextureNameWithoutExtension.data());
+			TextureName = m_Target->m_Ambient->GetName();
 		}
 		else {
-			TextureName = "None";
+			TextureNameWithoutExtension = "None";
 			TextureNameTextSize = m_NoneTextSize;
 		}
 
@@ -171,6 +178,7 @@ void MaterialEditor::SetupSelectorBox(SelectorBoxType type) {
 		if (ImGui::Button("##AmbientSelector", m_CurrentAmbientSelectorBoxSize)) {
 			m_SelectionWindows->SetSpriteSelectorWindowState(true);
 			m_SelectionWindows->SetSpriteSelectorTarget(m_Target->m_Ambient);
+			m_SelectionWindows->SetChangesCheckData(m_Target->GetAsset().m_UnsavedChanges, TextureName);
 		}
 		ImGui::SameLine(DistanceToSelectorBox + (m_CurrentAmbientSelectorBoxSize.x / 2) - (TextureNameTextSize.x / 2));
 
@@ -186,11 +194,12 @@ void MaterialEditor::SetupSelectorBox(SelectorBoxType type) {
 
 		//Texture Name
 		if (m_Target->m_Specular != nullptr) {
-			TextureName = m_Target->m_Specular->GetNameWithoutExtension();
-			TextureNameTextSize = ImGui::CalcTextSize(TextureName.data());
+			TextureNameWithoutExtension = m_Target->m_Specular->GetNameWithoutExtension();
+			TextureNameTextSize = ImGui::CalcTextSize(TextureNameWithoutExtension.data());
+			TextureName = m_Target->m_Specular->GetName();
 		}
 		else {
-			TextureName = "None";
+			TextureNameWithoutExtension = "None";
 			TextureNameTextSize = m_NoneTextSize;
 		}
 
@@ -199,6 +208,7 @@ void MaterialEditor::SetupSelectorBox(SelectorBoxType type) {
 		if (ImGui::Button("##SpecularSelector", m_CurrentSpecularSelectorBoxSize)) {
 			m_SelectionWindows->SetSpriteSelectorWindowState(true);
 			m_SelectionWindows->SetSpriteSelectorTarget(m_Target->m_Specular);
+			m_SelectionWindows->SetChangesCheckData(m_Target->GetAsset().m_UnsavedChanges, TextureName);
 		}
 		ImGui::SameLine(DistanceToSelectorBox + (m_CurrentSpecularSelectorBoxSize.x / 2) - (TextureNameTextSize.x / 2));
 
@@ -209,7 +219,7 @@ void MaterialEditor::SetupSelectorBox(SelectorBoxType type) {
 
 	//Value Name
 	ImGui::SetCursorPosY(CurrentLineHeight - 2);
-	ImGui::Text(TextureName.data());
+	ImGui::Text(TextureNameWithoutExtension.data());
 }
 
 void MaterialEditor::ApplyStyle() {

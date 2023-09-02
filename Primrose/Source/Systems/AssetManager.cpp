@@ -79,20 +79,22 @@ bool AssetManager::CreateMaterialAssetFile(Directory& location) {
 	//Creating asset
 	Asset* NewAsset = new Asset; //Rememeber to clean this if the function fails
 	NewAsset->m_EditorAsset = false;
-	NewAsset->m_Extension = ".rose"; //Depending on AssetType? or just general engine asset
 	NewAsset->m_Type = AssetType::MATERIAL;
-	NewAsset->m_Name = "NewMaterial";
+	NewAsset->m_Extension = ".rose";
+	NewAsset->m_NameWithoutExtension = "NewMaterial";
+	NewAsset->m_Name = NewAsset->m_NameWithoutExtension + NewAsset->m_Extension;
 	NewAsset->m_Parent = &location;
-	NewAsset->m_Path = location.m_Path.string() + std::string("\\" + NewAsset->m_Name + NewAsset->m_Extension);
+	NewAsset->m_Path = location.m_Path.string() + std::string("\\" + NewAsset->m_Name);
 
 	//Naming
 	int CopyNameIncrement = 0;
 	while (location.DoesAssetExist(NewAsset->m_Path.string())) {
 		CopyNameIncrement++;
-		NewAsset->m_Name = NewAsset->m_Name + std::to_string(CopyNameIncrement);
+		NewAsset->m_NameWithoutExtension = "NewMaterial" + std::to_string(CopyNameIncrement);
+		NewAsset->m_Name = NewAsset->m_NameWithoutExtension + NewAsset->m_Extension;
 		//IMPORTANT NOTE: Using Windows slashes but the function does work regardless. 
 		//-However, using double slashes for consistency in Asset.m_Path and Directory.m_Path 
-		NewAsset->m_Path = location.m_Path.string() + std::string("\\" + NewAsset->m_Name + NewAsset->m_Extension);
+		NewAsset->m_Path = location.m_Path.string() + std::string("\\" + NewAsset->m_Name);
 	}
 
 	//Create material using the asset
@@ -259,6 +261,8 @@ bool AssetManager::RemoveDirectory(Directory& directory) {
 	//-free memory then deleting pointer then go for next element will access out of range since the range changed!
 	//-I dont think this would happen in any of the lambdas cause i use begin and end, however, any loop with numbers will break for sure!
 
+	//IMPORTANT NOTE: This works but its kinda scary so i had a bunch of breakpoints left here but i needed to remove them for testing other stuff
+
 	while (directory.m_Folders.size() > 0)
 		RemoveDirectory(*directory.m_Folders.at(0));
 
@@ -277,6 +281,38 @@ bool AssetManager::RemoveDirectory(Directory& directory) {
 		return false;
 
 	return true;
+}
+
+
+bool AssetManager::SaveAsset(Asset& asset) const {
+
+	if (!asset.m_UnsavedChanges)
+		return true;
+
+	bool Results = false;
+
+	//Figure out asset type and get the specific asset then save it by calling correct template arg.
+	switch (asset.m_Type) {
+	case AssetType::MATERIAL: {
+		const Material* TargetMaterial = GetMaterial(asset); //If asset had ref to parent, this could have been skipped fully!
+		if (!TargetMaterial) {
+			m_Core->SystemLog("Failed to locate target material.");
+			m_Core->SystemLog("Failed to save material asset.");
+			return false;
+		}
+		Results = m_Serializer->SerializeToFile<Material>(*TargetMaterial);
+	} break;
+
+
+
+
+	}
+
+
+	if (Results)
+		asset.m_UnsavedChanges = false;
+
+	return Results;
 }
 
 

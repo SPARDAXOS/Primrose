@@ -38,6 +38,8 @@ public:
 	bool RemoveAsset(Asset& asset);
 	bool RemoveDirectory(Directory& directory);
 
+	bool SaveAsset(Asset& asset) const;
+
 public:
 	inline Directory* GetProjectRoot() const noexcept { return m_ProjectRoot; }
 	inline Directory* GetEditorRoot() const noexcept { return m_EditorRoot; }
@@ -80,7 +82,7 @@ private:
 	bool CreateMaterialAssetFile(Directory& location);
 
 	template<typename T>
-	inline bool RemoveAssetEntry(Asset& asset) {}
+	inline bool RemoveAssetEntry(Asset& asset) {}//Should the default templates be left like this? Probably not, some error checking or messsages should be used instead!
 	bool RemoveFolderEntry(Directory& folder);
 
 	[[nodiscard]] bool RemoveMaterialFromStorage(const Asset& asset);

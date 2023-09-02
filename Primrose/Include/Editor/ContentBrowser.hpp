@@ -1,6 +1,7 @@
 #pragma once
 #include "ImGUI/imgui.h"
 #include "Utility.hpp"
+#include "Math.hpp"
 
 class Core;
 class Editor;
@@ -84,7 +85,7 @@ private:
 
 	void CreateFolderEntry(Directory& folder, void* textureID);
 	void CreateAssetEntry(Asset& asset, void* textureID);
-	void AddContentElementTextEntry(const std::string& text);
+	void AddContentElementDataEntry(const std::string& text, bool unsavedChanges);
 
 	void UpdateContentElementCursor() noexcept;
 
@@ -124,10 +125,12 @@ private:
 	ImVec2 m_LastViewportSize;
 	ImVec2 m_LastDetailsWindowSize;
 
-
-
+private:
+	ImVec2 m_UnsavedChangesIconSize{ 15.0f, 15.0f };
 	ImVec2 m_ContentBrowserElementSize{ 100.0f, 100.0f };
 	float m_ContentBrowserElementPadding = 50.0f;
+
+	Color m_UnsavedChangesIconColor = Colors::White;
 
 
 
@@ -148,6 +151,7 @@ private:
 	float m_ContentElementCursor = 0.0f;
 	uint32 m_ContentLineElementsCount = 0;
 	std::vector<std::string> m_QueuedContentTexts; //Could use const char* instead
+	std::vector<bool> m_UnsavedChangesEntries;
 
 	void* m_SelectedContentElement{ nullptr };
 	bool m_FolderEntryOpened{ false };
@@ -160,6 +164,7 @@ private:
 	Texture2D* m_MissingTexture			{ nullptr };
 	Texture2D* m_UnknownAssetTexture	{ nullptr };
 	Texture2D* m_MaterialAssetTexture	{ nullptr };
+	Texture2D* m_UnsavedChangesTexture	{ nullptr };
 
 private:
 	bool m_DirectoryExplorerEditorFilter = false;

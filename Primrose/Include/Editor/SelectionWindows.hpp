@@ -40,6 +40,8 @@ public:
 	inline void ClearSpriteSelectorTarget() noexcept { m_SpriteSelectorTarget = nullptr; }
 	inline void ClearMaterialSelectorTarget() noexcept { m_MaterialSelectorTarget = nullptr; }
 
+	inline void SetChangesCheckData(bool& target, std::string_view name) noexcept { m_ChangesCheckTarget = &target; m_ChangesCheckName = name; }
+
 private:
 	void UpdateSpriteSelectorEntries();
 	void UpdateMaterialSelectorEntries();
@@ -51,6 +53,8 @@ private:
 	void FlushMaterialSelectorTexts();
 
 	void CheckViewportChanges();
+
+	void CheckChanges(const std::string& newName) noexcept;
 
 	void SetupStyle();
 	void ClearStyle();
@@ -77,6 +81,9 @@ private:
 	uint32 m_MaterialSelectorLineElementsCount = 0;
 	std::vector<std::string> m_QueuedMaterialSelectorTexts; //Could use const char* instead
 	void* m_SelectedMaterialSelectorElement{ nullptr };
+
+	bool* m_ChangesCheckTarget	{ nullptr };
+	std::string m_ChangesCheckName;
 
 private:
 	Texture2D* m_MaterialAssetTexture	{ nullptr };

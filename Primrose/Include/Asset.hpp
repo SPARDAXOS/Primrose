@@ -26,6 +26,7 @@ public:
 			this->m_Path = other.m_Path;
 			this->m_Extension = other.m_Extension;
 			this->m_Name = other.m_Name;
+			this->m_UnsavedChanges = other.m_UnsavedChanges;
 			this->m_EditorAsset = other.m_EditorAsset;
 			this->m_Type = other.m_Type;
 			return *this;
@@ -45,6 +46,7 @@ public:
 			this->m_Extension = std::move(other.m_Extension);
 			this->m_Name = std::move(other.m_Name);
 			this->m_EditorAsset = std::move(other.m_EditorAsset);
+			this->m_UnsavedChanges = std::move(other.m_UnsavedChanges);
 			this->m_Type = std::move(other.m_Type);
 			return *this;
 		}
@@ -59,6 +61,8 @@ public:
 		else if (m_Extension != other.m_Extension)
 			return false;
 		else if (m_Name != other.m_Name)
+			return false;
+		else if (m_UnsavedChanges != other.m_UnsavedChanges)
 			return false;
 		else if (m_EditorAsset != other.m_EditorAsset)
 			return false;
@@ -81,6 +85,7 @@ public:
 	std::string m_Name;
 	std::string m_NameWithoutExtension;
 
-	bool m_EditorAsset	{ false };
+	bool m_EditorAsset		{ false };
+	bool m_UnsavedChanges	{ false };
 	AssetType m_Type	{ AssetType::INVALID };
 };
