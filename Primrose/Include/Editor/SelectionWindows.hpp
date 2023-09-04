@@ -42,6 +42,11 @@ public:
 
 	inline void SetChangesCheckData(bool& target, std::string_view name) noexcept { m_ChangesCheckTarget = &target; m_ChangesCheckName = name; }
 
+	//Notes
+	//They share code so combine them
+	//The only difference is the target and the type of entries
+	//You CANT open multiple selectors at the same time i think!
+
 private:
 	void UpdateSpriteSelectorEntries();
 	void UpdateMaterialSelectorEntries();
