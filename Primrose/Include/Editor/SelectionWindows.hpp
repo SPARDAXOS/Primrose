@@ -59,7 +59,7 @@ private:
 
 	void CheckViewportChanges();
 
-	void CheckChanges(const std::string& newName) noexcept;
+	void CheckChanges(const std::string& newName) noexcept; //dfopes this include materials?
 
 	void SetupStyle();
 	void ClearStyle();
@@ -71,6 +71,7 @@ private:
 	ImVec2 m_SpriteSelectorElementSize{ 100.0f, 100.0f };
 	float m_SpriteSelectorElementPadding = 50.0f;
 	Texture2D** m_SpriteSelectorTarget{ nullptr };
+	//------------
 	float m_SpriteSelectorElementCursor = 0.0f;
 	uint32 m_SpriteSelectorLineElementsCount = 0;
 	std::vector<std::string> m_QueuedSpriteSelectorTexts; //Could use const char* instead
@@ -82,6 +83,7 @@ private:
 	ImVec2 m_MaterialSelectorElementSize{ 100.0f, 100.0f };
 	float m_MaterialSelectorElementPadding = 50.0f;
 	Material** m_MaterialSelectorTarget{ nullptr };
+	//------------
 	float m_MaterialSelectorElementCursor = 0.0f;
 	uint32 m_MaterialSelectorLineElementsCount = 0;
 	std::vector<std::string> m_QueuedMaterialSelectorTexts; //Could use const char* instead
