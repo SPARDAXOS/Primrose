@@ -6,6 +6,6 @@
 *.user
 
 #Ignore build files
-Build/Debug/Intermediate
-Build/Debug/Primrose.exe
-Build/Debug/Primrose.pdb
+Primrose/Build/Debug/Intermediate/
+Primrose/Build/Debug/Primrose.exe
+Primrose/Build/Debug/Primrose.pdb
