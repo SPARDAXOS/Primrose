@@ -47,12 +47,28 @@ public:
 	//The only difference is the target and the type of entries
 	//You CANT open multiple selectors at the same time i think!
 
+	//Bugs: 
+	//-1 SpriteSelector window stops opening
+	//-2 MaterialSelector window doesnt close if i click out of it! Could have effect on bug 1
+
+	//IMPORTANT NOTE: Rename the sprite selector to texture selector since that makes more sense!
+
 private:
 	void UpdateSpriteSelectorEntries();
 	void UpdateMaterialSelectorEntries();
 
 	void RenderSpriteSelector();
 	void RenderMaterialSelector();
+
+
+	void FlushSelectorTexts();
+	void NewMaterialSelectorFrame();
+	void NewSpriteSelectorFrame();
+	void CreateMaterialSelectorEntry(Material& material, void* textureID);
+	void CreateTextureSelectorEntry(Texture2D& texture, void* textureID);
+	void AddMaterialEntryData(const std::string_view& text);
+	void AddSpriteEntryData(const std::string_view& text);
+
 
 	void FlushSpriteSelectorTexts();
 	void FlushMaterialSelectorTexts();
@@ -63,6 +79,10 @@ private:
 
 	void SetupStyle();
 	void ClearStyle();
+
+private:
+	void UpdateSpriteSelectorCursor() noexcept;
+	void UpdateMaterialSelectorCursor() noexcept;
 
 private:
 	//Sprite Selector
@@ -86,7 +106,7 @@ private:
 	//------------
 	float m_MaterialSelectorElementCursor = 0.0f;
 	uint32 m_MaterialSelectorLineElementsCount = 0;
-	std::vector<std::string> m_QueuedMaterialSelectorTexts; //Could use const char* instead
+	std::vector<std::string_view> m_QueuedMaterialSelectorTexts; //Could use const char* instead
 	void* m_SelectedMaterialSelectorElement{ nullptr };
 
 	bool* m_ChangesCheckTarget	{ nullptr };
