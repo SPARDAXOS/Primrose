@@ -62,10 +62,10 @@ private:
 
 
 	void FlushSelectorTexts();
-	void NewMaterialSelectorFrame();
-	void NewSpriteSelectorFrame();
+	void NewMaterialSelectorFrame() noexcept;
+	void NewSpriteSelectorFrame() noexcept;
 	void CreateMaterialSelectorEntry(Material& material, void* textureID);
-	void CreateTextureSelectorEntry(Texture2D& texture, void* textureID);
+	void CreateTextureSelectorEntry(Texture2D& texture);
 	void AddMaterialEntryData(const std::string_view& text);
 	void AddSpriteEntryData(const std::string_view& text);
 

@@ -149,37 +149,40 @@ void SelectionWindows::UpdateMaterialSelectorCursor() noexcept {
 
 
 void SelectionWindows::UpdateSpriteSelectorEntries() {
-
 	for (auto& Texture : m_TextureStorage->GetTexture2DStorage()) {
-
-
-
+		if (!Texture) //Just in case even tho the responsibility over the ptrs validation falls to the TextureManager.
+			continue;
 
 		UpdateSpriteSelectorCursor();
-		
-		//This could be also applied to the content browser!
-		//Bind Texture
-		void* TextureID = nullptr;
-		if (Texture == nullptr) { //Again, possible but idk... just remove this?
-			TextureID = (void*)(intptr_t)(m_MissingTexture->GetID()); //Should i use this texture? missing? or error?
-			m_MissingTexture->Bind();
-		}
-		else {
-			TextureID = (void*)(intptr_t)(Texture->GetID());
-			Texture->Bind();
-		}
-		CreateTextureSelectorEntry(*Texture, TextureID);
-		//Unbind Texture
-		if (Texture == nullptr)
-			m_MissingTexture->Unbind();
-		else
-			Texture->Unbind();
-
-
+		CreateTextureSelectorEntry(*Texture);
 		AddSpriteEntryData(Texture->GetAsset().m_NameWithoutExtension);
 	}
 }
+void SelectionWindows::UpdateMaterialSelectorEntries() {
 
+	//Bind texture
+	void* TextureID = nullptr;
+	if (m_MaterialAssetTexture) {
+		m_MaterialAssetTexture->Bind();
+		TextureID = (void*)(intptr_t)(m_MaterialAssetTexture->GetID());
+	}
+	else {
+		m_MissingTexture->Bind();
+		TextureID = (void*)(intptr_t)(m_MissingTexture->GetID());
+	}
+
+	for (auto& Material : m_AssetManager->GetMaterialsStorage()) {
+		UpdateMaterialSelectorCursor();
+		CreateMaterialSelectorEntry(*Material, TextureID);
+		AddMaterialEntryData(Material->GetAsset().m_NameWithoutExtension); //NOTE: Creates a string_view that is moved into the list.
+	}
+
+	//Unbind Texture
+	if (m_MaterialAssetTexture)
+		m_MaterialAssetTexture->Unbind();
+	else
+		m_MissingTexture->Unbind();
+}
 
 void SelectionWindows::CreateMaterialSelectorEntry(Material& material, void* textureID) {
 
@@ -217,11 +220,27 @@ void SelectionWindows::CreateMaterialSelectorEntry(Material& material, void* tex
 	if (AppliedStyle)
 		ImGui::PopStyleColor();
 }
-void SelectionWindows::CreateTextureSelectorEntry(Texture2D& texture, void* textureID) {
+void SelectionWindows::CreateTextureSelectorEntry(Texture2D& texture) {
 
 	std::string Name = texture.GetName().data();
 	std::string ID = "##" + Name;
 	bool AppliedStyle = false;
+
+	//Bind Texture - The function mandates that texture is not nullptr
+	void* TextureID = (void*)(intptr_t)(texture.GetID());
+	texture.Bind();
+
+
+	//if (texture == nullptr) { //Again, possible but idk... just remove this?
+	//	TextureID = (void*)(intptr_t)(m_MissingTexture->GetID()); //Should i use this texture? missing? or error?
+	//	m_MissingTexture->Bind();
+	//}
+	//else {
+	//	TextureID = (void*)(intptr_t)(texture.GetID());
+	//	texture.Bind();
+	//}
+
+
 
 	//Apply selected style
 	if (m_SelectedSpriteSelectorElement == &texture) {
@@ -231,7 +250,7 @@ void SelectionWindows::CreateTextureSelectorEntry(Texture2D& texture, void* text
 
 	//Render content
 	ImGui::SameLine(m_SpriteSelectorElementCursor);
-	if (ImGui::ImageButton(ID.data(), textureID, m_SpriteSelectorElementSize)) {
+	if (ImGui::ImageButton(ID.data(), TextureID, m_SpriteSelectorElementSize)) {
 		if (m_SelectedSpriteSelectorElement == &texture) {
 			m_SelectedSpriteSelectorElement = nullptr;
 
@@ -248,52 +267,31 @@ void SelectionWindows::CreateTextureSelectorEntry(Texture2D& texture, void* text
 				ImGui::PopStyleColor();
 
 
-			break;
+			//break; //HERE!!!!!!!!!!!!!!!!!!!!!! Someway to end the loop if there was a selection!
 			//TODO: BREAK OUT OF THE LOOP. THIs and the other function boith need major refactors like the content browser
 		}
 		else
 			m_SelectedSpriteSelectorElement = &texture;
 	}
 
+	//Unbind Texture
+	//if (Texture == nullptr)
+	//	m_MissingTexture->Unbind();
+	//else
+	texture.Unbind();
+	
 	//Pop selected style
 	if (AppliedStyle)
 		ImGui::PopStyleColor();
-}
-void SelectionWindows::UpdateMaterialSelectorEntries() {
-
-	//NOTE: This applies to the content browser as well but this could be cleaned a lot more than this
-		//Move out into main render func for this selector
 
 
-	//Bind texture
-	void* TextureID = nullptr;
-	if (m_MaterialAssetTexture) {
-		m_MaterialAssetTexture->Bind();
-		TextureID = (void*)(intptr_t)(m_MaterialAssetTexture->GetID());
-	}
-	else {
-		m_MissingTexture->Bind();
-		TextureID = (void*)(intptr_t)(m_MissingTexture->GetID());
-	}
-
-	for (auto& Material : m_AssetManager->GetMaterialsStorage()) {
-		UpdateMaterialSelectorCursor();
-		CreateMaterialSelectorEntry(*Material, TextureID);
-		AddMaterialEntryData(Material->GetAsset().m_NameWithoutExtension); //NOTE: Creates a string_view that is moved into the list.
-	}
-
-	//Unbind Texture
-	if (m_MaterialAssetTexture)
-		m_MaterialAssetTexture->Unbind();
-	else
-		m_MissingTexture->Unbind();
 }
 
-void SelectionWindows::NewMaterialSelectorFrame() {
+void SelectionWindows::NewMaterialSelectorFrame() noexcept {
 	m_MaterialSelectorElementCursor = 0.0f;
 	m_MaterialSelectorLineElementsCount = 0;
 }
-void SelectionWindows::NewSpriteSelectorFrame() {
+void SelectionWindows::NewSpriteSelectorFrame() noexcept {
 	m_SpriteSelectorElementCursor = 0.0f;
 	m_SpriteSelectorLineElementsCount = 0;
 }
