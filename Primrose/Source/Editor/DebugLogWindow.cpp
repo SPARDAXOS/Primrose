@@ -16,9 +16,6 @@ DebugLogWindow::DebugLogWindow(Core& core, Editor& editor) noexcept
 	m_Logger = core.GetLogger();
 	m_TextureStorage = core.GetTextureStorage();
 	m_Time = core.GetTime();
-
-	m_ContentBrowser = editor.GetContentBrowser();
-	m_SystemLogWindow = editor.GetSystemLogWindow();
 }
 
 void DebugLogWindow::Render() {
@@ -202,6 +199,9 @@ void DebugLogWindow::Render() {
 }
 
 void DebugLogWindow::Init() {
+
+	m_ContentBrowser = m_Editor->GetContentBrowser();
+	m_SystemLogWindow = m_Editor->GetSystemLogWindow();
 
 	if (!m_TextureStorage->GetEditorTexture2DByName("Debug.png", m_DebugTexture))
 		m_Core->SystemLog("Failed to save reference to engine texture [Debug]");

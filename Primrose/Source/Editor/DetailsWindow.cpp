@@ -9,8 +9,6 @@ DetailsWindow::DetailsWindow(Core& core, Editor& editor) noexcept
 {
 }
 
-
-
 void DetailsWindow::Update() {
 
 

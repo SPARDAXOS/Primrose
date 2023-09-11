@@ -33,6 +33,7 @@ void SelectionWindows::Init() {
 
 }
 
+
 void SelectionWindows::RenderSpriteSelector() {
 
 	if (!m_SpriteSelectorOpened || m_SpriteSelectorTarget == nullptr)
@@ -43,7 +44,7 @@ void SelectionWindows::RenderSpriteSelector() {
 
 	ImGuiWindowFlags Flags = 0;
 	Flags |= ImGuiWindowFlags_AlwaysVerticalScrollbar;
-
+	Flags |= ImGuiWindowFlags_NoSavedSettings;
 
 	//Open Popup
 	if (m_SpriteSelectorOpened) {
@@ -80,6 +81,116 @@ void SelectionWindows::RenderSpriteSelector() {
 	ImGui::PopStyleColor();
 	ImGui::PopStyleVar();
 }
+void SelectionWindows::UpdateSpriteSelectorEntries() {
+	for (auto& Texture : m_TextureStorage->GetTexture2DStorage()) {
+		if (!Texture) //Just in case even tho the responsibility over the ptrs validation falls to the TextureManager.
+			continue;
+
+		UpdateSpriteSelectorCursor();
+		CreateTextureSelectorEntry(*Texture);
+		AddSpriteEntryData(Texture->GetAsset().m_NameWithoutExtension);
+	}
+}
+void SelectionWindows::NewSpriteSelectorFrame() noexcept {
+	m_SpriteSelectorElementCursor = 0.0f;
+	m_SpriteSelectorLineElementsCount = 0;
+}
+void SelectionWindows::UpdateSpriteSelectorCursor() noexcept {
+
+	m_SpriteSelectorElementCursor = (m_SpriteSelectorElementPadding * (m_SpriteSelectorLineElementsCount + 1)) + m_SpriteSelectorElementSize.x * m_SpriteSelectorLineElementsCount;
+	if (m_SpriteSelectorElementCursor + m_SpriteSelectorElementSize.x >= m_SpriteSelectorWindowSize.x) {
+		FlushSpriteSelectorTexts();
+		m_SpriteSelectorElementCursor = m_SpriteSelectorElementPadding;
+		m_SpriteSelectorLineElementsCount = 0; //This means its a new line!
+	}
+}
+void SelectionWindows::CreateTextureSelectorEntry(Texture2D& texture) {
+
+	std::string Name = texture.GetName().data();
+	std::string ID = "##" + Name;
+	bool AppliedStyle = false;
+
+	//Bind Texture - The function mandates that texture is not nullptr
+	void* TextureID = (void*)(intptr_t)(texture.GetID());
+	texture.Bind();
+
+	//Apply selected style
+	if (m_SelectedSpriteSelectorElement == &texture) {
+		AppliedStyle = true;
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5f, 0.5f, 0.5f, 0.6f));
+	}
+
+	//Render content
+	ImGui::SameLine(m_SpriteSelectorElementCursor);
+	if (ImGui::ImageButton(ID.data(), TextureID, m_SpriteSelectorElementSize)) {
+		if (m_SelectedSpriteSelectorElement == &texture) {
+			m_SelectedSpriteSelectorElement = nullptr;
+
+			*m_SpriteSelectorTarget = &texture;
+			m_SpriteSelectorTarget = nullptr;
+
+			if (m_ChangesCheckTarget) //It would construct an unnecessary otherwise
+				CheckChanges(texture.GetName().data());
+
+			ImGui::CloseCurrentPopup();
+
+			//Pop selected style
+			if (AppliedStyle)
+				ImGui::PopStyleColor();
+
+			//Unbind Texture
+			texture.Unbind();
+
+			return;
+			//break; //HERE!!!!!!!!!!!!!!!!!!!!!! Someway to end the loop if there was a selection!
+			//TODO: BREAK OUT OF THE LOOP. THIs and the other function boith need major refactors like the content browser
+		}
+		else
+			m_SelectedSpriteSelectorElement = &texture;
+	}
+
+	//Unbind Texture
+	texture.Unbind();
+
+	//Pop selected style
+	if (AppliedStyle)
+		ImGui::PopStyleColor();
+
+
+}
+void SelectionWindows::AddSpriteEntryData(const std::string_view& text) {
+	m_QueuedSpriteSelectorTexts.emplace_back(text);
+	m_SpriteSelectorLineElementsCount++;
+}
+void SelectionWindows::FlushSpriteSelectorTexts() {
+
+	if (m_QueuedSpriteSelectorTexts.size() == 0)
+		return;
+
+	m_Editor->AddSpacings(1);
+	float CurrentX = 0.0f;
+
+	for (uint32 Index = 0; Index < m_QueuedSpriteSelectorTexts.size(); Index++) {
+
+		std::string_view ElementName = m_QueuedSpriteSelectorTexts.at(Index);
+
+		ImVec2 TextSize = ImGui::CalcTextSize(ElementName.data());
+		CurrentX = (m_SpriteSelectorElementPadding * (Index + 1)) + m_SpriteSelectorElementSize.x * Index; //Same pos as content
+		CurrentX += m_SpriteSelectorElementSize.x / 2.0f; //Shift it by button half button size
+		CurrentX -= TextSize.x / 2.0f; //Shift it back by text half width
+
+		CurrentX += 5;
+		//TODO: Fix the positioning, it is slightly off still.
+
+		ImGui::SameLine(CurrentX);
+		ImGui::Text(ElementName.data());
+	}
+
+	m_QueuedSpriteSelectorTexts.clear();
+	m_Editor->AddSpacings(3);
+}
+
+
 void SelectionWindows::RenderMaterialSelector() {
 
 	if (!m_MaterialSelectorOpened || m_MaterialSelectorTarget == nullptr)
@@ -125,39 +236,6 @@ void SelectionWindows::RenderMaterialSelector() {
 	ImGui::PopStyleColor();
 	ImGui::PopStyleVar();
 }
-
-void SelectionWindows::UpdateSpriteSelectorCursor() noexcept {
-
-	//Calculate position and check if new line is necessary
-	m_SpriteSelectorElementCursor = (m_SpriteSelectorElementPadding * (m_SpriteSelectorLineElementsCount + 1)) + m_SpriteSelectorElementSize.x * m_SpriteSelectorLineElementsCount;
-	if (m_SpriteSelectorElementCursor + m_SpriteSelectorElementSize.x >= m_SpriteSelectorWindowSize.x) {
-		FlushSpriteSelectorTexts();
-		m_SpriteSelectorElementCursor = m_SpriteSelectorElementPadding;
-		m_SpriteSelectorLineElementsCount = 0; //This means its a new line!
-	}
-}
-void SelectionWindows::UpdateMaterialSelectorCursor() noexcept {
-
-	//Calculate position and check if new line is necessary
-	m_MaterialSelectorElementCursor = (m_MaterialSelectorElementPadding * (m_MaterialSelectorLineElementsCount + 1)) + m_MaterialSelectorElementSize.x * m_MaterialSelectorLineElementsCount;
-	if (m_MaterialSelectorElementCursor + m_MaterialSelectorElementSize.x >= m_MaterialSelectorWindowSize.x) {
-		FlushMaterialSelectorTexts();
-		m_MaterialSelectorElementCursor = m_MaterialSelectorElementPadding;
-		m_MaterialSelectorLineElementsCount = 0; //This means its a new line!
-	}
-}
-
-
-void SelectionWindows::UpdateSpriteSelectorEntries() {
-	for (auto& Texture : m_TextureStorage->GetTexture2DStorage()) {
-		if (!Texture) //Just in case even tho the responsibility over the ptrs validation falls to the TextureManager.
-			continue;
-
-		UpdateSpriteSelectorCursor();
-		CreateTextureSelectorEntry(*Texture);
-		AddSpriteEntryData(Texture->GetAsset().m_NameWithoutExtension);
-	}
-}
 void SelectionWindows::UpdateMaterialSelectorEntries() {
 
 	//Bind texture
@@ -183,7 +261,20 @@ void SelectionWindows::UpdateMaterialSelectorEntries() {
 	else
 		m_MissingTexture->Unbind();
 }
+void SelectionWindows::NewMaterialSelectorFrame() noexcept {
+	m_MaterialSelectorElementCursor = 0.0f;
+	m_MaterialSelectorLineElementsCount = 0;
+}
+void SelectionWindows::UpdateMaterialSelectorCursor() noexcept {
 
+	//Calculate position and check if new line is necessary
+	m_MaterialSelectorElementCursor = (m_MaterialSelectorElementPadding * (m_MaterialSelectorLineElementsCount + 1)) + m_MaterialSelectorElementSize.x * m_MaterialSelectorLineElementsCount;
+	if (m_MaterialSelectorElementCursor + m_MaterialSelectorElementSize.x >= m_MaterialSelectorWindowSize.x) {
+		FlushMaterialSelectorTexts();
+		m_MaterialSelectorElementCursor = m_MaterialSelectorElementPadding;
+		m_MaterialSelectorLineElementsCount = 0; //This means its a new line!
+	}
+}
 void SelectionWindows::CreateMaterialSelectorEntry(Material& material, void* textureID) {
 
 	std::string Name = material.GetAsset().m_NameWithoutExtension.data();
@@ -206,6 +297,7 @@ void SelectionWindows::CreateMaterialSelectorEntry(Material& material, void* tex
 			m_MaterialSelectorTarget = nullptr;
 
 			//Unique to Materials? Test out saving a sprite
+			//WOT`?????????????????????????????????
 			if (m_ChangesCheckTarget) //It would construct an unnecessary otherwise
 				CheckChanges(material.GetAsset().m_Name);
 
@@ -220,146 +312,9 @@ void SelectionWindows::CreateMaterialSelectorEntry(Material& material, void* tex
 	if (AppliedStyle)
 		ImGui::PopStyleColor();
 }
-void SelectionWindows::CreateTextureSelectorEntry(Texture2D& texture) {
-
-	std::string Name = texture.GetName().data();
-	std::string ID = "##" + Name;
-	bool AppliedStyle = false;
-
-	//Bind Texture - The function mandates that texture is not nullptr
-	void* TextureID = (void*)(intptr_t)(texture.GetID());
-	texture.Bind();
-
-
-	//if (texture == nullptr) { //Again, possible but idk... just remove this?
-	//	TextureID = (void*)(intptr_t)(m_MissingTexture->GetID()); //Should i use this texture? missing? or error?
-	//	m_MissingTexture->Bind();
-	//}
-	//else {
-	//	TextureID = (void*)(intptr_t)(texture.GetID());
-	//	texture.Bind();
-	//}
-
-
-
-	//Apply selected style
-	if (m_SelectedSpriteSelectorElement == &texture) {
-		AppliedStyle = true;
-		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5f, 0.5f, 0.5f, 0.6f));
-	}
-
-	//Render content
-	ImGui::SameLine(m_SpriteSelectorElementCursor);
-	if (ImGui::ImageButton(ID.data(), TextureID, m_SpriteSelectorElementSize)) {
-		if (m_SelectedSpriteSelectorElement == &texture) {
-			m_SelectedSpriteSelectorElement = nullptr;
-
-			*m_SpriteSelectorTarget = &texture;
-			m_SpriteSelectorTarget = nullptr;
-
-			if (m_ChangesCheckTarget) //It would construct an unnecessary otherwise
-				CheckChanges(texture.GetName().data());
-
-			ImGui::CloseCurrentPopup();
-
-			//Pop selected style
-			if (AppliedStyle)
-				ImGui::PopStyleColor();
-
-
-			//break; //HERE!!!!!!!!!!!!!!!!!!!!!! Someway to end the loop if there was a selection!
-			//TODO: BREAK OUT OF THE LOOP. THIs and the other function boith need major refactors like the content browser
-		}
-		else
-			m_SelectedSpriteSelectorElement = &texture;
-	}
-
-	//Unbind Texture
-	//if (Texture == nullptr)
-	//	m_MissingTexture->Unbind();
-	//else
-	texture.Unbind();
-	
-	//Pop selected style
-	if (AppliedStyle)
-		ImGui::PopStyleColor();
-
-
-}
-
-void SelectionWindows::NewMaterialSelectorFrame() noexcept {
-	m_MaterialSelectorElementCursor = 0.0f;
-	m_MaterialSelectorLineElementsCount = 0;
-}
-void SelectionWindows::NewSpriteSelectorFrame() noexcept {
-	m_SpriteSelectorElementCursor = 0.0f;
-	m_SpriteSelectorLineElementsCount = 0;
-}
-void SelectionWindows::FlushSelectorTexts() {
-
-	if (m_QueuedSpriteSelectorTexts.size() == 0)
-		return;
-
-	m_Editor->AddSpacings(1);
-	float CurrentX = 0.0f;
-
-	for (uint32 Index = 0; Index < m_QueuedSpriteSelectorTexts.size(); Index++) {
-
-		std::string ElementName = m_QueuedSpriteSelectorTexts.at(Index);
-
-		ImVec2 TextSize = ImGui::CalcTextSize(ElementName.data());
-		CurrentX = (m_SpriteSelectorElementPadding * (Index + 1)) + m_SpriteSelectorElementSize.x * Index; //Same pos as content
-		CurrentX += m_SpriteSelectorElementSize.x / 2.0f; //Shift it by button half button size
-		CurrentX -= TextSize.x / 2.0f; //Shift it back by text half width
-
-		CurrentX += 5;
-		//TODO: Fix the positioning, it is slightly off still.
-
-		ImGui::SameLine(CurrentX);
-		ImGui::Text(ElementName.data());
-	}
-
-	m_QueuedSpriteSelectorTexts.clear();
-	m_Editor->AddSpacings(3);
-}
-
 void SelectionWindows::AddMaterialEntryData(const std::string_view& text) {
 	m_QueuedMaterialSelectorTexts.emplace_back(text);
 	m_MaterialSelectorLineElementsCount++;
-}
-void SelectionWindows::AddSpriteEntryData(const std::string_view& text) {
-	m_QueuedSpriteSelectorTexts.emplace_back(text);
-	m_SpriteSelectorLineElementsCount++;
-}
-
-
-
-void SelectionWindows::FlushSpriteSelectorTexts() {
-
-	if (m_QueuedSpriteSelectorTexts.size() == 0)
-		return;
-
-	m_Editor->AddSpacings(1);
-	float CurrentX = 0.0f;
-
-	for (uint32 Index = 0; Index < m_QueuedSpriteSelectorTexts.size(); Index++) {
-
-		std::string ElementName = m_QueuedSpriteSelectorTexts.at(Index);
-
-		ImVec2 TextSize = ImGui::CalcTextSize(ElementName.data());
-		CurrentX = (m_SpriteSelectorElementPadding * (Index + 1)) + m_SpriteSelectorElementSize.x * Index; //Same pos as content
-		CurrentX += m_SpriteSelectorElementSize.x / 2.0f; //Shift it by button half button size
-		CurrentX -= TextSize.x / 2.0f; //Shift it back by text half width
-
-		CurrentX += 5;
-		//TODO: Fix the positioning, it is slightly off still.
-
-		ImGui::SameLine(CurrentX);
-		ImGui::Text(ElementName.data());
-	}
-
-	m_QueuedSpriteSelectorTexts.clear();
-	m_Editor->AddSpacings(3);
 }
 void SelectionWindows::FlushMaterialSelectorTexts() {
 
@@ -388,6 +343,7 @@ void SelectionWindows::FlushMaterialSelectorTexts() {
 	m_Editor->AddSpacings(3);
 }
 
+
 void SelectionWindows::CheckChanges(const std::string& newName) noexcept {
 
 	if (!m_ChangesCheckTarget)
@@ -409,7 +365,6 @@ void SelectionWindows::CheckViewportChanges() {
 	if (!m_MaterialSelectorOpened)
 		m_MaterialSelectorWindowSize = ImVec2(m_ImGuiViewport->Size.x * 0.2f, m_ImGuiViewport->Size.y * 0.6f);
 }
-
 
 void SelectionWindows::SetupStyle() {
 

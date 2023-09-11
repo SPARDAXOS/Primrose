@@ -53,39 +53,32 @@ public:
 
 	//IMPORTANT NOTE: Rename the sprite selector to texture selector since that makes more sense!
 
-private:
-	void UpdateSpriteSelectorEntries();
-	void UpdateMaterialSelectorEntries();
-
+private: //TextureSelector
 	void RenderSpriteSelector();
-	void RenderMaterialSelector();
-
-
-	void FlushSelectorTexts();
-	void NewMaterialSelectorFrame() noexcept;
+	void UpdateSpriteSelectorEntries();
 	void NewSpriteSelectorFrame() noexcept;
-	void CreateMaterialSelectorEntry(Material& material, void* textureID);
+	void UpdateSpriteSelectorCursor() noexcept;
 	void CreateTextureSelectorEntry(Texture2D& texture);
-	void AddMaterialEntryData(const std::string_view& text);
 	void AddSpriteEntryData(const std::string_view& text);
-
-
 	void FlushSpriteSelectorTexts();
+
+private: //MaterialSelector
+	void RenderMaterialSelector();
+	void UpdateMaterialSelectorEntries();
+	void NewMaterialSelectorFrame() noexcept;
+	void UpdateMaterialSelectorCursor() noexcept;
+	void CreateMaterialSelectorEntry(Material& material, void* textureID);
+	void AddMaterialEntryData(const std::string_view& text);
 	void FlushMaterialSelectorTexts();
 
+private:
 	void CheckViewportChanges();
-
 	void CheckChanges(const std::string& newName) noexcept; //dfopes this include materials?
 
 	void SetupStyle();
 	void ClearStyle();
 
-private:
-	void UpdateSpriteSelectorCursor() noexcept;
-	void UpdateMaterialSelectorCursor() noexcept;
-
-private:
-	//Sprite Selector
+private: //Sprite Selector
 	bool m_SpriteSelectorOpened = false;
 	ImVec2 m_SpriteSelectorWindowSize;
 	ImVec2 m_SpriteSelectorElementSize{ 100.0f, 100.0f };
@@ -94,10 +87,10 @@ private:
 	//------------
 	float m_SpriteSelectorElementCursor = 0.0f;
 	uint32 m_SpriteSelectorLineElementsCount = 0;
-	std::vector<std::string> m_QueuedSpriteSelectorTexts; //Could use const char* instead
+	std::vector<std::string_view> m_QueuedSpriteSelectorTexts; //Could use const char* instead
 	void* m_SelectedSpriteSelectorElement{ nullptr }; //Why is this even void*?
 
-	//Material Selector
+private: //Material Selector
 	bool m_MaterialSelectorOpened = false;
 	ImVec2 m_MaterialSelectorWindowSize;
 	ImVec2 m_MaterialSelectorElementSize{ 100.0f, 100.0f };
@@ -109,6 +102,7 @@ private:
 	std::vector<std::string_view> m_QueuedMaterialSelectorTexts; //Could use const char* instead
 	void* m_SelectedMaterialSelectorElement{ nullptr };
 
+private:
 	bool* m_ChangesCheckTarget	{ nullptr };
 	std::string m_ChangesCheckName;
 

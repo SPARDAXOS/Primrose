@@ -47,7 +47,6 @@ Editor::Editor(Core& core)
 	ImGui_ImplGlfw_InitForOpenGL(m_Window->GetWindowResource().m_Handle, true);
 	ImGui_ImplOpenGL3_Init();
 
-	m_NewStandaloneWindowSize = ImVec2(m_ImGuiViewport->Size.x * 0.3f, m_ImGuiViewport->Size.y * 0.3f);
 
 	m_SelectionWindows = std::make_unique<SelectionWindows>(core, *this);
 	m_MaterialEditor = std::make_unique<MaterialEditor>(core, *this);
@@ -122,7 +121,8 @@ void Editor::Render() {
 	StartFrame();
 	//I should probably just do it here.
 
-
+	m_NewStandaloneWindowSize = ImVec2(m_ImGuiViewport->Size.x * 0.3f, m_ImGuiViewport->Size.y * 0.3f); //Move somewhere else and it needs to be after startframe! Maybe just move this line 
+	//to the func itself and get rid of the variable.
 	UpdateSubsystems(); //Requires a call to StartFrame()
 
 	m_IsAnyWindowHovered = false; //Consider moving this to StartFrame() or something
