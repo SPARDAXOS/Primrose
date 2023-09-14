@@ -59,13 +59,13 @@ void SelectionWindows::RenderSpriteSelector() {
 	if (ImGui::BeginPopupModal("Sprite Selector", &m_SpriteSelectorOpened, Flags)) {
 		m_Editor->CheckForHoveredWindows();
 
-		
+		//
 		m_Editor->AddSpacings(5);
 		SetupStyle();
 		NewSpriteSelectorFrame();
 		UpdateSpriteSelectorEntries();
 		ClearStyle();
-		FlushSpriteSelectorTexts();
+		FlushSpriteSelectorTexts();<
 
 
 		m_SpriteSelectorWindowSize = ImGui::GetWindowSize(); //This method is great but it requires that i keep track of the bool and edit it manually.
