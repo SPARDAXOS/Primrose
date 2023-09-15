@@ -65,7 +65,7 @@ void SelectionWindows::RenderSpriteSelector() {
 		NewSpriteSelectorFrame();
 		UpdateSpriteSelectorEntries();
 		ClearStyle();
-		FlushSpriteSelectorTexts();<
+		FlushSpriteSelectorTexts();
 
 
 		m_SpriteSelectorWindowSize = ImGui::GetWindowSize(); //This method is great but it requires that i keep track of the bool and edit it manually.
