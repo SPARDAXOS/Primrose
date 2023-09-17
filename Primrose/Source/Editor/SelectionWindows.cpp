@@ -59,7 +59,6 @@ void SelectionWindows::RenderSpriteSelector() {
 	if (ImGui::BeginPopupModal("Sprite Selector", &m_SpriteSelectorOpened, Flags)) {
 		m_Editor->CheckForHoveredWindows();
 
-		//sss
 		m_Editor->AddSpacings(5);
 		SetupStyle();
 		NewSpriteSelectorFrame();
