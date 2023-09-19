@@ -255,9 +255,13 @@
     <ClInclude Include="Include\Systems\Window.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\Shaders\DepthView.fs" />
+    <None Include="Resources\Shaders\DepthView.vs" />
+    <None Include="Resources\Shaders\DepthViewFrag.glsl" />
+    <None Include="Resources\Shaders\DepthViewVertex.glsl" />
     <None Include="Resources\Shaders\Fragment.glsl" />
-    <None Include="Resources\Shaders\Frag_PhongLighting.glsl" />
-    <None Include="Resources\Shaders\Vertex.glsl" />
+    <None Include="Resources\Shaders\DefaultLitFrag.glsl" />
+    <None Include="Resources\Shaders\DefaultLitVertex.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
