@@ -11,6 +11,9 @@ Renderer::Renderer(Core& core) noexcept
     m_ModelStorage = m_Core->GetModelStorage();
     m_ECS = m_Core->GetECS();
 
+
+    SetupShaderPrograms();
+
     glEnable(GL_DEPTH_TEST); //TODO: move somewhere else
     glEnable(GL_BLEND); //TODO: move somewhere else
 };
@@ -28,21 +31,40 @@ bool Renderer::Update() {
     return RendererStatus;
 }
 
+void Renderer::SetupShaderPrograms() {
+
+    m_DepthViewShaderProgram.AttachShader(m_DepthViewVertex);
+    m_DepthViewShaderProgram.AttachShader(m_DepthViewFragment);
+    if (!m_DepthViewShaderProgram.LinkShaderProgram())
+        m_Core->SystemLog("Renderer failed to link DepthView shader program");
+
+    m_DefaultLitShaderProgram.AttachShader(m_DefaultLitVertex);
+    m_DefaultLitShaderProgram.AttachShader(m_DefaultLitFrag);
+    if (!m_DefaultLitShaderProgram.LinkShaderProgram())
+        m_Core->SystemLog("Renderer failed to link DefautlLit shader program");
+
+}
+
 
 bool Renderer::Render2D() {
     
-    //Shaders
-    Shader VertexShader(GL_VERTEX_SHADER, "Resources/Shaders/Vertex.glsl");
-    Shader FragmentShader(GL_FRAGMENT_SHADER, "Resources/Shaders/Frag_PhongLighting.glsl");
+    //Shaders 
+    //THESE ARE NOT CLEANED BTW? CLEAN THEM!
+    //Shader VertexShader(GL_VERTEX_SHADER, "Resources/Shaders/DefaultLitVertex.glsl");
+    //Shader FragmentShader(GL_FRAGMENT_SHADER, "Resources/Shaders/DefaultLitFrag.glsl");
 
-    ShaderProgram ShaderProgramTest;
-    ShaderProgramTest.AttachShader(VertexShader);
-    ShaderProgramTest.AttachShader(FragmentShader);
-    if (!ShaderProgramTest.LinkShaderProgram())
-        m_Core->SystemLog("Renderer failed to link shader program");
-    ShaderProgramTest.Bind();
+    //ShaderProgram ShaderProgramTest;
+    //ShaderProgramTest.AttachShader(VertexShader);
+    //ShaderProgramTest.AttachShader(FragmentShader);
+    //if (!ShaderProgramTest.LinkShaderProgram())
+    //    m_Core->SystemLog("Renderer failed to link shader program");
+    //ShaderProgramTest.Bind();
 
 
+
+
+
+    m_DefaultLitShaderProgram.Bind();
 
     //TODO: Register error message when it happens here!
     //TODO: Drop this approach and simply get a copy of the vector since its faster cause of something i forgot what it was called and its just a vector of ptrs
@@ -63,8 +85,8 @@ bool Renderer::Render2D() {
             continue;
 
 
-        SetupMaterial(ShaderProgramTest, TargetComponent); //WORKS ONLY FOR SPRITERENDERES
-        SetupLightUniforms(ShaderProgramTest);
+        SetupMaterial(m_DefaultLitShaderProgram, TargetComponent); //WORKS ONLY FOR SPRITERENDERES
+        SetupLightUniforms(m_DefaultLitShaderProgram);
 
         //IMPORTNAT NOTE: I got an error once when moving an object "5eeee". It had something to do with gluniform3f()
 
@@ -116,12 +138,12 @@ bool Renderer::Render2D() {
         Camera* ViewportCamera = &m_ECS->GetViewportCamera();
 
         //Would probably be the main camera in case of play mode being on
-        ShaderProgramTest.SetUniform("uViewCameraPosition", ViewportCamera->GetOwner()->GetTransform().m_Position);
-        ShaderProgramTest.SetUniform("uNormalMatrix", glm::mat3(glm::transpose(glm::inverse(*TargetMatrix)))); //Inverse operations are costly in shaders
+        m_DefaultLitShaderProgram.SetUniform("uViewCameraPosition", ViewportCamera->GetOwner()->GetTransform().m_Position);
+        m_DefaultLitShaderProgram.SetUniform("uNormalMatrix", glm::mat3(glm::transpose(glm::inverse(*TargetMatrix)))); //Inverse operations are costly in shaders
 
-        ShaderProgramTest.SetUniform("uMVP.Model", *TargetMatrix); //Construct matrix here instead of getting to apply the flipx anmd y?
-        ShaderProgramTest.SetUniform("uMVP.View", ViewportCamera->GetViewMatrix());
-        ShaderProgramTest.SetUniform("uMVP.Projection", ViewportCamera->GetProjectionMatrix());
+        m_DefaultLitShaderProgram.SetUniform("uMVP.Model", *TargetMatrix); //Construct matrix here instead of getting to apply the flipx anmd y?
+        m_DefaultLitShaderProgram.SetUniform("uMVP.View", ViewportCamera->GetViewMatrix());
+        m_DefaultLitShaderProgram.SetUniform("uMVP.Projection", ViewportCamera->GetProjectionMatrix());
         
         TargetComponent->GetVAO()->Bind();
         GLCall(glDrawElements(GL_TRIANGLES, TargetComponent->GetEBO()->GetCount(), GL_UNSIGNED_INT, nullptr));
@@ -130,20 +152,25 @@ bool Renderer::Render2D() {
         TargetComponent->GetVAO()->Unbind();
     }
 
+    m_DefaultLitShaderProgram.Unbind();
+
     return true;
 }
 bool Renderer::Render3D() {
 
-    //Shaders - Duplicated from Render2D. Consider cleaning this.
-    Shader VertexShader(GL_VERTEX_SHADER, "Resources/Shaders/Vertex.glsl");
-    Shader FragmentShader(GL_FRAGMENT_SHADER, "Resources/Shaders/Frag_PhongLighting.glsl");
 
-    ShaderProgram ShaderProgramTest;
-    ShaderProgramTest.AttachShader(VertexShader);
-    ShaderProgramTest.AttachShader(FragmentShader);
-    if (!ShaderProgramTest.LinkShaderProgram())
-        m_Core->SystemLog("Renderer failed to link shader program");
-    ShaderProgramTest.Bind();
+    //Shaders - Duplicated from Render2D. Consider cleaning this.
+    //Shader VertexShader(GL_VERTEX_SHADER, "Resources/Shaders/Vertex.glsl");
+    //Shader FragmentShader(GL_FRAGMENT_SHADER, "Resources/Shaders/Frag_PhongLighting.glsl");
+
+    //ShaderProgram ShaderProgramTest;
+    //ShaderProgramTest.AttachShader(VertexShader);
+    //ShaderProgramTest.AttachShader(FragmentShader);
+    //if (!ShaderProgramTest.LinkShaderProgram())
+    //    m_Core->SystemLog("Renderer failed to link shader program");
+    //ShaderProgramTest.Bind();
+
+    m_DefaultLitShaderProgram.Bind();
 
     auto SkeletalMeshes = m_ECS->GetSkeletalMeshes();
     for (auto& SkeletalMesh : SkeletalMeshes) {
@@ -161,19 +188,19 @@ bool Renderer::Render3D() {
             continue;
 
         //Lights
-        SetupLightUniforms(ShaderProgramTest);
+        SetupLightUniforms(m_DefaultLitShaderProgram);
 
         //MVP - This could be dumped down a bit into a function too. Those could be set once?
         Transform* TargetTransform = &TargetGameObject->GetTransform();
         glm::mat4* TargetMatrix = &TargetTransform->GetMatrix();
         Camera* ViewportCamera = &m_ECS->GetViewportCamera();
 
-        ShaderProgramTest.SetUniform("uViewCameraPosition", ViewportCamera->GetOwner()->GetTransform().m_Position);
-        ShaderProgramTest.SetUniform("uNormalMatrix", glm::mat3(glm::transpose(glm::inverse(*TargetMatrix)))); //Inverse operations are costly in shaders
+        m_DefaultLitShaderProgram.SetUniform("uViewCameraPosition", ViewportCamera->GetOwner()->GetTransform().m_Position);
+        m_DefaultLitShaderProgram.SetUniform("uNormalMatrix", glm::mat3(glm::transpose(glm::inverse(*TargetMatrix)))); //Inverse operations are costly in shaders
 
-        ShaderProgramTest.SetUniform("uMVP.Model", *TargetMatrix);
-        ShaderProgramTest.SetUniform("uMVP.View", ViewportCamera->GetViewMatrix());
-        ShaderProgramTest.SetUniform("uMVP.Projection", ViewportCamera->GetProjectionMatrix());
+        m_DefaultLitShaderProgram.SetUniform("uMVP.Model", *TargetMatrix);
+        m_DefaultLitShaderProgram.SetUniform("uMVP.View", ViewportCamera->GetViewMatrix());
+        m_DefaultLitShaderProgram.SetUniform("uMVP.Projection", ViewportCamera->GetProjectionMatrix());
 
         //Texture Filtering/Sampling
         GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (GLuint)SkeletalMesh->GetAddressingModeS()));
@@ -199,15 +226,15 @@ bool Renderer::Render3D() {
             //}
             if (Mesh->m_Textures.size() > 0)
                 Mesh->m_Textures[0]->Bind();
-            ShaderProgramTest.SetUniform("uMaterial.Diffuse", TextureType::DIFFUSE); //??
+            m_DefaultLitShaderProgram.SetUniform("uMaterial.Diffuse", TextureType::DIFFUSE); //??
             
             //Directional is kinda borked!
-            ShaderProgramTest.SetUniform("uMaterial.Ambient", TextureType::DIFFUSE);
-            ShaderProgramTest.SetUniform("uMaterial.Specular", TextureType::DIFFUSE);
-            ShaderProgramTest.SetUniform("uMaterial.AmbientStrength", 0.1f);
-            ShaderProgramTest.SetUniform("uMaterial.SpecularShininess", 32);
-            ShaderProgramTest.SetUniform("uMaterial.SpecularStrength", 0.5f);
-            ShaderProgramTest.SetUniform("uTint", Colors::White); //This! will lead to Alpha ending up as 0
+            m_DefaultLitShaderProgram.SetUniform("uMaterial.Ambient", TextureType::DIFFUSE);
+            m_DefaultLitShaderProgram.SetUniform("uMaterial.Specular", TextureType::DIFFUSE);
+            m_DefaultLitShaderProgram.SetUniform("uMaterial.AmbientStrength", 0.1f);
+            m_DefaultLitShaderProgram.SetUniform("uMaterial.SpecularShininess", 32);
+            m_DefaultLitShaderProgram.SetUniform("uMaterial.SpecularStrength", 0.5f);
+            m_DefaultLitShaderProgram.SetUniform("uTint", Colors::White); //This! will lead to Alpha ending up as 0
 
             Mesh->m_VAO->Bind();
             GLCall(glDrawElements(GL_TRIANGLES, Mesh->m_EBO->GetCount(), GL_UNSIGNED_INT, nullptr));
@@ -223,7 +250,7 @@ bool Renderer::Render3D() {
         }
     }
 
-
+    m_DefaultLitShaderProgram.Unbind();
     return true;
 }
 void Renderer::SetupLightUniforms(ShaderProgram& program) {

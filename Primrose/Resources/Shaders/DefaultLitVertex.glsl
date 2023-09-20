@@ -16,7 +16,6 @@ out vec2 oCoords;
 out vec3 oNormal;
 out vec3 oFragPosition;
 
-
 uniform MVP uMVP;
 
 void main() {
