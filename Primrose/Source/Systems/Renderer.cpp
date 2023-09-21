@@ -63,7 +63,7 @@ bool Renderer::Render2D() {
 
     //tadsf
 
-
+    //dfdsfsd
     m_DefaultLitShaderProgram.Bind();
 
     //TODO: Register error message when it happens here!
