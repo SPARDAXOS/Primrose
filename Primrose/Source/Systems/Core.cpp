@@ -94,7 +94,7 @@ void Core::Run() {
 	//Temp
 	GameObject* ModelTest = &m_ECS->CreateGameObject("ModelTest");
 	SkeletalMesh* MeshComp = ModelTest->AddComponent<SkeletalMesh>();
-	MeshComp->SetModel(m_ModelStorage->GetModelStorage()[1]);
+	MeshComp->SetModel(m_ModelStorage->GetModelStorage()[0]);
 	
 	//Need Model selector screen and Material selector screen / Skip mdl files. We add pic of the model later with FBO
 	
