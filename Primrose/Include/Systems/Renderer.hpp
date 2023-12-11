@@ -1,7 +1,7 @@
 #pragma once
 #include "Utility.hpp"
 #include "GraphicsResources.hpp"
-#include "ShaderProgram.hpp"
+#include "ShaderProgram.hpp" //Put in Graphics Resources!
 
 
 class Core;
@@ -15,7 +15,15 @@ class SpriteRenderer;
 class Renderer final {
 public:
 	Renderer() = delete;
-	Renderer(Core& core) noexcept;
+	explicit Renderer(Core& core);
+
+	~Renderer();
+
+	Renderer(const Renderer& other) = delete;
+	Renderer& operator=(const Renderer& other) = delete;
+
+	Renderer(Renderer&& other) = delete;
+	Renderer& operator=(Renderer&& other) = delete;
 
 public:
 	enum class RenderingView {
@@ -29,7 +37,7 @@ public:
 	[[nodiscard]] bool Update();
 
 public:
-	void CheckRendererAPIVersion();
+	void CheckRendererAPIVersion() const;
 	inline std::string GetLastExitMessage() noexcept { return m_LastExitMessage; };
 
 
@@ -44,7 +52,7 @@ private:
 
 
 private:
-	inline void RegisterExitMessage(std::string message) noexcept { m_LastExitMessage = message; };
+	constexpr inline void RegisterExitMessage(std::string message) noexcept { m_LastExitMessage = message; };
 
 private:
 	void SetupMaterial(ShaderProgram& program, const SpriteRenderer* component);
@@ -55,9 +63,11 @@ private:
 
 private:
 	Shader m_DefaultLitVertex	{ GL_VERTEX_SHADER, "Resources/Shaders/DefaultLitVertex.glsl" };
-	Shader m_DefaultLitFrag		{ GL_FRAGMENT_SHADER, "Resources/Shaders/DefaultLitFrag.glsl" };
+	Shader m_DefaultLitFragment		{ GL_FRAGMENT_SHADER, "Resources/Shaders/DefaultLitFrag.glsl" };
+	//UNLIT
 	Shader m_DepthViewVertex	{ GL_VERTEX_SHADER, "Resources/Shaders/DepthViewVertex.glsl" };
 	Shader m_DepthViewFragment	{ GL_FRAGMENT_SHADER, "Resources/Shaders/DepthViewFrag.glsl" };
+	//WIREFRAME? NO SHADER?
 	
 private:
 	ShaderProgram m_DepthViewShaderProgram;
@@ -65,7 +75,7 @@ private:
 
 private:
 	std::string m_LastExitMessage;
-
+	//Other diagnostics and warnings that need printing
 
 
 private:

@@ -3,7 +3,7 @@
 
 
 
-Renderer::Renderer(Core& core) noexcept
+Renderer::Renderer(Core& core)
     : m_Core(&core)
 {
     m_Window = m_Core->GetWindow();
@@ -17,18 +17,22 @@ Renderer::Renderer(Core& core) noexcept
     glEnable(GL_DEPTH_TEST); //TODO: move somewhere else
     glEnable(GL_BLEND); //TODO: move somewhere else
 };
+Renderer::~Renderer() {
+    //NOTE: Diagnostics and such can be evaluated in here and sent to GUI
+}
 
 
 bool Renderer::Update() {
 
     //This is kinda nonesense here
     bool RendererStatus = true;
+
     if (!Render2D())
         RendererStatus = false;
     if (!Render3D())
         RendererStatus = false;
 
-    return RendererStatus;
+    return RendererStatus; //NOTE: Should represent the overall status of the renderer doing its job. Its fine if a system or two fail. Then it sends out warnings and errors!
 }
 
 void Renderer::SetupShaderPrograms() {
@@ -39,9 +43,11 @@ void Renderer::SetupShaderPrograms() {
         m_Core->SystemLog("Renderer failed to link DepthView shader program");
 
     m_DefaultLitShaderProgram.AttachShader(m_DefaultLitVertex);
-    m_DefaultLitShaderProgram.AttachShader(m_DefaultLitFrag);
+    m_DefaultLitShaderProgram.AttachShader(m_DefaultLitFragment);
     if (!m_DefaultLitShaderProgram.LinkShaderProgram())
         m_Core->SystemLog("Renderer failed to link DefautlLit shader program");
+
+
 
 }
 
@@ -400,10 +406,10 @@ void Renderer::UnbindAllTextures(const SpriteRenderer* component) {
 }
 
 
-void Renderer::CheckRendererAPIVersion() {
+void Renderer::CheckRendererAPIVersion() const {
     const unsigned char* convert = static_cast<const unsigned char*>(glGetString(GL_VERSION));
     //TODO: Change depending on renderer API and make a function for all systems that need to be called at the start. 2 step init?
     std::string Version("OpenGL ");
-    Version.append(reinterpret_cast<const char*>(convert));
+    Version.append(reinterpret_cast<const char*>(convert)); //TODO: Clean this up.
     m_Core->SystemLog(Version);
 }
