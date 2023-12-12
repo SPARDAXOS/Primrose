@@ -59,6 +59,9 @@ void Core::Run() {
 	//It will save it so next time something wants a shader with these params, it will look if they are saved and return that same shader
 
 	
+
+	//Pointer invalidation is now the biggest problem to solve!
+
 	//ECS
 	GameObject* GameObjectTest = &m_ECS->CreateGameObject("GameObject1");
 	GameObjectTest->AddComponent<SpriteRenderer>();

@@ -8,25 +8,45 @@
 class SpriteRenderer final : public ComponentBase {
 public:
 	SpriteRenderer() = delete;
-	explicit SpriteRenderer(GameObject& owner, int64 ownerID) noexcept;
+	explicit SpriteRenderer(GameObject& owner, uint64 ownerID) noexcept;
 	~SpriteRenderer();
 
 
 	//For now it is not possbile to move or copy components - Maybe copying values should be allowed
-	SpriteRenderer(const SpriteRenderer& other) : ComponentBase(other){
+	SpriteRenderer(const SpriteRenderer& other) : ComponentBase(other) {
 		*this = other;
 	}
-	SpriteRenderer& operator=(const SpriteRenderer& other) {
+	SpriteRenderer& operator=(const SpriteRenderer& other) noexcept {
 		if (this == &other)
 			return *this;
 		else {
 
+			//this is whats broken and maybe  creating an infinite loop somwhow
+
+			this->m_Sprite = other.m_Sprite;
+			this->m_Tint = other.m_Tint;
+			this->m_Material = other.m_Material;
+			this->m_FlipX = other.m_FlipX;
+			this->m_FlipY = other.m_FlipY;
+
+			this->m_BlendEquation = other.m_BlendEquation;
+			this->m_SourceBlendMode = other.m_SourceBlendMode;
+			this->m_DestinationBlendMode = other.m_DestinationBlendMode;
+
+			this->m_AddressingModeS = other.m_AddressingModeS;
+			this->m_AddressingModeT = other.m_AddressingModeT;
+			this->m_FilteringModeMin = other.m_FilteringModeMin;
+			this->m_FilteringModeMag = other.m_FilteringModeMag;
+
+			this->m_VAO = other.m_VAO;
+			this->m_VBO = other.m_VBO;
+			this->m_EBO = other.m_EBO;
 
 			return *this;
 		}
 	}
 
-	SpriteRenderer(SpriteRenderer&& other) : ComponentBase(std::move(other)) {
+	SpriteRenderer(SpriteRenderer&& other) noexcept : ComponentBase(std::move(other)) {
 		*this = std::move(other);
 	}
 	SpriteRenderer& operator=(SpriteRenderer&& other) {
@@ -49,13 +69,29 @@ public:
 			this->m_FilteringModeMin = std::move(other.m_FilteringModeMin);
 			this->m_FilteringModeMag = std::move(other.m_FilteringModeMag);
 
-
 			this->m_VAO = std::move(other.m_VAO);
 			this->m_VBO = std::move(other.m_VBO);
 			this->m_EBO = std::move(other.m_EBO);
 
-			//Clean Other and implement copy semantics
 
+			other.m_Sprite = nullptr;
+			other.m_Tint = Colors::White;
+			other.m_Material = nullptr;
+			other.m_FlipX = false;
+			other.m_FlipY = false;
+
+			other.m_BlendEquation = BlendEquation::ADDITIVE;
+			other.m_SourceBlendMode = SourceBlendMode::SOURCE_ALPHA;
+			other.m_DestinationBlendMode = DestinationBlendMode::ONE_MINUS_SOURCE_ALPHA;
+
+			other.m_AddressingModeS = AddressingMode::REPEAT;
+			other.m_AddressingModeT = AddressingMode::REPEAT;
+			other.m_FilteringModeMin = FilteringModeMin::LINEAR_MIPMAP_LINEAR;
+			other.m_FilteringModeMag = FilteringModeMag::LINEAR;
+
+			other.m_VAO	= nullptr;
+			other.m_VBO	= nullptr;	
+			other.m_EBO	= nullptr;
 
 			return *this;
 		}

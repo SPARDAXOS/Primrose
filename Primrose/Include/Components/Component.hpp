@@ -20,7 +20,7 @@ class GameObject;
 class ComponentBase {
 public:
 	ComponentBase() = delete;
-	ComponentBase(GameObject& owner, int64 ownerID) noexcept
+	ComponentBase(GameObject& owner, uint64 ownerID) noexcept
 		: m_Owner(&owner), m_OwnerID(ownerID)
 	{
 	}
@@ -51,8 +51,10 @@ public:
 			this->m_Owner   = other.m_Owner;
 
 			other.m_Enabled = true;
-			other.m_OwnerID = -1;
+			other.m_OwnerID = 0; //INVALID_OBJECT_ID
 			other.m_Owner   = nullptr;
+
+			//Im worried about the fact that all pointers are invalidated now everytime the list grows!
 
 			return *this;
 		}
@@ -62,12 +64,12 @@ public:
 public:
 	inline void SetEnabled(bool state) noexcept { m_Enabled = state; };
 	inline bool GetEnabled() const noexcept { return m_Enabled; };
-	inline int64 GetOwnerID() const noexcept { return m_OwnerID; };
+	inline uint64 GetOwnerID() const noexcept { return m_OwnerID; };
 	inline GameObject* GetOwner() const noexcept { return m_Owner; };
 
 
 protected:
 	bool m_Enabled{ true };
-	int64 m_OwnerID;
+	uint64 m_OwnerID;
 	GameObject* m_Owner;
 };

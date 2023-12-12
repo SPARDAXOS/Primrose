@@ -4,7 +4,7 @@
 class PointLight final : public LightComponentBase {
 public:
 	PointLight() = delete;
-	PointLight(GameObject& owner, int64 ownerID);
+	PointLight(GameObject& owner, uint64 ownerID);
 	~PointLight() = default;
 
 	//For now it is not possbile to move or copy components - Copy only it should be? idk think about it

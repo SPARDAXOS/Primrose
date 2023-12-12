@@ -95,6 +95,8 @@ GameObject& EntityComponentSystem::CreateGameObject(const std::string& name) {
 	GameObject* NewGameObject = new GameObject(*this, m_CurrentObjectIDIndex);
 	//NewGameObject->SetParent(m_MainScene);
 
+	//NOTE: Maybe check current object id index if its the invalid and do something or maybe just set it in ctor to make sure instead initializing it
+
 	m_MainScene->AddChild(NewGameObject);
 	NewGameObject->SetName(name);
 	NewGameObject->Awake();
@@ -123,7 +125,7 @@ GameObject& EntityComponentSystem::Instantiate(const GameObject& object) {
 ///	AddComponent()
 //////////
 template<>
-SpriteRenderer* EntityComponentSystem::AddComponent<SpriteRenderer>(int64 objectID) {
+SpriteRenderer* EntityComponentSystem::AddComponent<SpriteRenderer>(uint64 objectID) {
 	static_assert(std::is_base_of_v<ComponentBase, SpriteRenderer>); //Makes more sense for the custom components
 	GameObject* ptr = FindGameObject(objectID);
 	if (ptr == nullptr)
@@ -134,7 +136,7 @@ SpriteRenderer* EntityComponentSystem::AddComponent<SpriteRenderer>(int64 object
 	return &m_SpriteRenderers.emplace_back(SpriteRenderer{ *ptr, objectID });
 }
 template<>
-SkeletalMesh* EntityComponentSystem::AddComponent<SkeletalMesh>(int64 objectID) {
+SkeletalMesh* EntityComponentSystem::AddComponent<SkeletalMesh>(uint64 objectID) {
 	static_assert(std::is_base_of_v<ComponentBase, SkeletalMesh>); //Makes more sense for the custom components
 	GameObject* ptr = FindGameObject(objectID);
 	if (ptr == nullptr)
@@ -147,7 +149,7 @@ SkeletalMesh* EntityComponentSystem::AddComponent<SkeletalMesh>(int64 objectID) 
 	return NewSkeletalMesh;
 }
 template<>
-Camera* EntityComponentSystem::AddComponent<Camera>(int64 objectID) {
+Camera* EntityComponentSystem::AddComponent<Camera>(uint64 objectID) {
 	static_assert(std::is_base_of_v<ComponentBase, Camera>); //Makes more sense for the custom components
 	GameObject* ptr = FindGameObject(objectID);
 	if (ptr == nullptr)
@@ -161,7 +163,7 @@ Camera* EntityComponentSystem::AddComponent<Camera>(int64 objectID) {
 	return NewCamera;
 }
 template<>
-DirectionalLight* EntityComponentSystem::AddComponent<DirectionalLight>(int64 objectID) {
+DirectionalLight* EntityComponentSystem::AddComponent<DirectionalLight>(uint64 objectID) {
 	static_assert(std::is_base_of_v<ComponentBase, DirectionalLight>); //Makes more sense for the custom components
 	GameObject* ptr = FindGameObject(objectID);
 	if (ptr == nullptr)
@@ -177,7 +179,7 @@ DirectionalLight* EntityComponentSystem::AddComponent<DirectionalLight>(int64 ob
 	return m_MainDirectionalLight;
 }
 template<>
-PointLight* EntityComponentSystem::AddComponent<PointLight>(int64 objectID) {
+PointLight* EntityComponentSystem::AddComponent<PointLight>(uint64 objectID) {
 	static_assert(std::is_base_of_v<ComponentBase, PointLight>); //Makes more sense for the custom components
 	GameObject* ptr = FindGameObject(objectID);
 	if (ptr == nullptr)
@@ -190,7 +192,7 @@ PointLight* EntityComponentSystem::AddComponent<PointLight>(int64 objectID) {
 	return NewPointLight;
 }
 template<>
-SpotLight* EntityComponentSystem::AddComponent<SpotLight>(int64 objectID) {
+SpotLight* EntityComponentSystem::AddComponent<SpotLight>(uint64 objectID) {
 	static_assert(std::is_base_of_v<ComponentBase, SpotLight>); //Makes more sense for the custom components
 	GameObject* ptr = FindGameObject(objectID);
 	if (ptr == nullptr)
@@ -205,7 +207,7 @@ SpotLight* EntityComponentSystem::AddComponent<SpotLight>(int64 objectID) {
 
 
 
-void EntityComponentSystem::DestroyGameObject(int64 objectID) {
+void EntityComponentSystem::DestroyGameObject(uint64 objectID) {
 
 	for (uint32 index = 0; index < m_GameObjects.size(); index++) {
 		if (m_GameObjects.at(index)->GetObjectID() == objectID) {
@@ -216,7 +218,7 @@ void EntityComponentSystem::DestroyGameObject(int64 objectID) {
 	}
 }
 
-GameObject* EntityComponentSystem::FindGameObject(int64 objectID) const noexcept {
+GameObject* EntityComponentSystem::FindGameObject(uint64 objectID) const noexcept {
 	for (auto& x : m_GameObjects) {
 		if (x->GetObjectID() == objectID)
 			return x;
@@ -224,7 +226,7 @@ GameObject* EntityComponentSystem::FindGameObject(int64 objectID) const noexcept
 	return nullptr;
 }
 
-int64 EntityComponentSystem::FindSpriteRenderer(int64 objectID) const noexcept {
+int32 EntityComponentSystem::FindSpriteRenderer(uint64 objectID) const noexcept {
 	//TODO: Rework into using foreach now that it contains objects and not pointers
 
 	//for (auto& component : m_SpriteRenderers) {
@@ -232,51 +234,51 @@ int64 EntityComponentSystem::FindSpriteRenderer(int64 objectID) const noexcept {
 	//		return C
 	//}
 
-	for (uint64 index = 0; index < m_SpriteRenderers.size(); index++) {
+	for (int32 index = 0; index < m_SpriteRenderers.size(); index++) {
 		if (m_SpriteRenderers.at(index).GetOwnerID() == objectID) {
-			return static_cast<int64>(index);
+			return index;
 		}
 	}
-	return INVALID_OBJECT_ID;
+	return FAILED_COMPONENT_SEARCH;
 }
-int64 EntityComponentSystem::FindSkeletalMesh(int64 objectID) const noexcept {
+int32 EntityComponentSystem::FindSkeletalMesh(uint64 objectID) const noexcept {
 	//TODO: Rework into using foreach now that it contains objects and not pointers
-	for (uint64 index = 0; index < m_SkeletalMeshes.size(); index++) {
+	for (int32 index = 0; index < m_SkeletalMeshes.size(); index++) {
 		if (m_SkeletalMeshes.at(index)->GetOwnerID() == objectID) {
-			return static_cast<int64>(index);
+			return index;
 		}
 	}
-	return INVALID_OBJECT_ID;
+	return FAILED_COMPONENT_SEARCH;
 }
-int64 EntityComponentSystem::FindCamera(int64 objectID) const noexcept {
+int32 EntityComponentSystem::FindCamera(uint64 objectID) const noexcept {
 	//TODO: Rework into using foreach now that it contains objects and not pointers
-	for (uint64 index = 0; index < m_Cameras.size(); index++) {
+	for (int32 index = 0; index < m_Cameras.size(); index++) {
 		if (m_Cameras.at(index).GetOwnerID() == objectID) {
-			return static_cast<int64>(index);
+			return index;
 		}
 	}
-	return INVALID_OBJECT_ID;
+	return FAILED_COMPONENT_SEARCH;
 }
-int64 EntityComponentSystem::FindPointLight(int64 objectID) const noexcept {
+int32 EntityComponentSystem::FindPointLight(uint64 objectID) const noexcept {
 	//TODO: Rework into using foreach now that it contains objects and not pointers
-	for (uint64 index = 0; index < m_PointLights.size(); index++) {
+	for (int32 index = 0; index < m_PointLights.size(); index++) {
 		if (m_PointLights.at(index)->GetOwnerID() == objectID) {
-			return static_cast<int64>(index);
+			return index;
 		}
 	}
-	return INVALID_OBJECT_ID;
+	return FAILED_COMPONENT_SEARCH;
 }
-int64 EntityComponentSystem::FindSpotLight(int64 objectID) const noexcept {
+int32 EntityComponentSystem::FindSpotLight(uint64 objectID) const noexcept {
 	//TODO: Rework into using foreach now that it contains objects and not pointers
-	for (uint64 index = 0; index < m_SpotLights.size(); index++) {
+	for (int32 index = 0; index < m_SpotLights.size(); index++) {
 		if (m_SpotLights.at(index)->GetOwnerID() == objectID) {
-			return static_cast<int64>(index);
+			return index;
 		}
 	}
-	return INVALID_OBJECT_ID;
+	return FAILED_COMPONENT_SEARCH;
 }
 
-bool EntityComponentSystem::IsReserved(int64 objectID) const noexcept {
+bool EntityComponentSystem::IsReserved(uint64 objectID) const noexcept {
 	if (objectID == MAIN_SCENE_OBJECT_ID)
 		return true;
 	else if (objectID == VIEWPORT_CAMERA_OBJECT_ID)

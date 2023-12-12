@@ -12,7 +12,7 @@ public:
 
 public:
 	Camera() = delete;
-	Camera(GameObject& owner, int64 ownerID);
+	Camera(GameObject& owner, uint64 ownerID);
 	~Camera() = default;
 
 	//For now it is not possbile to move or copy components - Copy only it should be? idk think about it

@@ -7,7 +7,7 @@ class Model;
 class SkeletalMesh final : public ComponentBase {
 public:
 	SkeletalMesh() = delete;
-	SkeletalMesh(GameObject& owner, int64 ownerID);
+	SkeletalMesh(GameObject& owner, uint64 ownerID);
 	~SkeletalMesh() = default;
 
 	//For now it is not possbile to move or copy components - Copy only it should be? idk think about it

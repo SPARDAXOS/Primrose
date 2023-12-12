@@ -1,7 +1,7 @@
 #include "Components/SpriteRendererComponent.hpp"
 #include "GameObject.hpp"
 
-Camera::Camera(GameObject& owner, int64 ownerID)
+Camera::Camera(GameObject& owner, uint64 ownerID)
 	: ComponentBase(owner, ownerID)
 {
 	Transform* TargetTransform = &m_Owner->GetTransform();

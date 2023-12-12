@@ -50,7 +50,8 @@ void Renderer::SetupShaderPrograms() {
     if (!m_DepthViewShaderProgram.LinkShaderProgram())
         m_Core->SystemLog("Renderer failed to link DepthView shader program");
 
-
+    m_CurrentShaderProgram = &m_DefaultLitShaderProgram;
+    m_CurrentRenderingView = RenderingView::LIT;
 }
 
 

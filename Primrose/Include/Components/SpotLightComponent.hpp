@@ -4,7 +4,7 @@
 class SpotLight final : public LightComponentBase {
 public:
 	SpotLight() = delete;
-	SpotLight(GameObject& owner, int64 ownerID);
+	SpotLight(GameObject& owner, uint64 ownerID);
 	~SpotLight() = default;
 
 	//For now it is not possbile to move or copy components - Copy only it should be? idk think about it
