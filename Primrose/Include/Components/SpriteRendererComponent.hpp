@@ -8,16 +8,58 @@
 class SpriteRenderer final : public ComponentBase {
 public:
 	SpriteRenderer() = delete;
-	SpriteRenderer(GameObject& owner, uint64 ownerID) noexcept;
+	explicit SpriteRenderer(GameObject& owner, int64 ownerID) noexcept;
 	~SpriteRenderer();
 
 
 	//For now it is not possbile to move or copy components - Maybe copying values should be allowed
-	SpriteRenderer(const SpriteRenderer& other) = delete;
-	SpriteRenderer& operator=(const SpriteRenderer& other) = delete;
+	SpriteRenderer(const SpriteRenderer& other) : ComponentBase(other){
+		*this = other;
+	}
+	SpriteRenderer& operator=(const SpriteRenderer& other) {
+		if (this == &other)
+			return *this;
+		else {
 
-	SpriteRenderer(SpriteRenderer&& other) = delete;
-	SpriteRenderer& operator=(SpriteRenderer&& other) = delete;
+
+			return *this;
+		}
+	}
+
+	SpriteRenderer(SpriteRenderer&& other) : ComponentBase(std::move(other)) {
+		*this = std::move(other);
+	}
+	SpriteRenderer& operator=(SpriteRenderer&& other) {
+		if (this == &other)
+			return *this;
+		else {
+
+			this->m_Sprite = std::move(other.m_Sprite);
+			this->m_Tint = std::move(other.m_Tint);
+			this->m_Material = std::move(other.m_Material);
+			this->m_FlipX = std::move(other.m_FlipX);
+			this->m_FlipY = std::move(other.m_FlipY);
+
+			this->m_BlendEquation = std::move(other.m_BlendEquation);
+			this->m_SourceBlendMode = std::move(other.m_SourceBlendMode);
+			this->m_DestinationBlendMode = std::move(other.m_DestinationBlendMode);
+
+			this->m_AddressingModeS = std::move(other.m_AddressingModeS);
+			this->m_AddressingModeT = std::move(other.m_AddressingModeT);
+			this->m_FilteringModeMin = std::move(other.m_FilteringModeMin);
+			this->m_FilteringModeMag = std::move(other.m_FilteringModeMag);
+
+
+			this->m_VAO = std::move(other.m_VAO);
+			this->m_VBO = std::move(other.m_VBO);
+			this->m_EBO = std::move(other.m_EBO);
+
+			//Clean Other and implement copy semantics
+
+
+			return *this;
+		}
+	}
 
 public:
 	inline void SetSprite(Texture2D* sprite) noexcept { m_Sprite = sprite; }

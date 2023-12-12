@@ -6,7 +6,7 @@ class GameObject {
 public:
 
 	GameObject() = delete;
-	GameObject(EntityComponentSystem& ecs, uint64 id)
+	GameObject(EntityComponentSystem& ecs, int64 id)
 		:	m_ECS(&ecs), m_ObjectID(id)
 	{
 	}
@@ -148,7 +148,7 @@ public:
 	}
 
 public:
-	inline uint64 GetObjectID() const noexcept { return m_ObjectID; }
+	inline int64 GetObjectID() const noexcept { return m_ObjectID; }
 	inline std::string GetName() const noexcept { return m_ObjectName; }
 	inline std::string GetTag() const noexcept { return m_ObjectTag; }
 
@@ -219,7 +219,7 @@ private:
 	uint32 m_ComponentFlags{ 0 };
 
 private:
-	uint64 m_ObjectID{ 0 };
+	int64 m_ObjectID{ 0 };
 	std::string m_ObjectName{ "NewGameObject" };
 	std::string m_ObjectTag{ "None" };
 };

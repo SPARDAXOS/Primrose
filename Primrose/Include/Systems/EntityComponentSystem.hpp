@@ -11,7 +11,7 @@
 class Core;
 class GameObject;
 
-constexpr int INVALID_OBJECT_ID = -1;
+constexpr int64 INVALID_OBJECT_ID = -1;
 
 class EntityComponentSystem final {
 public:
@@ -19,11 +19,11 @@ public:
 	EntityComponentSystem(Core& core) noexcept;
 	~EntityComponentSystem();
 
-	EntityComponentSystem(const EntityComponentSystem&) = delete;
-	EntityComponentSystem& operator=(const EntityComponentSystem&) = delete;
+	EntityComponentSystem(const EntityComponentSystem& other) = delete;
+	EntityComponentSystem& operator=(const EntityComponentSystem& other) = delete;
 
-	EntityComponentSystem(EntityComponentSystem&&) = delete;
-	EntityComponentSystem& operator=(EntityComponentSystem&&) = delete;
+	EntityComponentSystem(EntityComponentSystem&& other) = delete;
+	EntityComponentSystem& operator=(EntityComponentSystem&& other) = delete;
 
 
 public:
@@ -31,7 +31,7 @@ public:
 	GameObject& CreateGameObject(const std::string& name);
 	GameObject& Instantiate(const GameObject& object);
 
-	void DestroyGameObject(uint64 objectID);
+	void DestroyGameObject(int64 objectID);
 
 public:
 	[[nodiscard]] bool Update();
@@ -39,19 +39,19 @@ public:
 
 public:
 	template<typename T>
-	T* AddComponent(uint64 objectID);
+	T* AddComponent(int64 objectID);
 	template<>
-	SpriteRenderer*   AddComponent<SpriteRenderer>(uint64 objectID);
+	SpriteRenderer*   AddComponent<SpriteRenderer>(int64 objectID);
 	template<>
-	SkeletalMesh* AddComponent<SkeletalMesh>(uint64 objectID);
+	SkeletalMesh*	  AddComponent<SkeletalMesh>(int64 objectID);
 	template<>
-	Camera*			  AddComponent<Camera>(uint64 objectID);
+	Camera*			  AddComponent<Camera>(int64 objectID);
 	template<>
-	DirectionalLight* AddComponent<DirectionalLight>(uint64 objectID);
+	DirectionalLight* AddComponent<DirectionalLight>(int64 objectID);
 	template<>
-	PointLight*		  AddComponent<PointLight>(uint64 objectID);
+	PointLight*		  AddComponent<PointLight>(int64 objectID);
 	template<>
-	SpotLight*		  AddComponent<SpotLight>(uint64 objectID);
+	SpotLight*		  AddComponent<SpotLight>(int64 objectID);
 
 
 	template<typename T>
@@ -61,7 +61,7 @@ public:
 		if (FindGameObject(objectID) == nullptr)
 			return;
 
-		const int32 TargetIndex = FindSpriteRenderer(objectID);
+		const int64 TargetIndex = FindSpriteRenderer(objectID);
 		if (TargetIndex == INVALID_OBJECT_ID) 
 			return;
 
@@ -72,7 +72,7 @@ public:
 		if (FindGameObject(objectID) == nullptr)
 			return;
 
-		const int32 TargetIndex = FindSkeletalMesh(objectID);
+		const int64 TargetIndex = FindSkeletalMesh(objectID);
 		if (TargetIndex == INVALID_OBJECT_ID)
 			return;
 
@@ -83,7 +83,7 @@ public:
 		if (FindGameObject(objectID) == nullptr)
 			return;
 
-		const int32 TargetIndex = FindCamera(objectID);
+		const int64 TargetIndex = FindCamera(objectID);
 		if (TargetIndex == INVALID_OBJECT_ID) 
 			return;
 
@@ -103,7 +103,7 @@ public:
 		if (FindGameObject(objectID) == nullptr)
 			return;
 
-		const int32 TargetIndex = FindPointLight(objectID);
+		const int64 TargetIndex = FindPointLight(objectID);
 		if (TargetIndex == INVALID_OBJECT_ID)
 			return;
 
@@ -114,7 +114,7 @@ public:
 		if (FindGameObject(objectID) == nullptr)
 			return;
 
-		const int32 TargetIndex = FindSpotLight(objectID);
+		const int64 TargetIndex = FindSpotLight(objectID);
 		if (TargetIndex == INVALID_OBJECT_ID)
 			return;
 
@@ -123,42 +123,42 @@ public:
 
 
 	template<typename T>
-	T* GetComponent(uint64 objectID);
+	T* GetComponent(int64 objectID);
 	template<>
-	SpriteRenderer* GetComponent<SpriteRenderer>(uint64 objectID) {
+	SpriteRenderer* GetComponent<SpriteRenderer>(int64 objectID) {
 		if (FindGameObject(objectID) == nullptr)
 			return nullptr;
 
-		const int32 TargetIndex = FindSpriteRenderer(objectID);
+		const int64 TargetIndex = FindSpriteRenderer(objectID);
 		if (TargetIndex == INVALID_OBJECT_ID)
 			return nullptr;
 
-		return m_SpriteRenderers.at(TargetIndex);
+		return &m_SpriteRenderers.at(TargetIndex);
 	}
 	template<>
-	SkeletalMesh* GetComponent<SkeletalMesh>(uint64 objectID) {
+	SkeletalMesh* GetComponent<SkeletalMesh>(int64 objectID) {
 		if (FindGameObject(objectID) == nullptr)
 			return nullptr;
 
-		const int32 TargetIndex = FindSkeletalMesh(objectID);
+		const int64 TargetIndex = FindSkeletalMesh(objectID);
 		if (TargetIndex == INVALID_OBJECT_ID)
 			return nullptr;
 
 		return m_SkeletalMeshes.at(TargetIndex);
 	}
 	template<>
-	Camera* GetComponent<Camera>(uint64 objectID) {
+	Camera* GetComponent<Camera>(int64 objectID) {
 		if (FindGameObject(objectID) == nullptr)
 			return nullptr;
 
-		const int32 TargetIndex = FindCamera(objectID);
+		const int64 TargetIndex = FindCamera(objectID);
 		if (TargetIndex == INVALID_OBJECT_ID)
 			return nullptr;
 
-		return m_Cameras.at(TargetIndex);
+		return &m_Cameras.at(TargetIndex);
 	}
 	template<>
-	DirectionalLight* GetComponent<DirectionalLight>(uint64 objectID) {
+	DirectionalLight* GetComponent<DirectionalLight>(int64 objectID) {
 		if (FindGameObject(objectID) == nullptr)
 			return nullptr;
 
@@ -166,22 +166,22 @@ public:
 		return m_MainDirectionalLight;
 	}
 	template<>
-	PointLight* GetComponent<PointLight>(uint64 objectID) {
+	PointLight* GetComponent<PointLight>(int64 objectID) {
 		if (FindGameObject(objectID) == nullptr)
 			return nullptr;
 
-		const int32 TargetIndex = FindPointLight(objectID);
+		const int64 TargetIndex = FindPointLight(objectID);
 		if (TargetIndex == INVALID_OBJECT_ID)
 			return nullptr;
 
 		return m_PointLights.at(TargetIndex);
 	}
 	template<>
-	SpotLight* GetComponent<SpotLight>(uint64 objectID) {
+	SpotLight* GetComponent<SpotLight>(int64 objectID) {
 		if (FindGameObject(objectID) == nullptr)
 			return nullptr;
 
-		const int32 TargetIndex = FindSpotLight(objectID);
+		const int64 TargetIndex = FindSpotLight(objectID);
 		if (TargetIndex == INVALID_OBJECT_ID)
 			return nullptr;
 
@@ -192,21 +192,22 @@ public:
 public:
 	//TODO: LATEST NOTE: Yes, delete all these and simply return the vector.
 	template<typename T>
-	uint32 GetComponentsAmount() const noexcept;
+	std::vector<T> GetAllComponentsOfType() const noexcept;
+
 	template<>
-	uint32 GetComponentsAmount<SpriteRenderer>() const noexcept{
-		return static_cast<uint32>(m_SpriteRenderers.size());
+	std::vector<SpriteRenderer> GetAllComponentsOfType<SpriteRenderer>() const noexcept{
+		return m_SpriteRenderers;
 	}
 	template<>
-	uint32 GetComponentsAmount<Camera>() const noexcept {
-		return static_cast<uint32>(m_Cameras.size());
+	std::vector<Camera> GetAllComponentsOfType<Camera>() const noexcept {
+		return m_Cameras;
 	}
 
 
 
-public:
+public: //NOTE: These seem to serve the same purpose as GetAllComponentsOfType which has a better name...
 	inline std::vector<GameObject*> GetGameObjects() const noexcept { return m_GameObjects; }
-	inline std::vector<SpriteRenderer*> GetSpriteRenderers() const noexcept { return m_SpriteRenderers; }
+	inline std::vector<SpriteRenderer> GetSpriteRenderers() const noexcept { return m_SpriteRenderers; }
 	inline std::vector<SkeletalMesh*> GetSkeletalMeshes() const noexcept { return m_SkeletalMeshes; }
 	inline std::vector<PointLight*> GetPointLights() const noexcept { return m_PointLights; }
 	inline std::vector<SpotLight*> GetSpotLights() const noexcept { return m_SpotLights; }
@@ -218,7 +219,7 @@ public:
 	T* GetComponentForUpdate();
 	template<>
 	SpriteRenderer* GetComponentForUpdate<SpriteRenderer>() {
-		SpriteRenderer* TargetComponent = m_SpriteRenderers.at(m_SpriteRenderersUpdateIndex);
+		SpriteRenderer* TargetComponent = &m_SpriteRenderers.at(m_SpriteRenderersUpdateIndex);
 		m_SpriteRenderersUpdateIndex++;
 		if (m_SpriteRenderersUpdateIndex == m_SpriteRenderers.size())
 			m_SpriteRenderersUpdateIndex = 0;
@@ -236,31 +237,31 @@ public:
 	inline DirectionalLight* GetMainDirectionalLight() const noexcept { return m_MainDirectionalLight; }
 
 
-	GameObject* FindGameObject(uint64 ObjectID) const noexcept;
-	bool IsReserved(uint64 objectID) const noexcept;
+	GameObject* FindGameObject(int64 ObjectID) const noexcept;
+	bool IsReserved(int64 objectID) const noexcept;
 
 private:
 	void CalculateTransformations(GameObject& object);
 
 private:
-	int32 FindSpriteRenderer(uint64 objectID) const noexcept;
-	int32 FindSkeletalMesh(uint64 objectID) const noexcept;
-	int32 FindCamera(uint64 objectID) const noexcept;
-	int32 FindPointLight(uint64 objectID) const noexcept;
-	int32 FindSpotLight(uint64 objectID) const noexcept;
+	int64 FindSpriteRenderer(int64 objectID) const noexcept;
+	int64 FindSkeletalMesh(int64 objectID) const noexcept;
+	int64 FindCamera(int64 objectID) const noexcept;
+	int64 FindPointLight(int64 objectID) const noexcept;
+	int64 FindSpotLight(int64 objectID) const noexcept;
 
 private:
 	inline void RegisterExitMessage(std::string message) noexcept { m_LastExitMessage = message; }
 
 private:
-	uint32  m_SpriteRenderersUpdateIndex = 0;
+	uint32  m_SpriteRenderersUpdateIndex = 0; //?? Remove probably
 
 
 private:
 	std::vector<GameObject*> m_GameObjects;
-	std::vector<SpriteRenderer*> m_SpriteRenderers;
+	std::vector<SpriteRenderer> m_SpriteRenderers;
 	std::vector<SkeletalMesh*> m_SkeletalMeshes; 
-	std::vector<Camera*> m_Cameras;
+	std::vector<Camera> m_Cameras;
 
 	DirectionalLight* m_MainDirectionalLight;
 	std::vector<PointLight*> m_PointLights;
@@ -276,7 +277,7 @@ private:
 	GameObject* m_ViewportCameraGO;
 	Camera* m_ViewportCamera;
 
-	uint64 m_CurrentObjectIDIndex = 1;
+	int64 m_CurrentObjectIDIndex = 1;
 };
 
 

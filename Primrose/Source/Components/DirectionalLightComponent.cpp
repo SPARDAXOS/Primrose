@@ -3,7 +3,7 @@
 
 
 
-DirectionalLight::DirectionalLight(GameObject& owner, uint64 ownerID)
+DirectionalLight::DirectionalLight(GameObject& owner, int64 ownerID)
 	: LightComponentBase(owner, ownerID)
 {
 

@@ -12,15 +12,15 @@ public:
 
 public:
 	Camera() = delete;
-	Camera(GameObject& owner, uint64 ownerID);
+	Camera(GameObject& owner, int64 ownerID);
 	~Camera() = default;
 
 	//For now it is not possbile to move or copy components - Copy only it should be? idk think about it
-	Camera(const Camera& other) = delete;
-	Camera& operator=(const Camera& other) = delete;
+	Camera(const Camera& other) = default;
+	Camera& operator=(const Camera& other) = default;
 
-	Camera(Camera&& other) = delete;
-	Camera& operator=(Camera&& other) = delete;
+	Camera(Camera&& other) = default;
+	Camera& operator=(Camera&& other) = default;
 
 public:
 	glm::mat4 GetViewMatrix() noexcept { 

@@ -40,16 +40,15 @@ bool Renderer::Update() {
 
 void Renderer::SetupShaderPrograms() {
 
-    m_DepthViewShaderProgram.AttachShader(m_DepthViewVertex);
-    m_DepthViewShaderProgram.AttachShader(m_DepthViewFragment);
-    if (!m_DepthViewShaderProgram.LinkShaderProgram())
-        m_Core->SystemLog("Renderer failed to link DepthView shader program");
-
     m_DefaultLitShaderProgram.AttachShader(m_DefaultLitVertex);
     m_DefaultLitShaderProgram.AttachShader(m_DefaultLitFragment);
     if (!m_DefaultLitShaderProgram.LinkShaderProgram())
         m_Core->SystemLog("Renderer failed to link DefautlLit shader program");
 
+    m_DepthViewShaderProgram.AttachShader(m_DepthViewVertex);
+    m_DepthViewShaderProgram.AttachShader(m_DepthViewFragment);
+    if (!m_DepthViewShaderProgram.LinkShaderProgram())
+        m_Core->SystemLog("Renderer failed to link DepthView shader program");
 
 
 }
@@ -57,29 +56,15 @@ void Renderer::SetupShaderPrograms() {
 
 bool Renderer::Render2D() {
     
-    //Shaders 
-    //THESE ARE NOT CLEANED BTW? CLEAN THEM!
-    //Shader VertexShader(GL_VERTEX_SHADER, "Resources/Shaders/DefaultLitVertex.glsl");
-    //Shader FragmentShader(GL_FRAGMENT_SHADER, "Resources/Shaders/DefaultLitFrag.glsl");
-
-    //ShaderProgram ShaderProgramTest;
-    //ShaderProgramTest.AttachShader(VertexShader);
-    //ShaderProgramTest.AttachShader(FragmentShader);
-    //if (!ShaderProgramTest.LinkShaderProgram())
-    //    m_Core->SystemLog("Renderer failed to link shader program");
-    //ShaderProgramTest.Bind();
-
 
     BindShaderProgram();
-
-    //m_DefaultLitShaderProgram.Bind();
 
     //TODO: Register error message when it happens here!
     //TODO: Drop this approach and simply get a copy of the vector since its faster cause of something i forgot what it was called and its just a vector of ptrs
     //- This still might be faster tho since no copying is happening and im just getting them in order as defined by the ECS. There are definitely some implications to
     //- think of.
-    const uint32 Amount = m_ECS->GetComponentsAmount<SpriteRenderer>();
-    for (uint32 index = 0; index < Amount; index++) {
+    const std::vector<SpriteRenderer> AllSpriteRenderers = m_ECS->GetAllComponentsOfType<SpriteRenderer>();
+    for (uint32 index = 0; index < AllSpriteRenderers.size(); index++) {
 
         const SpriteRenderer* TargetComponent = m_ECS->GetComponentForUpdate<SpriteRenderer>();
         if (!Validate(TargetComponent))
@@ -88,7 +73,6 @@ bool Renderer::Render2D() {
         GameObject* TargetGameObject = m_ECS->FindGameObject(TargetComponent->GetOwnerID());
         if (!Validate(TargetGameObject))
             return false;
-
 
 
         SetupMaterial(m_DefaultLitShaderProgram, TargetComponent); //WORKS ONLY FOR SPRITERENDERES
@@ -142,23 +126,16 @@ bool Renderer::Render2D() {
 
         //MVP
         Camera* ViewportCamera = &m_ECS->GetViewportCamera();
-
-        //Would probably be the main camera in case of play mode being on
-        m_DefaultLitShaderProgram.SetUniform("uViewCameraPosition", ViewportCamera->GetOwner()->GetTransform().m_Position);
-        m_DefaultLitShaderProgram.SetUniform("uNormalMatrix", glm::mat3(glm::transpose(glm::inverse(*TargetMatrix)))); //Inverse operations are costly in shaders
-
-        m_DefaultLitShaderProgram.SetUniform("uMVP.Model", *TargetMatrix); //Construct matrix here instead of getting to apply the flipx anmd y?
-        m_DefaultLitShaderProgram.SetUniform("uMVP.View", ViewportCamera->GetViewMatrix());
-        m_DefaultLitShaderProgram.SetUniform("uMVP.Projection", ViewportCamera->GetProjectionMatrix());
+        SetupMVP(ViewportCamera, TargetMatrix);
         
         TargetComponent->GetVAO()->Bind();
+
+        //TODO: Too important to be out like this. Move into func.
         GLCall(glDrawElements(GL_TRIANGLES, TargetComponent->GetEBO()->GetCount(), GL_UNSIGNED_INT, nullptr));
 
         UnbindAllTextures(TargetComponent);
         TargetComponent->GetVAO()->Unbind();
     }
-
-    //m_DefaultLitShaderProgram.Unbind();
 
     UnbindShaderProgram();
     return true;
@@ -179,21 +156,15 @@ bool Renderer::Render3D() {
         if (!Validate(TargetGameObject))
             continue;
 
-
         //Lights
         SetupLightUniforms(m_DefaultLitShaderProgram);
 
         //MVP - This could be dumped down a bit into a function too. Those could be set once?
         Transform* TargetTransform = &TargetGameObject->GetTransform();
-        glm::mat4* TargetMatrix = &TargetTransform->GetMatrix();
+        glm::mat4* ModelMatrix = &TargetTransform->GetMatrix();
         Camera* ViewportCamera = &m_ECS->GetViewportCamera();
 
-        m_DefaultLitShaderProgram.SetUniform("uViewCameraPosition", ViewportCamera->GetOwner()->GetTransform().m_Position);
-        m_DefaultLitShaderProgram.SetUniform("uNormalMatrix", glm::mat3(glm::transpose(glm::inverse(*TargetMatrix)))); //Inverse operations are costly in shaders
-
-        m_DefaultLitShaderProgram.SetUniform("uMVP.Model", *TargetMatrix);
-        m_DefaultLitShaderProgram.SetUniform("uMVP.View", ViewportCamera->GetViewMatrix());
-        m_DefaultLitShaderProgram.SetUniform("uMVP.Projection", ViewportCamera->GetProjectionMatrix());
+        SetupMVP(ViewportCamera, ModelMatrix);
 
         //Texture Filtering/Sampling
         GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (GLuint)SkeletalMesh->GetAddressingModeS()));
@@ -249,65 +220,63 @@ bool Renderer::Render3D() {
 }
 void Renderer::CheckInput() noexcept {
 
-    if (m_Input->GetKey(Keycode::F1))
+    if (m_Input->GetKey(Keycode::F1)) {
         m_CurrentRenderingView = RenderingView::LIT;
-    else if (m_Input->GetKey(Keycode::F2))
+        m_CurrentShaderProgram = &m_DefaultLitShaderProgram;
+    }
+    else if (m_Input->GetKey(Keycode::F2)) {
         m_CurrentRenderingView = RenderingView::UNLIT;
-    else if (m_Input->GetKey(Keycode::F3))
+        m_CurrentShaderProgram = &m_DefaultLitShaderProgram;
+    }
+    else if (m_Input->GetKey(Keycode::F3)) {
         m_CurrentRenderingView = RenderingView::WIREFRAME;
-    else if (m_Input->GetKey(Keycode::F4))
+        m_CurrentShaderProgram = &m_DefaultLitShaderProgram;
+    }
+    else if (m_Input->GetKey(Keycode::F4)) {
         m_CurrentRenderingView = RenderingView::DEPTH_ONLY;
+        m_CurrentShaderProgram = &m_DepthViewShaderProgram;
+    }
 }
 
 
+//NOTE: Not needed!
 void Renderer::BindShaderProgram() const noexcept {
 
-    switch ((m_CurrentRenderingView)) {
-    case RenderingView::LIT: {
-        m_DefaultLitShaderProgram.Bind();
-    } break;
-    case RenderingView::UNLIT: {
-        m_DefaultLitShaderProgram.Bind();
-    } break;
-    case RenderingView::DEPTH_ONLY: {
-        m_DefaultLitShaderProgram.Bind();
-    } break;
-    case RenderingView::WIREFRAME: {
-        m_DefaultLitShaderProgram.Bind();
-    } break;
-    default:
-        break;
-    }
+    m_CurrentShaderProgram->Bind();
 }
 void Renderer::UnbindShaderProgram() const noexcept {
 
-    switch ((m_CurrentRenderingView)) {
-    case RenderingView::LIT: {
-        m_DefaultLitShaderProgram.Unbind();
-    } break;
-    case RenderingView::UNLIT: {
-        m_DefaultLitShaderProgram.Unbind();
-    } break;
-    case RenderingView::DEPTH_ONLY: {
-        m_DefaultLitShaderProgram.Unbind();
-    } break;
-    case RenderingView::WIREFRAME: {
-        m_DefaultLitShaderProgram.Unbind();
-    } break;
-    default:
-        break;
-    }
+    m_CurrentShaderProgram->Unbind();
 }
 
 
-void Renderer::SetupMVP(Camera* viewport, glm::mat4& model) noexcept {
-    //Would probably be the main camera in case of play mode being on
-    m_DefaultLitShaderProgram.SetUniform("uViewCameraPosition", viewport->GetOwner()->GetTransform().m_Position);
-    m_DefaultLitShaderProgram.SetUniform("uNormalMatrix", glm::mat3(glm::transpose(glm::inverse(model)))); //Inverse operations are costly in shaders
+void Renderer::SetupMVP(Camera* viewport, glm::mat4* model) {
 
-    m_DefaultLitShaderProgram.SetUniform("uMVP.Model", model); //Construct matrix here instead of getting to apply the flipx anmd y?
-    m_DefaultLitShaderProgram.SetUniform("uMVP.View", viewport->GetViewMatrix());
-    m_DefaultLitShaderProgram.SetUniform("uMVP.Projection", viewport->GetProjectionMatrix());
+    if (viewport == nullptr || model == nullptr)
+        return;
+
+    //MVP
+    m_CurrentShaderProgram->SetUniform("uMVP.Model", *model); //Construct matrix here instead of getting to apply the flipx anmd y?
+    m_CurrentShaderProgram->SetUniform("uMVP.View", viewport->GetViewMatrix());
+    m_CurrentShaderProgram->SetUniform("uMVP.Projection", viewport->GetProjectionMatrix());
+
+    //TODO: Take out into another function - These seem to be frag shader related!
+    switch (m_CurrentRenderingView) {
+    case RenderingView::LIT: {
+        //Would probably be the main camera in case of play mode being on
+        m_CurrentShaderProgram->SetUniform("uViewCameraPosition", viewport->GetOwner()->GetTransform().m_Position);
+        m_CurrentShaderProgram->SetUniform("uNormalMatrix", glm::mat3(glm::transpose(glm::inverse(*model)))); //Inverse operations are costly in shaders
+
+    }break;
+    case RenderingView::DEPTH_ONLY: {
+        m_CurrentShaderProgram->SetUniform("uNear", viewport->GetNearClipPlane());
+        m_CurrentShaderProgram->SetUniform("uFar", viewport->GetFarClipPlane());
+
+    }break;
+
+    }
+
+
 }
 void Renderer::SetupLightUniforms(ShaderProgram& program) {
 

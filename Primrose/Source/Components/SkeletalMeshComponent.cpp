@@ -1,6 +1,6 @@
 #include "Components/SkeletalMeshComponent.hpp"
 
-SkeletalMesh::SkeletalMesh(GameObject& owner, uint64 ownerID)
+SkeletalMesh::SkeletalMesh(GameObject& owner, int64 ownerID)
 	: ComponentBase(owner, ownerID)
 {
 

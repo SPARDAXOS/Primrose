@@ -2,7 +2,7 @@
 #include "GameObject.hpp"
 
 
-SpotLight::SpotLight(GameObject& owner, uint64 ownerID)
+SpotLight::SpotLight(GameObject& owner, int64 ownerID)
 	: LightComponentBase(owner, ownerID)
 {
 

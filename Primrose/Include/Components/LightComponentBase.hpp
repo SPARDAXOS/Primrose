@@ -7,7 +7,7 @@
 class LightComponentBase : public ComponentBase {
 public:
 	LightComponentBase() = delete;
-	LightComponentBase(GameObject& owner, uint64 ownerID);
+	LightComponentBase(GameObject& owner, int64 ownerID);
 	~LightComponentBase() = default;
 
 	//For now it is not possbile to move or copy components - Copy only it should be? idk think about it

@@ -1,7 +1,7 @@
 #include "Components/PointLightComponent.hpp"
 
 
-PointLight::PointLight(GameObject& owner, uint64 ownerID)
+PointLight::PointLight(GameObject& owner, int64 ownerID)
 	: LightComponentBase(owner, ownerID)
 {
 	

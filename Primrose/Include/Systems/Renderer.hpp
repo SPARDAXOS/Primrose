@@ -63,7 +63,7 @@ private:
 private:
 	void BindShaderProgram() const noexcept;
 	void UnbindShaderProgram() const noexcept;
-	void SetupMVP(Camera* viewport, glm::mat4& model) noexcept;
+	void SetupMVP(Camera* viewport, glm::mat4* model);
 	void SetupLightUniforms(ShaderProgram& program);
 	void SetupMaterial(ShaderProgram& program, const SpriteRenderer* component);
 	void UnbindAllTextures(const SpriteRenderer* component);
@@ -85,6 +85,7 @@ private:
 	//WIREFRAME? NO SHADER?
 	
 private:
+	ShaderProgram* m_CurrentShaderProgram	{nullptr};
 	ShaderProgram m_DepthViewShaderProgram;
 	ShaderProgram m_DefaultLitShaderProgram;
 

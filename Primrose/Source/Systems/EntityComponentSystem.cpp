@@ -123,7 +123,7 @@ GameObject& EntityComponentSystem::Instantiate(const GameObject& object) {
 ///	AddComponent()
 //////////
 template<>
-SpriteRenderer* EntityComponentSystem::AddComponent<SpriteRenderer>(uint64 objectID) {
+SpriteRenderer* EntityComponentSystem::AddComponent<SpriteRenderer>(int64 objectID) {
 	static_assert(std::is_base_of_v<ComponentBase, SpriteRenderer>); //Makes more sense for the custom components
 	GameObject* ptr = FindGameObject(objectID);
 	if (ptr == nullptr)
@@ -131,13 +131,10 @@ SpriteRenderer* EntityComponentSystem::AddComponent<SpriteRenderer>(uint64 objec
 
 	//Check limit on components? Maybe Gameobject side instead. one sounds logical
 
-
-	SpriteRenderer* NewSpriteRenderer = new SpriteRenderer(*ptr, objectID); //Add index in 
-	m_SpriteRenderers.push_back(NewSpriteRenderer);
-	return NewSpriteRenderer;
+	return &m_SpriteRenderers.emplace_back(SpriteRenderer{ *ptr, objectID });
 }
 template<>
-SkeletalMesh* EntityComponentSystem::AddComponent<SkeletalMesh>(uint64 objectID) {
+SkeletalMesh* EntityComponentSystem::AddComponent<SkeletalMesh>(int64 objectID) {
 	static_assert(std::is_base_of_v<ComponentBase, SkeletalMesh>); //Makes more sense for the custom components
 	GameObject* ptr = FindGameObject(objectID);
 	if (ptr == nullptr)
@@ -146,11 +143,11 @@ SkeletalMesh* EntityComponentSystem::AddComponent<SkeletalMesh>(uint64 objectID)
 	//Check limit on components? Maybe Gameobject side instead. one sounds logical
 
 	SkeletalMesh* NewSkeletalMesh = new SkeletalMesh(*ptr, objectID); //Add index in 
-	m_SkeletalMeshes.push_back(NewSkeletalMesh);
+	m_SkeletalMeshes.push_back(NewSkeletalMesh); //TODO: Emplace_back instead! - Do like SpriteRenderers
 	return NewSkeletalMesh;
 }
 template<>
-Camera* EntityComponentSystem::AddComponent<Camera>(uint64 objectID) {
+Camera* EntityComponentSystem::AddComponent<Camera>(int64 objectID) {
 	static_assert(std::is_base_of_v<ComponentBase, Camera>); //Makes more sense for the custom components
 	GameObject* ptr = FindGameObject(objectID);
 	if (ptr == nullptr)
@@ -160,11 +157,11 @@ Camera* EntityComponentSystem::AddComponent<Camera>(uint64 objectID) {
 
 
 	Camera* NewCamera = new Camera(*ptr, objectID); //Add index in 
-	m_Cameras.push_back(NewCamera);
+	m_Cameras.push_back(*NewCamera); //TODO: Emplace_back instead! - Do like SpriteRenderers
 	return NewCamera;
 }
 template<>
-DirectionalLight* EntityComponentSystem::AddComponent<DirectionalLight>(uint64 objectID) {
+DirectionalLight* EntityComponentSystem::AddComponent<DirectionalLight>(int64 objectID) {
 	static_assert(std::is_base_of_v<ComponentBase, DirectionalLight>); //Makes more sense for the custom components
 	GameObject* ptr = FindGameObject(objectID);
 	if (ptr == nullptr)
@@ -175,32 +172,32 @@ DirectionalLight* EntityComponentSystem::AddComponent<DirectionalLight>(uint64 o
 		m_Core->WarningLog("Unable to add a directional light component. Reason: a game object with a directional light component already exists!");
 		return nullptr;
 	}
-
+	//TODO: Emplace_back instead! - Do like SpriteRenderers
 	m_MainDirectionalLight = new DirectionalLight(*ptr, objectID); //Add index in ? //Latest note. There are a lot of search optimizations that could be done!
 	return m_MainDirectionalLight;
 }
 template<>
-PointLight* EntityComponentSystem::AddComponent<PointLight>(uint64 objectID) {
+PointLight* EntityComponentSystem::AddComponent<PointLight>(int64 objectID) {
 	static_assert(std::is_base_of_v<ComponentBase, PointLight>); //Makes more sense for the custom components
 	GameObject* ptr = FindGameObject(objectID);
 	if (ptr == nullptr)
 		return nullptr;
 
 	//Check limit on components? Maybe Gameobject side instead. one sounds logical
-
+	//TODO: Emplace_back instead! - Do like SpriteRenderers
 	PointLight* NewPointLight = new PointLight(*ptr, objectID); //Add index in ? //Latest note. There are a lot of search optimizations that could be done!
 	m_PointLights.push_back(NewPointLight);
 	return NewPointLight;
 }
 template<>
-SpotLight* EntityComponentSystem::AddComponent<SpotLight>(uint64 objectID) {
+SpotLight* EntityComponentSystem::AddComponent<SpotLight>(int64 objectID) {
 	static_assert(std::is_base_of_v<ComponentBase, SpotLight>); //Makes more sense for the custom components
 	GameObject* ptr = FindGameObject(objectID);
 	if (ptr == nullptr)
 		return nullptr;
 
 	//Check limit on components? Maybe Gameobject side instead. one sounds logical
-
+	//TODO: Emplace_back instead! - Do like SpriteRenderers
 	SpotLight* NewSpotLight = new SpotLight(*ptr, objectID);
 	m_SpotLights.push_back(NewSpotLight);
 	return NewSpotLight;
@@ -208,7 +205,7 @@ SpotLight* EntityComponentSystem::AddComponent<SpotLight>(uint64 objectID) {
 
 
 
-void EntityComponentSystem::DestroyGameObject(uint64 objectID) {
+void EntityComponentSystem::DestroyGameObject(int64 objectID) {
 
 	for (uint32 index = 0; index < m_GameObjects.size(); index++) {
 		if (m_GameObjects.at(index)->GetObjectID() == objectID) {
@@ -219,7 +216,7 @@ void EntityComponentSystem::DestroyGameObject(uint64 objectID) {
 	}
 }
 
-GameObject* EntityComponentSystem::FindGameObject(uint64 objectID) const noexcept {
+GameObject* EntityComponentSystem::FindGameObject(int64 objectID) const noexcept {
 	for (auto& x : m_GameObjects) {
 		if (x->GetObjectID() == objectID)
 			return x;
@@ -227,48 +224,59 @@ GameObject* EntityComponentSystem::FindGameObject(uint64 objectID) const noexcep
 	return nullptr;
 }
 
-int32 EntityComponentSystem::FindSpriteRenderer(uint64 objectID) const noexcept {
-	for (uint32 index = 0; index < m_SpriteRenderers.size(); index++) {
-		if (m_SpriteRenderers.at(index)->GetOwnerID() == objectID) {
-			return index;
+int64 EntityComponentSystem::FindSpriteRenderer(int64 objectID) const noexcept {
+	//TODO: Rework into using foreach now that it contains objects and not pointers
+
+	//for (auto& component : m_SpriteRenderers) {
+	//	if (component.GetOwnerID() == objectID)
+	//		return C
+	//}
+
+	for (uint64 index = 0; index < m_SpriteRenderers.size(); index++) {
+		if (m_SpriteRenderers.at(index).GetOwnerID() == objectID) {
+			return static_cast<int64>(index);
 		}
 	}
 	return INVALID_OBJECT_ID;
 }
-int32 EntityComponentSystem::FindSkeletalMesh(uint64 objectID) const noexcept {
-	for (uint32 index = 0; index < m_SkeletalMeshes.size(); index++) {
+int64 EntityComponentSystem::FindSkeletalMesh(int64 objectID) const noexcept {
+	//TODO: Rework into using foreach now that it contains objects and not pointers
+	for (uint64 index = 0; index < m_SkeletalMeshes.size(); index++) {
 		if (m_SkeletalMeshes.at(index)->GetOwnerID() == objectID) {
-			return index;
+			return static_cast<int64>(index);
 		}
 	}
 	return INVALID_OBJECT_ID;
 }
-int32 EntityComponentSystem::FindCamera(uint64 objectID) const noexcept {
-	for (uint32 index = 0; index < m_Cameras.size(); index++) {
-		if (m_Cameras.at(index)->GetOwnerID() == objectID) {
-			return index;
+int64 EntityComponentSystem::FindCamera(int64 objectID) const noexcept {
+	//TODO: Rework into using foreach now that it contains objects and not pointers
+	for (uint64 index = 0; index < m_Cameras.size(); index++) {
+		if (m_Cameras.at(index).GetOwnerID() == objectID) {
+			return static_cast<int64>(index);
 		}
 	}
 	return INVALID_OBJECT_ID;
 }
-int32 EntityComponentSystem::FindPointLight(uint64 objectID) const noexcept {
-	for (uint32 index = 0; index < m_PointLights.size(); index++) {
+int64 EntityComponentSystem::FindPointLight(int64 objectID) const noexcept {
+	//TODO: Rework into using foreach now that it contains objects and not pointers
+	for (uint64 index = 0; index < m_PointLights.size(); index++) {
 		if (m_PointLights.at(index)->GetOwnerID() == objectID) {
-			return index;
+			return static_cast<int64>(index);
 		}
 	}
 	return INVALID_OBJECT_ID;
 }
-int32 EntityComponentSystem::FindSpotLight(uint64 objectID) const noexcept {
-	for (uint32 index = 0; index < m_SpotLights.size(); index++) {
+int64 EntityComponentSystem::FindSpotLight(int64 objectID) const noexcept {
+	//TODO: Rework into using foreach now that it contains objects and not pointers
+	for (uint64 index = 0; index < m_SpotLights.size(); index++) {
 		if (m_SpotLights.at(index)->GetOwnerID() == objectID) {
-			return index;
+			return static_cast<int64>(index);
 		}
 	}
 	return INVALID_OBJECT_ID;
 }
 
-bool EntityComponentSystem::IsReserved(uint64 objectID) const noexcept {
+bool EntityComponentSystem::IsReserved(int64 objectID) const noexcept {
 	if (objectID == MAIN_SCENE_OBJECT_ID)
 		return true;
 	else if (objectID == VIEWPORT_CAMERA_OBJECT_ID)
