@@ -10,6 +10,7 @@ Renderer::Renderer(Core& core)
     m_TextureStorage = m_Core->GetTextureStorage();
     m_ModelStorage = m_Core->GetModelStorage();
     m_ECS = m_Core->GetECS();
+    m_Input = m_Core->GetInput();
 
 
     SetupShaderPrograms();
@@ -23,6 +24,8 @@ Renderer::~Renderer() {
 
 
 bool Renderer::Update() {
+
+    CheckInput(); //NOTE: Should input checking be on separate tickrate than rendering? Should this even be here? seems like editor thing
 
     //This is kinda nonesense here
     bool RendererStatus = true;
@@ -66,11 +69,10 @@ bool Renderer::Render2D() {
     //    m_Core->SystemLog("Renderer failed to link shader program");
     //ShaderProgramTest.Bind();
 
-    //asjdiasjdpas
-    //tadsf
 
-    //dfdsfsd
-    m_DefaultLitShaderProgram.Bind();
+    BindShaderProgram();
+
+    //m_DefaultLitShaderProgram.Bind();
 
     //TODO: Register error message when it happens here!
     //TODO: Drop this approach and simply get a copy of the vector since its faster cause of something i forgot what it was called and its just a vector of ptrs
@@ -80,15 +82,13 @@ bool Renderer::Render2D() {
     for (uint32 index = 0; index < Amount; index++) {
 
         const SpriteRenderer* TargetComponent = m_ECS->GetComponentForUpdate<SpriteRenderer>();
-        if (TargetComponent == nullptr)
-            continue;
-        if (!TargetComponent->GetEnabled())
-            continue;
+        if (!Validate(TargetComponent))
+            return false;
+
         GameObject* TargetGameObject = m_ECS->FindGameObject(TargetComponent->GetOwnerID());
-        if (TargetGameObject == nullptr)
-            continue;
-        if (!TargetGameObject->GetActiveInHeirarchy())
-            continue;
+        if (!Validate(TargetGameObject))
+            return false;
+
 
 
         SetupMaterial(m_DefaultLitShaderProgram, TargetComponent); //WORKS ONLY FOR SPRITERENDERES
@@ -158,40 +158,27 @@ bool Renderer::Render2D() {
         TargetComponent->GetVAO()->Unbind();
     }
 
-    m_DefaultLitShaderProgram.Unbind();
+    //m_DefaultLitShaderProgram.Unbind();
 
+    UnbindShaderProgram();
     return true;
 }
 bool Renderer::Render3D() {
 
+    BindShaderProgram();
 
-    //Shaders - Duplicated from Render2D. Consider cleaning this.
-    //Shader VertexShader(GL_VERTEX_SHADER, "Resources/Shaders/Vertex.glsl");
-    //Shader FragmentShader(GL_FRAGMENT_SHADER, "Resources/Shaders/Frag_PhongLighting.glsl");
-
-    //ShaderProgram ShaderProgramTest;
-    //ShaderProgramTest.AttachShader(VertexShader);
-    //ShaderProgramTest.AttachShader(FragmentShader);
-    //if (!ShaderProgramTest.LinkShaderProgram())
-    //    m_Core->SystemLog("Renderer failed to link shader program");
-    //ShaderProgramTest.Bind();
-
-    m_DefaultLitShaderProgram.Bind();
-
+    //TODO: Move into func!
     auto SkeletalMeshes = m_ECS->GetSkeletalMeshes();
     for (auto& SkeletalMesh : SkeletalMeshes) {
         //This is pretty much standard for all types
-        if (SkeletalMesh == nullptr)
+
+        if (!Validate(SkeletalMesh))
             continue;
-        if (!SkeletalMesh->GetEnabled())
-            continue;
-        if (SkeletalMesh->GetModel() == nullptr)
-            continue;
+
         GameObject* TargetGameObject = m_ECS->FindGameObject(SkeletalMesh->GetOwnerID());
-        if (TargetGameObject == nullptr)
+        if (!Validate(TargetGameObject))
             continue;
-        if (!TargetGameObject->GetActiveInHeirarchy())
-            continue;
+
 
         //Lights
         SetupLightUniforms(m_DefaultLitShaderProgram);
@@ -256,8 +243,71 @@ bool Renderer::Render3D() {
         }
     }
 
-    m_DefaultLitShaderProgram.Unbind();
+    UnbindShaderProgram();
+
     return true;
+}
+void Renderer::CheckInput() noexcept {
+
+    if (m_Input->GetKey(Keycode::F1))
+        m_CurrentRenderingView = RenderingView::LIT;
+    else if (m_Input->GetKey(Keycode::F2))
+        m_CurrentRenderingView = RenderingView::UNLIT;
+    else if (m_Input->GetKey(Keycode::F3))
+        m_CurrentRenderingView = RenderingView::WIREFRAME;
+    else if (m_Input->GetKey(Keycode::F4))
+        m_CurrentRenderingView = RenderingView::DEPTH_ONLY;
+}
+
+
+void Renderer::BindShaderProgram() const noexcept {
+
+    switch ((m_CurrentRenderingView)) {
+    case RenderingView::LIT: {
+        m_DefaultLitShaderProgram.Bind();
+    } break;
+    case RenderingView::UNLIT: {
+        m_DefaultLitShaderProgram.Bind();
+    } break;
+    case RenderingView::DEPTH_ONLY: {
+        m_DefaultLitShaderProgram.Bind();
+    } break;
+    case RenderingView::WIREFRAME: {
+        m_DefaultLitShaderProgram.Bind();
+    } break;
+    default:
+        break;
+    }
+}
+void Renderer::UnbindShaderProgram() const noexcept {
+
+    switch ((m_CurrentRenderingView)) {
+    case RenderingView::LIT: {
+        m_DefaultLitShaderProgram.Unbind();
+    } break;
+    case RenderingView::UNLIT: {
+        m_DefaultLitShaderProgram.Unbind();
+    } break;
+    case RenderingView::DEPTH_ONLY: {
+        m_DefaultLitShaderProgram.Unbind();
+    } break;
+    case RenderingView::WIREFRAME: {
+        m_DefaultLitShaderProgram.Unbind();
+    } break;
+    default:
+        break;
+    }
+}
+
+
+void Renderer::SetupMVP(Camera* viewport, glm::mat4& model) noexcept {
+    //Would probably be the main camera in case of play mode being on
+    m_DefaultLitShaderProgram.SetUniform("uViewCameraPosition", viewport->GetOwner()->GetTransform().m_Position);
+    m_DefaultLitShaderProgram.SetUniform("uNormalMatrix", glm::mat3(glm::transpose(glm::inverse(model)))); //Inverse operations are costly in shaders
+
+    m_DefaultLitShaderProgram.SetUniform("uMVP.Model", model); //Construct matrix here instead of getting to apply the flipx anmd y?
+    m_DefaultLitShaderProgram.SetUniform("uMVP.View", viewport->GetViewMatrix());
+    m_DefaultLitShaderProgram.SetUniform("uMVP.Projection", viewport->GetProjectionMatrix());
 }
 void Renderer::SetupLightUniforms(ShaderProgram& program) {
 
@@ -309,7 +359,6 @@ void Renderer::SetupLightUniforms(ShaderProgram& program) {
         }
     }
 }
-
 void Renderer::SetupMaterial(ShaderProgram& program, const SpriteRenderer* component) {
 
 
@@ -403,6 +452,37 @@ void Renderer::UnbindAllTextures(const SpriteRenderer* component) {
         CompMaterial->m_Specular->Unbind();
     }
 
+}
+
+
+bool Renderer::Validate(const SpriteRenderer* component) const noexcept {
+
+    if (component == nullptr)
+        return false;
+    if (!component->GetEnabled())
+        return false;
+
+    return true;
+}
+bool Renderer::Validate(const SkeletalMesh* component) const noexcept {
+
+    if (component == nullptr)
+        return false;
+    if (!component->GetEnabled())
+        return false;
+    if (component->GetModel() == nullptr)
+        return false;
+
+    return true;
+}
+bool Renderer::Validate(const GameObject* object) const noexcept {
+
+    if (object == nullptr)
+        return false;
+    if (!object->GetActiveInHeirarchy())
+        return false;
+
+    return true;
 }
 
 

@@ -159,6 +159,7 @@ public:
 	inline GameObject* GetParent() const noexcept { return m_Parent; }
 
 	inline Transform& GetTransform() noexcept { return m_Transform; }
+	inline Transform GetTransform() const noexcept { return m_Transform; }
 
 	inline void SetName(std::string name) noexcept { if (!name.empty()){ m_ObjectName = name; } }
 	inline void SetTag(std::string tag) noexcept { m_ObjectTag = tag; }
