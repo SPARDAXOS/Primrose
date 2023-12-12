@@ -61,6 +61,13 @@ void Core::Run() {
 	
 
 	//Pointer invalidation is now the biggest problem to solve!
+	//Make a vector of buckets of predefined reserved sizes!
+	//Removal might invalidate since it will move elements around
+	//Massive buckets might waste memory
+	//Reuse empty (removed) components?
+	//Check from end for something (I forgot but it was an optimization to start from the last bucket then end or just end of one bucket??)
+	//Might as well use a custom allocator then? Allocate blocks then keep track of their bookkeepings in a class (ComponentsBucket ComponentsBlock)
+	//I use it to allocate block at the start, deallocate at the end then contruct in place and destruct!
 
 	//ECS
 	GameObject* GameObjectTest = &m_ECS->CreateGameObject("GameObject1");
