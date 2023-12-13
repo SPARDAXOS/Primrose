@@ -189,7 +189,6 @@
     <ClCompile Include="Source\STB_Image.cpp" />
     <ClCompile Include="Source\Systems\Core.cpp" />
     <ClCompile Include="Source\Main.cpp" />
-    <ClCompile Include="Source\Tools\Profiler.cpp" />
     <ClCompile Include="Source\Systems\Renderer.cpp" />
     <ClCompile Include="Source\Systems\ShaderCompiler.cpp" />
     <ClCompile Include="Source\Systems\Editor.cpp" />
@@ -239,9 +238,10 @@
     <ClInclude Include="Include\Systems\Input.hpp" />
     <ClInclude Include="Include\Systems\Serializer.hpp" />
     <ClInclude Include="Include\Texture2D.hpp" />
+    <ClInclude Include="Include\Tools\Allocator.h" />
     <ClInclude Include="Include\Tools\Logger.hpp" />
     <ClInclude Include="Include\Math.hpp" />
-    <ClInclude Include="Include\Tools\Profiler.hpp" />
+    <ClInclude Include="Include\Tools\Profiler.h" />
     <ClInclude Include="Include\Systems\Core.hpp" />
     <ClInclude Include="Include\Systems\Renderer.hpp" />
     <ClInclude Include="Include\Shader.hpp" />
@@ -250,6 +250,7 @@
     <ClInclude Include="Include\Components\SpriteRendererComponent.hpp" />
     <ClInclude Include="Include\Systems\TextureStorage.hpp" />
     <ClInclude Include="Include\Systems\Time.hpp" />
+    <ClInclude Include="Include\Tools\Sorting.h" />
     <ClInclude Include="Include\Transform.hpp" />
     <ClInclude Include="Include\Utility.hpp" />
     <ClInclude Include="Include\Systems\Window.hpp" />

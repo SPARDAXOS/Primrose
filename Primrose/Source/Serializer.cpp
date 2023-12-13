@@ -1,6 +1,5 @@
 #include "Systems/Serializer.hpp"
 #include "Systems/Core.hpp"
-#include "Tools/Profiler.hpp"
 
 
 Serializer::Serializer(Core& core) noexcept

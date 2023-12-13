@@ -260,6 +260,14 @@ private:
 
 private:
 	std::vector<GameObject*> m_GameObjects;
+
+	//NEW 
+	//Each pointer points to the start of a bucket of X predefined constexpr size
+	std::vector<SpriteRenderer*> m_SpriteRenderersBuckets;
+	//Need list of places std::vector<bool> for vacantSpotsOnMemoryBlock
+	std::vector<std::vector<bool>> m_SpriteRenderersBucketsLayout; //Questionable doesnt seem elegant
+
+
 	std::vector<SpriteRenderer> m_SpriteRenderers;
 	std::vector<SkeletalMesh*> m_SkeletalMeshes; 
 	std::vector<Camera> m_Cameras;
