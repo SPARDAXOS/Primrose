@@ -6,7 +6,7 @@
 #include "Components/SpotLightComponent.hpp"
 #include "Components/SkeletalMeshComponent.hpp"
 
-#include <vector>
+#include "Structures/MemoryBlocksBucket.h"
 
 class Core;
 class GameObject;

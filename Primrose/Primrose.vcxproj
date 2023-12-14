@@ -215,6 +215,8 @@
     <ClInclude Include="Include\Components\PointLightComponent.hpp" />
     <ClInclude Include="Include\Components\SkeletalMeshComponent.hpp" />
     <ClInclude Include="Include\Components\SpotLightComponent.hpp" />
+    <ClInclude Include="Include\Structures\Container.h" />
+    <ClInclude Include="Include\Structures\MemoryBlocksBucket.h" />
     <ClInclude Include="Include\Directory.hpp" />
     <ClInclude Include="Include\Editor\ContentBrowser.hpp" />
     <ClInclude Include="Include\Editor\DebugLogWindow.hpp" />
