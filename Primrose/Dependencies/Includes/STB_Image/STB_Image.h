@@ -1019,48 +1019,48 @@ static int stbi__mul2sizes_valid(int a, int b)
 
 #if !defined(STBI_NO_JPEG) || !defined(STBI_NO_PNG) || !defined(STBI_NO_TGA) || !defined(STBI_NO_HDR)
 // returns 1 if "a*b + add" has no negative terms/factors and doesn't overflow
-static int stbi__mad2sizes_valid(int a, int b, int add)
+static int stbi__mad2sizes_valid(int a, int b, int emplace_back)
 {
-   return stbi__mul2sizes_valid(a, b) && stbi__addsizes_valid(a*b, add);
+   return stbi__mul2sizes_valid(a, b) && stbi__addsizes_valid(a*b, emplace_back);
 }
 #endif
 
 // returns 1 if "a*b*c + add" has no negative terms/factors and doesn't overflow
-static int stbi__mad3sizes_valid(int a, int b, int c, int add)
+static int stbi__mad3sizes_valid(int a, int b, int c, int emplace_back)
 {
    return stbi__mul2sizes_valid(a, b) && stbi__mul2sizes_valid(a*b, c) &&
-      stbi__addsizes_valid(a*b*c, add);
+      stbi__addsizes_valid(a*b*c, emplace_back);
 }
 
 // returns 1 if "a*b*c*d + add" has no negative terms/factors and doesn't overflow
 #if !defined(STBI_NO_LINEAR) || !defined(STBI_NO_HDR) || !defined(STBI_NO_PNM)
-static int stbi__mad4sizes_valid(int a, int b, int c, int d, int add)
+static int stbi__mad4sizes_valid(int a, int b, int c, int d, int emplace_back)
 {
    return stbi__mul2sizes_valid(a, b) && stbi__mul2sizes_valid(a*b, c) &&
-      stbi__mul2sizes_valid(a*b*c, d) && stbi__addsizes_valid(a*b*c*d, add);
+      stbi__mul2sizes_valid(a*b*c, d) && stbi__addsizes_valid(a*b*c*d, emplace_back);
 }
 #endif
 
 #if !defined(STBI_NO_JPEG) || !defined(STBI_NO_PNG) || !defined(STBI_NO_TGA) || !defined(STBI_NO_HDR)
 // mallocs with size overflow checking
-static void *stbi__malloc_mad2(int a, int b, int add)
+static void *stbi__malloc_mad2(int a, int b, int emplace_back)
 {
-   if (!stbi__mad2sizes_valid(a, b, add)) return NULL;
-   return stbi__malloc(a*b + add);
+   if (!stbi__mad2sizes_valid(a, b, emplace_back)) return NULL;
+   return stbi__malloc(a*b + emplace_back);
 }
 #endif
 
-static void *stbi__malloc_mad3(int a, int b, int c, int add)
+static void *stbi__malloc_mad3(int a, int b, int c, int emplace_back)
 {
-   if (!stbi__mad3sizes_valid(a, b, c, add)) return NULL;
-   return stbi__malloc(a*b*c + add);
+   if (!stbi__mad3sizes_valid(a, b, c, emplace_back)) return NULL;
+   return stbi__malloc(a*b*c + emplace_back);
 }
 
 #if !defined(STBI_NO_LINEAR) || !defined(STBI_NO_HDR) || !defined(STBI_NO_PNM)
-static void *stbi__malloc_mad4(int a, int b, int c, int d, int add)
+static void *stbi__malloc_mad4(int a, int b, int c, int d, int emplace_back)
 {
-   if (!stbi__mad4sizes_valid(a, b, c, d, add)) return NULL;
-   return stbi__malloc(a*b*c*d + add);
+   if (!stbi__mad4sizes_valid(a, b, c, d, emplace_back)) return NULL;
+   return stbi__malloc(a*b*c*d + emplace_back);
 }
 #endif
 

@@ -152,18 +152,43 @@ private:
 
 class VAO final {
 public:
-	VAO() noexcept {
+	VAO() noexcept 
+		:	m_ID(0)
+	{
 		GLCall(glGenVertexArrays(1, &m_ID));
 	}
 	~VAO() {
 		GLCall(glDeleteBuffers(1, &m_ID));
 	}
 
-	VAO(const VAO&) = delete;
-	VAO& operator=(const VAO&) = delete;
+	VAO(const VAO& other) {
+		*this = other;
+	}
+	VAO& operator=(const VAO& other) {
+		if (this == &other)
+			return *this;
+		else {
 
-	VAO(VAO&&) = delete;
-	VAO& operator=(VAO&&) = delete;
+			this->m_ID = other.m_ID;
+
+			return *this;
+		}
+	}
+
+	VAO(VAO&& other) {
+		*this = std::move(other);
+	}
+	VAO& operator=(VAO&& other) {
+		if (this == &other)
+			return *this;
+		else {
+
+			this->m_ID = other.m_ID;
+			other.m_ID = 0; // 0 is used by opengl to unbind. It is not valid. This would need to change for other rendering APIs probably.
+
+			return *this;
+		}
+	}
 
 public:
 	void Bind() const noexcept {

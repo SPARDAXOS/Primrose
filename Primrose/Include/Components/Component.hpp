@@ -32,8 +32,10 @@ public:
 		if (this == &other)
 			return *this;
 		else {
-			//Copy All data except owner ID
+			//Copy All data except owner ID //or? idk tbh im too tired!
 			this->m_Enabled = other.m_Enabled;
+			this->m_OwnerID = other.m_OwnerID;
+			this->m_Owner = other.m_Owner;
 			return *this;
 		}
 	}

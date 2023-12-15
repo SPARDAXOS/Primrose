@@ -62,11 +62,14 @@ public:
 		if (FindGameObject(objectID) == nullptr)
 			return;
 
-		const uint64 TargetIndex = FindSpriteRenderer(objectID);
-		if (TargetIndex == FAILED_COMPONENT_SEARCH)
-			return;
+		//const uint64 TargetIndex = FindSpriteRenderer(objectID);
+		//if (TargetIndex == FAILED_COMPONENT_SEARCH)
+		//	return;
 
-		m_SpriteRenderers.erase(std::begin(m_SpriteRenderers) + TargetIndex);
+
+		//NOTE: I can only get the ID!
+		//m_SpriteRenderers.erase(std::begin(m_SpriteRenderers) + TargetIndex);
+		m_SpriteRenderers.erase(objectID);
 	}
 	template<>
 	void RemoveComponent<SkeletalMesh>(uint64 objectID) noexcept {
@@ -130,11 +133,7 @@ public:
 		if (FindGameObject(objectID) == nullptr)
 			return nullptr;
 
-		const uint64 TargetIndex = FindSpriteRenderer(objectID);
-		if (TargetIndex == FAILED_COMPONENT_SEARCH)
-			return nullptr;
-
-		return &m_SpriteRenderers.at(TargetIndex);
+		return m_SpriteRenderers.find(objectID);
 	}
 	template<>
 	SkeletalMesh* GetComponent<SkeletalMesh>(uint64 objectID) {
@@ -193,39 +192,31 @@ public:
 public:
 	//TODO: LATEST NOTE: Yes, delete all these and simply return the vector.
 	template<typename T>
-	std::vector<T> GetAllComponentsOfType() const noexcept;
+	MemoryBlocksBucket<T>& GetAllComponentsOfType() noexcept;
 
 	template<>
-	std::vector<SpriteRenderer> GetAllComponentsOfType<SpriteRenderer>() const noexcept{
-		return m_SpriteRenderers;
-	}
-	template<>
-	std::vector<Camera> GetAllComponentsOfType<Camera>() const noexcept {
-		return m_Cameras;
-	}
+	MemoryBlocksBucket<SpriteRenderer>& GetAllComponentsOfType<SpriteRenderer>() noexcept { return m_SpriteRenderers; }
+
+	//template<>
+	//MemoryBlocksBucket<SkeletalMesh>& GetAllComponentsOfType<SkeletalMesh>() noexcept { return m_SkeletalMeshes; }
+
+	//template<>
+	//std::vector<Camera> GetAllComponentsOfType<Camera>() const noexcept {
+	//	return m_Cameras;
+	//}
 
 
 
 public: //NOTE: These seem to serve the same purpose as GetAllComponentsOfType which has a better name...
 	inline std::vector<GameObject*> GetGameObjects() const noexcept { return m_GameObjects; }
-	inline std::vector<SpriteRenderer> GetSpriteRenderers() const noexcept { return m_SpriteRenderers; }
+	//inline std::vector<SpriteRenderer> GetSpriteRenderers() const noexcept { return m_SpriteRenderers; }
 	inline std::vector<SkeletalMesh*> GetSkeletalMeshes() const noexcept { return m_SkeletalMeshes; }
 	inline std::vector<PointLight*> GetPointLights() const noexcept { return m_PointLights; }
 	inline std::vector<SpotLight*> GetSpotLights() const noexcept { return m_SpotLights; }
 
 
 
-	//TODO: maybe rework this to use lists? simply passes the vector?. LATEST NOTE: Yes, delete all these and simply return the vector.
-	template<typename T>
-	T* GetComponentForUpdate();
-	template<>
-	SpriteRenderer* GetComponentForUpdate<SpriteRenderer>() {
-		SpriteRenderer* TargetComponent = &m_SpriteRenderers.at(m_SpriteRenderersUpdateIndex);
-		m_SpriteRenderersUpdateIndex++;
-		if (m_SpriteRenderersUpdateIndex == m_SpriteRenderers.size())
-			m_SpriteRenderersUpdateIndex = 0;
-		return TargetComponent;
-	}
+
 
 
 
@@ -245,7 +236,6 @@ private:
 	void CalculateTransformations(GameObject& object);
 
 private:
-	int32 FindSpriteRenderer(uint64 objectID) const noexcept;
 	int32 FindSkeletalMesh(uint64 objectID) const noexcept;
 	int32 FindCamera(uint64 objectID) const noexcept;
 	int32 FindPointLight(uint64 objectID) const noexcept;
@@ -262,13 +252,11 @@ private:
 	std::vector<GameObject*> m_GameObjects;
 
 	//NEW 
-	//Each pointer points to the start of a bucket of X predefined constexpr size
-	std::vector<SpriteRenderer*> m_SpriteRenderersBuckets;
-	//Need list of places std::vector<bool> for vacantSpotsOnMemoryBlock
-	std::vector<std::vector<bool>> m_SpriteRenderersBucketsLayout; //Questionable doesnt seem elegant
+	//std::vector<SpriteRenderer*> m_SpriteRenderersBuckets;
+	MemoryBlocksBucket<SpriteRenderer> m_SpriteRenderers = (50);
 
 
-	std::vector<SpriteRenderer> m_SpriteRenderers;
+	//std::vector<SpriteRenderer> m_SpriteRenderers;
 	std::vector<SkeletalMesh*> m_SkeletalMeshes; 
 	std::vector<Camera> m_Cameras;
 

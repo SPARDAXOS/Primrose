@@ -86,6 +86,7 @@ public:
 		static_assert(std::is_base_of_v<ComponentBase, T>);
 		if (HasComponent<T>())
 			return nullptr;
+
 		T* NewComponent = m_ECS->AddComponent<T>(m_ObjectID);
 		if (NewComponent == nullptr)
 			return nullptr;

@@ -132,8 +132,8 @@ SpriteRenderer* EntityComponentSystem::AddComponent<SpriteRenderer>(uint64 objec
 		return nullptr;
 
 	//Check limit on components? Maybe Gameobject side instead. one sounds logical
-
-	return &m_SpriteRenderers.emplace_back(SpriteRenderer{ *ptr, objectID });
+	return m_SpriteRenderers.emplace_back(SpriteRenderer{ *ptr, objectID });
+	//return &m_SpriteRenderers.emplace_back(SpriteRenderer{ *ptr, objectID });
 }
 template<>
 SkeletalMesh* EntityComponentSystem::AddComponent<SkeletalMesh>(uint64 objectID) {
@@ -226,21 +226,7 @@ GameObject* EntityComponentSystem::FindGameObject(uint64 objectID) const noexcep
 	return nullptr;
 }
 
-int32 EntityComponentSystem::FindSpriteRenderer(uint64 objectID) const noexcept {
-	//TODO: Rework into using foreach now that it contains objects and not pointers
 
-	//for (auto& component : m_SpriteRenderers) {
-	//	if (component.GetOwnerID() == objectID)
-	//		return C
-	//}
-
-	for (int32 index = 0; index < m_SpriteRenderers.size(); index++) {
-		if (m_SpriteRenderers.at(index).GetOwnerID() == objectID) {
-			return index;
-		}
-	}
-	return FAILED_COMPONENT_SEARCH;
-}
 int32 EntityComponentSystem::FindSkeletalMesh(uint64 objectID) const noexcept {
 	//TODO: Rework into using foreach now that it contains objects and not pointers
 	for (int32 index = 0; index < m_SkeletalMeshes.size(); index++) {

@@ -8,27 +8,27 @@ concept IsPointer = std::is_pointer_v<Type>;
 
 class Sorting final {
 public:
-	template<IsPointer Iterator>
-	constexpr static inline void ExchangeSort(Iterator start, Iterator end) noexcept {
+	template<IsPointer Pointer>
+	constexpr static inline void ExchangeSort(Pointer start, Pointer end) noexcept {
 		if (!ValidateRange(start, end))
 			return;
 
-		for (Iterator Cursor = start; Cursor < end; Cursor++) {
-			for (Iterator AfterCursor = Cursor + 1; AfterCursor < end; AfterCursor++) {
+		for (Pointer Cursor = start; Cursor < end; Cursor++) {
+			for (Pointer AfterCursor = Cursor + 1; AfterCursor < end; AfterCursor++) {
 				if (*Cursor < *AfterCursor)
 					Swap(Cursor, AfterCursor);
 			}
 		}
 	}
 
-	template<IsPointer Iterator>
-	constexpr static inline void SelectionSort(Iterator start, Iterator end) noexcept {
+	template<IsPointer Pointer>
+	constexpr static inline void SelectionSort(Pointer start, Pointer end) noexcept {
 		if (!ValidateRange(start, end))
 			return;
 
-		for (Iterator Cursor = start; Cursor < end; Cursor++) {
-			Iterator LowestValueIterator = Cursor;
-			for (Iterator AfterCursor = Cursor + 1; AfterCursor < end; AfterCursor++) {
+		for (Pointer Cursor = start; Cursor < end; Cursor++) {
+			Pointer LowestValueIterator = Cursor;
+			for (Pointer AfterCursor = Cursor + 1; AfterCursor < end; AfterCursor++) {
 				if (*AfterCursor < *LowestValueIterator)
 					LowestValueIterator = AfterCursor;
 			}
@@ -37,27 +37,27 @@ public:
 		}
 	}
 
-	template<IsPointer Iterator>
-	constexpr static inline void BubbleSort(Iterator start, Iterator end) noexcept {
+	template<IsPointer Pointer>
+	constexpr static inline void BubbleSort(Pointer start, Pointer end) noexcept {
 		if (!ValidateRange(start, end))
 			return;
 
-		for (Iterator Cursor = start; Cursor < end; Cursor++) {
-			for (Iterator AfterCursor = start; AfterCursor < end - 1; AfterCursor++) {
+		for (Pointer Cursor = start; Cursor < end; Cursor++) {
+			for (Pointer AfterCursor = start; AfterCursor < end - 1; AfterCursor++) {
 				if (*AfterCursor > *(AfterCursor + 1))
 					Swap(AfterCursor, AfterCursor + 1);
 			}
 		}
 	}
 
-	template<IsPointer Iterator>
-	constexpr static inline void InsertionSort(Iterator start, Iterator end) noexcept {
+	template<IsPointer Pointer>
+	constexpr static inline void InsertionSort(Pointer start, Pointer end) noexcept {
 		if (!ValidateRange(start, end))
 			return;
 
-		for (Iterator Cursor = start + 1; Cursor < end; Cursor++) {
+		for (Pointer Cursor = start + 1; Cursor < end; Cursor++) {
 			auto Key = *Cursor;
-			Iterator BeforeCursor = Cursor - 1;
+			Pointer BeforeCursor = Cursor - 1;
 
 			while (Key < *BeforeCursor && BeforeCursor >= start) {
 				Swap(BeforeCursor + 1, BeforeCursor);
@@ -97,36 +97,36 @@ public:
 		}
 	}
 
-	template<IsPointer Iterator>
-	constexpr static inline void QuickSort(Iterator start, Iterator end) noexcept {
+	template<IsPointer Pointer>
+	constexpr static inline void QuickSort(Pointer start, Pointer end) noexcept {
 		if (!ValidateRange(start, end))
 			return;
 
 		RecursiveQuickSort(start, end - 1);
 	}
 
-	template<IsPointer Iterator>
-	constexpr static inline void MergeSort(Iterator start, Iterator end) noexcept {
+	template<IsPointer Pointer>
+	constexpr static inline void MergeSort(Pointer start, Pointer end) noexcept {
 		if (!ValidateRange(start, end))
 			return;
 
 		int64 RangeSize = end - start;
 		int64 SplitPoint = RangeSize / 2;
 
-		Iterator FirstHalfStart = start;
-		Iterator FirstHalfEnd = start + (SplitPoint - 1);
+		Pointer FirstHalfStart = start;
+		Pointer FirstHalfEnd = start + (SplitPoint - 1);
 
-		Iterator SecondHalfStart = start + SplitPoint;
-		Iterator SecondHalfEnd = end - 1;
+		Pointer SecondHalfStart = start + SplitPoint;
+		Pointer SecondHalfEnd = end - 1;
 
-		std::pair<Iterator, Iterator> Range1 = MergePartition(FirstHalfStart, FirstHalfEnd);
-		std::pair<Iterator, Iterator> Range2 = MergePartition(SecondHalfStart, SecondHalfEnd);
+		std::pair<Pointer, Pointer> Range1 = MergePartition(FirstHalfStart, FirstHalfEnd);
+		std::pair<Pointer, Pointer> Range2 = MergePartition(SecondHalfStart, SecondHalfEnd);
 
 		InsertionSort(Range1.first, Range2.second + 1);
 	}
 
-	template<IsPointer Iterator>
-	constexpr static inline void HeapSort(Iterator start, Iterator end) noexcept {
+	template<IsPointer Pointer>
+	constexpr static inline void HeapSort(Pointer start, Pointer end) noexcept {
 		if (!ValidateRange(start, end))
 			return;
 
@@ -143,8 +143,8 @@ public:
 
 
 private: //Helpers
-	template<IsPointer Iterator>
-	constexpr static inline bool ValidateRange(Iterator start, Iterator end) noexcept {
+	template<IsPointer Pointer>
+	constexpr static inline bool ValidateRange(Pointer start, Pointer end) noexcept {
 		if (start == end)
 			return false;
 
@@ -157,8 +157,8 @@ private: //Helpers
 		return true;
 	}
 
-	template<IsPointer Iterator>
-	constexpr static inline void Swap(Iterator first, Iterator second) noexcept {
+	template<IsPointer Pointer>
+	constexpr static inline void Swap(Pointer first, Pointer second) noexcept {
 		if (first == second)
 			return;
 
@@ -169,14 +169,14 @@ private: //Helpers
 
 
 private: //Sorting Helpers
-	template<IsPointer Iterator>
-	constexpr static inline Iterator QuickSortPartition(Iterator start, Iterator end) noexcept {
+	template<IsPointer Pointer>
+	constexpr static inline Pointer QuickSortPartition(Pointer start, Pointer end) noexcept {
 
 		size_t TotalElements = std::distance(start, end + 1);
 		auto Pivot = *(start + (TotalElements - 1) / 2);
 
-		Iterator LeftCursor = start - 1;
-		Iterator RightCursor = end + 1;
+		Pointer LeftCursor = start - 1;
+		Pointer RightCursor = end + 1;
 
 		while (true) {
 			do {
@@ -194,45 +194,45 @@ private: //Sorting Helpers
 		}
 	}
 
-	template<IsPointer Iterator>
-	constexpr static inline void RecursiveQuickSort(Iterator firstElement, Iterator lastElement) noexcept {
+	template<IsPointer Pointer>
+	constexpr static inline void RecursiveQuickSort(Pointer firstElement, Pointer lastElement) noexcept {
 		if (firstElement < lastElement) {
-			Iterator Pivot = QuickSortPartition(firstElement, lastElement);
+			Pointer Pivot = QuickSortPartition(firstElement, lastElement);
 			RecursiveQuickSort(firstElement, Pivot);
 			RecursiveQuickSort(Pivot + 1, lastElement);
 		}
 	}
 
-	template<IsPointer Iterator>
-	static std::pair<Iterator, Iterator> MergePartition(Iterator start, Iterator end) noexcept {
+	template<IsPointer Pointer>
+	static std::pair<Pointer, Pointer> MergePartition(Pointer start, Pointer end) noexcept {
 
 		int64 RangeSize = (end - start) + 1;
 		if (RangeSize == 1)
-			return std::pair<Iterator, Iterator>(start, start);
+			return std::pair<Pointer, Pointer>(start, start);
 		else if (RangeSize == 2) {
 			if (*start > *end)
 				Swap(start, end);
-			return std::pair<Iterator, Iterator>(start, end);
+			return std::pair<Pointer, Pointer>(start, end);
 		}
 		else {
 			int64 SplitPoint = RangeSize / 2;
 
-			Iterator FirstHalfStart = start;
-			Iterator FirstHalfEnd = start + (SplitPoint - 1);
+			Pointer FirstHalfStart = start;
+			Pointer FirstHalfEnd = start + (SplitPoint - 1);
 
-			Iterator SecondHalfStart = start + SplitPoint;
-			Iterator SecondHalfEnd = end;
+			Pointer SecondHalfStart = start + SplitPoint;
+			Pointer SecondHalfEnd = end;
 
-			std::pair<Iterator, Iterator> Range1 = MergePartition(FirstHalfStart, FirstHalfEnd);
-			std::pair<Iterator, Iterator> Range2 = MergePartition(SecondHalfStart, SecondHalfEnd);
+			std::pair<Pointer, Pointer> Range1 = MergePartition(FirstHalfStart, FirstHalfEnd);
+			std::pair<Pointer, Pointer> Range2 = MergePartition(SecondHalfStart, SecondHalfEnd);
 
 			InsertionSort(Range1.first, Range2.second + 1);
-			return std::pair<Iterator, Iterator>(start, end);
+			return std::pair<Pointer, Pointer>(start, end);
 		}
 	}
 
-	template<IsPointer Iterator>
-	constexpr static inline void Heapify(Iterator start, size_t count, uint32 index) noexcept {
+	template<IsPointer Pointer>
+	constexpr static inline void Heapify(Pointer start, size_t count, uint32 index) noexcept {
 		uint32 Largest = index;
 		uint32 Left = 2 * index + 1;
 		uint32 Right = 2 * index + 2;

@@ -64,10 +64,9 @@ bool Renderer::Render2D() {
     //TODO: Drop this approach and simply get a copy of the vector since its faster cause of something i forgot what it was called and its just a vector of ptrs
     //- This still might be faster tho since no copying is happening and im just getting them in order as defined by the ECS. There are definitely some implications to
     //- think of.
-    const std::vector<SpriteRenderer> AllSpriteRenderers = m_ECS->GetAllComponentsOfType<SpriteRenderer>();
-    for (uint32 index = 0; index < AllSpriteRenderers.size(); index++) {
-
-        const SpriteRenderer* TargetComponent = m_ECS->GetComponentForUpdate<SpriteRenderer>();
+    const MemoryBlocksBucket<SpriteRenderer>* AllSpriteRenderers = &m_ECS->GetAllComponentsOfType<SpriteRenderer>();
+    for (uint32 i = 0; i < AllSpriteRenderers->size(); i++) {
+        const SpriteRenderer* TargetComponent = &(*AllSpriteRenderers)[i];
         if (!Validate(TargetComponent))
             return false;
 
@@ -128,7 +127,7 @@ bool Renderer::Render2D() {
         //MVP
         Camera* ViewportCamera = &m_ECS->GetViewportCamera();
         SetupMVP(ViewportCamera, TargetMatrix);
-        
+
         TargetComponent->GetVAO()->Bind();
 
         //TODO: Too important to be out like this. Move into func.
