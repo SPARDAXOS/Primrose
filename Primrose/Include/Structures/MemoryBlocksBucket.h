@@ -19,8 +19,34 @@
 //Some book keeping for elements amount in each memory block is requiered to query the merge operation conditions quickly.
 
 template<class T>
-struct MemoryBlockSpecification final {
+class MemoryBlockSpecification final {
+public:
+	explicit MemoryBlockSpecification() = default;
+	//TODO: Add some custom ctors
+	~MemoryBlockSpecification() {
+		//TODO: Clean up mem or... Maybe it takes a reference to a CustomAllocator that it uses to free up the memory! It also uses in the ctor to allocate the mem!
+	}
 
+
+
+public:
+	constexpr inline bool IsFull() const noexcept {
+		return m_Size == m_Capacity;
+	}
+	constexpr inline T* GetAvailableAddress() const noexcept {
+		if (IsFull())
+			return nullptr;
+
+		for (uint32 i = 0; i < m_Mappings.size(); i++) {
+			if (!m_Mappings[i])
+				return m_Block + i;
+		}
+
+		return nullptr;
+	}
+
+
+public:
 	T* m_Block = nullptr;
 	uint32 m_Capacity = 0;
 	uint32 m_Size = 0;
@@ -68,10 +94,23 @@ public:
 	template<class... args>
 	constexpr inline Reference Add(args&&... arguments) {
 
+		MemoryBlockSpecification* MemoryBlock = nullptr;
+		Iterator Address = nullptr;
+		for (auto& block : m_Blocks) {
+			if (!block.IsFull()) {
+				Address = block.GetAvailableAddress();
+				MemoryBlock = &block;
+			}
+		}
+		if (!Address) {
+			//Add New Memory Block if possible!
+			//Get Address from it!
+			//Set it as target memory block
+		}
 
-
-		
-
+		Reference NewElement = Construct(Address);
+		MemoryBlock->m_Size++;
+		return NewElement;
 	}
 
 	constexpr inline bool Remove(const Type& element) { //Maybe get an ID instead. Would limit this data structure to components only
@@ -133,7 +172,7 @@ private: //Memory
 		//m_Iterator = nullptr;
 	}
 
-	constexpr inline void Construct(MemoryBlockSpecification<Type>& target) {
+	constexpr inline Reference Construct(Iterator address) {
 		
 
 		//Get vacant spot on block - Consider making it a class with helper functions then
