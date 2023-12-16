@@ -161,30 +161,20 @@ public:
 		GLCall(glDeleteBuffers(1, &m_ID));
 	}
 
-	VAO(const VAO& other) {
-		*this = other;
-	}
-	VAO& operator=(const VAO& other) {
-		if (this == &other)
-			return *this;
-		else {
+	//Otherwise the copy will delete the buffer
+	VAO(const VAO& other) noexcept = delete;
+	VAO& operator=(const VAO& other) noexcept = delete;
 
-			this->m_ID = other.m_ID;
-
-			return *this;
-		}
-	}
-
-	VAO(VAO&& other) {
+	VAO(VAO&& other) noexcept {
 		*this = std::move(other);
 	}
-	VAO& operator=(VAO&& other) {
+	VAO& operator=(VAO&& other) noexcept {
 		if (this == &other)
 			return *this;
 		else {
 
 			this->m_ID = other.m_ID;
-			other.m_ID = 0; // 0 is used by opengl to unbind. It is not valid. This would need to change for other rendering APIs probably.
+			other.m_ID = 0; // 0 is used by opengl to unbind. It is not valid. This would need to change for other rendering APIs probably. Update: VAOs are only for opengl...
 
 			return *this;
 		}
