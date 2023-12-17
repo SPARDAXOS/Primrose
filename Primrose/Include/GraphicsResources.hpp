@@ -120,8 +120,20 @@ public:
 	VBO(const VBO&) = delete;
 	VBO& operator=(const VBO&) = delete;
 
-	VBO(VBO&&) = delete;
-	VBO& operator=(VBO&&) = delete;
+	VBO(VBO&& other) noexcept {
+		*this = std::move(other);
+	}
+	VBO& operator=(VBO&& other) noexcept {
+		if (this == &other)
+			return *this;
+		else {
+
+			this->m_ID = other.m_ID;
+			other.m_ID = 0;
+
+			return *this;
+		}
+	}
 
 public:
 	void Bind() const noexcept {
@@ -207,11 +219,25 @@ public:
 		GLCall(glDeleteBuffers(1, &m_ID));
 	}
 
-	EBO(const EBO&) = delete;
-	EBO& operator=(const EBO&) = delete;
+	EBO(const EBO& other) = delete;
+	EBO& operator=(const EBO& other) = delete;
 
-	EBO(EBO&&) = delete;
-	EBO& operator=(EBO&&) = delete;
+	EBO(EBO&& other) noexcept {
+		*this = std::move(other);
+	}
+	EBO& operator=(EBO&& other) noexcept {
+		if (this == &other)
+			return *this;
+		else {
+
+			this->m_ID = other.m_ID;
+			this->m_Count = other.m_Count;
+			other.m_ID = 0; // 0 is used by opengl to unbind. It is not valid. This would need to change for other rendering APIs probably. Update: VAOs are only for opengl...
+			other.m_Count = 0;
+
+			return *this;
+		}
+	}
 
 public:
 	void Bind() const noexcept {
