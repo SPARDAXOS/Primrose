@@ -149,7 +149,7 @@ void Core::UpdateSystems() {
 	}
 
 
-	m_Window->ClearBuffer();
+	m_Window->ClearBuffer(); //TODO: Move into renderer
 
 
 	if (!m_Renderer->Update()) {

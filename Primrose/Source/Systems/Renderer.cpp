@@ -64,6 +64,9 @@ bool Renderer::Render2D() {
     //TODO: Drop this approach and simply get a copy of the vector since its faster cause of something i forgot what it was called and its just a vector of ptrs
     //- This still might be faster tho since no copying is happening and im just getting them in order as defined by the ECS. There are definitely some implications to
     //- think of.
+
+    
+
     MemoryBlocksBucket<SpriteRenderer>* AllSpriteRenderers = &m_ECS->GetAllComponentsOfType<SpriteRenderer>();
     if (AllSpriteRenderers->size() > 0 && !m_Render2DReady)
         Setup2DRenderingData();
@@ -77,6 +80,8 @@ bool Renderer::Render2D() {
         if (!Validate(TargetGameObject))
             return false;
 
+
+        //Check shader
 
         SetupMaterial(*m_CurrentShaderProgram, TargetComponent); //WORKS ONLY FOR SPRITERENDERES
         SetupLightUniforms(*m_CurrentShaderProgram);
