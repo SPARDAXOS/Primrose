@@ -38,9 +38,9 @@ public:
 			this->m_FilteringModeMin = other.m_FilteringModeMin;
 			this->m_FilteringModeMag = other.m_FilteringModeMag;
 
-			this->m_VAO = other.m_VAO;
-			this->m_VBO = other.m_VBO;
-			this->m_EBO = other.m_EBO;
+			//this->m_VAO = other.m_VAO;
+			//this->m_VBO = other.m_VBO;
+			//this->m_EBO = other.m_EBO;
 
 			return *this;
 		}
@@ -49,7 +49,7 @@ public:
 	SpriteRenderer(SpriteRenderer&& other) noexcept : ComponentBase(std::move(other)) {
 		*this = std::move(other);
 	}
-	SpriteRenderer& operator=(SpriteRenderer&& other) {
+	SpriteRenderer& operator=(SpriteRenderer&& other) noexcept {
 		if (this == &other)
 			return *this;
 		else {
@@ -69,9 +69,9 @@ public:
 			this->m_FilteringModeMin = std::move(other.m_FilteringModeMin);
 			this->m_FilteringModeMag = std::move(other.m_FilteringModeMag);
 
-			this->m_VAO = std::move(other.m_VAO);
-			this->m_VBO = std::move(other.m_VBO);
-			this->m_EBO = std::move(other.m_EBO);
+			//this->m_VAO = std::move(other.m_VAO);
+			//this->m_VBO = std::move(other.m_VBO);
+			//this->m_EBO = std::move(other.m_EBO);
 
 
 			other.m_Sprite = nullptr;
@@ -89,9 +89,9 @@ public:
 			other.m_FilteringModeMin = FilteringModeMin::LINEAR_MIPMAP_LINEAR;
 			other.m_FilteringModeMag = FilteringModeMag::LINEAR;
 
-			other.m_VAO	= nullptr;
-			other.m_VBO	= nullptr;	
-			other.m_EBO	= nullptr;
+			//other.m_VAO	= nullptr;
+			//other.m_VBO	= nullptr;	
+			//other.m_EBO	= nullptr;
 
 			return *this;
 		}
@@ -131,16 +131,11 @@ public:
 	inline FilteringModeMin GetFilteringModeMin() const noexcept { return m_FilteringModeMin; }
 	inline FilteringModeMag GetFilteringModeMag() const noexcept { return m_FilteringModeMag; }
 
-	inline VAO* GetVAO() const noexcept { return m_VAO; }
-	inline EBO* GetEBO() const noexcept { return m_EBO; }
+
+	//inline VAO& GetVAO() noexcept { return m_VAO; }
+	//inline EBO& GetEBO() noexcept { return m_EBO; }
 
 
-private:
-	Texture2D* m_Sprite = nullptr;
-	Color m_Tint = Colors::White;
-	Material* m_Material = nullptr;
-	bool m_FlipX = false;
-	bool m_FlipY = false;
 
 private:
 	BlendEquation m_BlendEquation = BlendEquation::ADDITIVE;
@@ -153,8 +148,15 @@ private:
 	FilteringModeMag m_FilteringModeMag = FilteringModeMag::LINEAR;
 
 private:
-	Cube m_Primitive; //Change to square for 2D
-	VAO* m_VAO = nullptr;
-	VBO* m_VBO = nullptr;
-	EBO* m_EBO = nullptr;
+	Texture2D* m_Sprite = nullptr;
+	Color m_Tint = Colors::White;
+	Material* m_Material = nullptr;
+	bool m_FlipX = false;
+	bool m_FlipY = false;
+
+private:
+	//Cube m_Primitive; //Change to square for 2D - Can be cached in renderer to avoid each sprite renderer containing this
+	//VAO m_VAO;
+	//VBO m_VBO;
+	//EBO m_EBO;
 };

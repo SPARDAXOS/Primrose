@@ -69,6 +69,9 @@ private:
 	void UnbindAllTextures(const SpriteRenderer* component);
 
 private:
+	void Setup2DRenderingData() noexcept;
+
+private:
 	[[nodiscard]] bool Validate(const SpriteRenderer* component) const noexcept;
 	[[nodiscard]] bool Validate(const SkeletalMesh* component) const noexcept;
 	[[nodiscard]] bool Validate(const GameObject* object) const noexcept;
@@ -93,6 +96,12 @@ private:
 	std::string m_LastExitMessage;
 	//Other diagnostics and warnings that need printing
 
+private:
+	bool m_Render2DReady = false;
+	Cube m_SpritePrimitive;
+	VAO m_SpriteVAO;
+	VBO m_SpriteVBO;
+	EBO m_SpriteEBO;
 
 private:
 	Core* m_Core						{ nullptr };

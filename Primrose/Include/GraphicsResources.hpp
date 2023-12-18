@@ -103,22 +103,21 @@ struct Cube {
 
 class VBO final {
 public:
-	VBO() = delete;
+	explicit VBO() noexcept 
+		:  m_ID(0)
+	{
+		GLCall(glGenBuffers(1, &m_ID)); //TODO: to func for clarity!
+	}
 	VBO(const void* data, const GLuint size) noexcept {
-		GLCall(glGenBuffers(1, &m_ID));
-		Bind();
-		GLCall(glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW));
-		ActivatePositionAttribute();
-		ActivateTextureCoordinatesAttribute();
-		ActivateNormalAttribute();
-		Unbind(); 
+		GLCall(glGenBuffers(1, &m_ID)); //TODO: to func for clarity!
+		SetData(data, size);
 	}
 	~VBO() {
-		GLCall(glDeleteBuffers(1, &m_ID));
+		GLCall(glDeleteBuffers(1, &m_ID)); //TODO: to func for clarity!
 	}
 
-	VBO(const VBO&) = delete;
-	VBO& operator=(const VBO&) = delete;
+	VBO(const VBO& other) = delete;
+	VBO& operator=(const VBO& other) = delete;
 
 	VBO(VBO&& other) noexcept {
 		*this = std::move(other);
@@ -141,6 +140,14 @@ public:
 	}
 	void Unbind() const noexcept {
 		GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
+	}
+	void SetData(const void* data, const GLuint size) const noexcept {
+		Bind();
+		GLCall(glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW));
+		ActivatePositionAttribute();
+		ActivateTextureCoordinatesAttribute();
+		ActivateNormalAttribute();
+		Unbind();
 	}
 
 private:
@@ -184,10 +191,10 @@ public:
 		if (this == &other)
 			return *this;
 		else {
-
+	
 			this->m_ID = other.m_ID;
 			other.m_ID = 0; // 0 is used by opengl to unbind. It is not valid. This would need to change for other rendering APIs probably. Update: VAOs are only for opengl...
-
+	
 			return *this;
 		}
 	}
@@ -207,13 +214,14 @@ private:
 
 class EBO final {
 public:
-	EBO() = delete;
+	EBO() noexcept 
+		: m_ID(0), m_Count(0)
+	{
+		GLCall(glGenBuffers(1, &m_ID));
+	}
 	EBO(const GLuint* data, const GLuint size, const GLuint count) noexcept { //Could make smaller ones with shorts for better perf
 		GLCall(glGenBuffers(1, &m_ID));
-		Bind();
-		GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, GL_STATIC_DRAW));
-		Unbind();
-		m_Count = count;
+		SetData(data, size, count);
 	}
 	~EBO() {
 		GLCall(glDeleteBuffers(1, &m_ID));
@@ -240,11 +248,17 @@ public:
 	}
 
 public:
-	void Bind() const noexcept {
+	inline void Bind() const noexcept {
 		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ID));
 	}
-	void Unbind() const noexcept {
+	inline void Unbind() const noexcept {
 		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+	}
+	inline void SetData(const GLuint* data, const GLuint size, const GLuint count) noexcept {
+		Bind();
+		GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, GL_STATIC_DRAW));
+		Unbind();
+		m_Count = count;
 	}
 
 	inline GLuint GetCount() const noexcept { return m_Count; };

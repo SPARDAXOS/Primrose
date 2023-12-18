@@ -133,7 +133,6 @@ SpriteRenderer* EntityComponentSystem::AddComponent<SpriteRenderer>(uint64 objec
 
 	//Check limit on components? Maybe Gameobject side instead. one sounds logical
 	return m_SpriteRenderers.emplace_back(SpriteRenderer{ *ptr, objectID });
-	//return &m_SpriteRenderers.emplace_back(SpriteRenderer{ *ptr, objectID });
 }
 template<>
 SkeletalMesh* EntityComponentSystem::AddComponent<SkeletalMesh>(uint64 objectID) {

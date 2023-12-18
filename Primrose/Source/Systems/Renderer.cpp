@@ -35,7 +35,7 @@ bool Renderer::Update() {
     if (!Render3D())
         RendererStatus = false;
 
-    return RendererStatus; //NOTE: Should represent the overall status of the renderer doing its job. Its fine if a system or two fail. Then it sends out warnings and errors!
+    return true; //NOTE: Should represent the overall status of the renderer doing its job. Its fine if a system or two fail. Then it sends out warnings and errors!
 }
 
 void Renderer::SetupShaderPrograms() {
@@ -64,19 +64,22 @@ bool Renderer::Render2D() {
     //TODO: Drop this approach and simply get a copy of the vector since its faster cause of something i forgot what it was called and its just a vector of ptrs
     //- This still might be faster tho since no copying is happening and im just getting them in order as defined by the ECS. There are definitely some implications to
     //- think of.
-    const MemoryBlocksBucket<SpriteRenderer>* AllSpriteRenderers = &m_ECS->GetAllComponentsOfType<SpriteRenderer>();
+    MemoryBlocksBucket<SpriteRenderer>* AllSpriteRenderers = &m_ECS->GetAllComponentsOfType<SpriteRenderer>();
+    if (AllSpriteRenderers->size() > 0 && !m_Render2DReady)
+        Setup2DRenderingData();
+
     for (uint32 i = 0; i < AllSpriteRenderers->size(); i++) {
         const SpriteRenderer* TargetComponent = &(*AllSpriteRenderers)[i];
         if (!Validate(TargetComponent))
             return false;
 
-        GameObject* TargetGameObject = m_ECS->FindGameObject(TargetComponent->GetOwnerID());
+        GameObject* TargetGameObject = TargetComponent->GetOwner();
         if (!Validate(TargetGameObject))
             return false;
 
 
-        SetupMaterial(m_DefaultLitShaderProgram, TargetComponent); //WORKS ONLY FOR SPRITERENDERES
-        SetupLightUniforms(m_DefaultLitShaderProgram);
+        SetupMaterial(*m_CurrentShaderProgram, TargetComponent); //WORKS ONLY FOR SPRITERENDERES
+        SetupLightUniforms(*m_CurrentShaderProgram);
 
         //IMPORTNAT NOTE: I got an error once when moving an object "5eeee". It had something to do with gluniform3f()
 
@@ -128,13 +131,17 @@ bool Renderer::Render2D() {
         Camera* ViewportCamera = &m_ECS->GetViewportCamera();
         SetupMVP(ViewportCamera, TargetMatrix);
 
-        TargetComponent->GetVAO()->Bind();
+        m_SpriteVAO.Bind();
+        //TargetComponent->GetVAO().Bind();
 
         //TODO: Too important to be out like this. Move into func.
-        GLCall(glDrawElements(GL_TRIANGLES, TargetComponent->GetEBO()->GetCount(), GL_UNSIGNED_INT, nullptr));
+        //GLCall(glDrawElements(GL_TRIANGLES, TargetComponent->GetEBO().GetCount(), GL_UNSIGNED_INT, nullptr));
+        GLCall(glDrawElements(GL_TRIANGLES, m_SpriteEBO.GetCount(), GL_UNSIGNED_INT, nullptr));
 
         UnbindAllTextures(TargetComponent);
-        TargetComponent->GetVAO()->Unbind();
+
+        m_SpriteVAO.Unbind();
+        //TargetComponent->GetVAO().Unbind();
     }
 
     UnbindShaderProgram();
@@ -454,6 +461,24 @@ bool Renderer::Validate(const GameObject* object) const noexcept {
     return true;
 }
 
+
+void Renderer::Setup2DRenderingData() noexcept {
+    if (m_Render2DReady)
+        return;
+
+    m_SpriteVAO.Bind();
+    m_SpriteVBO.SetData(m_SpritePrimitive.m_Data, sizeof(m_SpritePrimitive.m_Data));
+    m_SpriteEBO.SetData(m_SpritePrimitive.m_Indices, sizeof(m_SpritePrimitive.m_Indices), sizeof(m_SpritePrimitive.m_Indices) / sizeof(GLuint));
+
+    m_SpriteVBO.Bind();
+    m_SpriteEBO.Bind();
+
+    m_SpriteVAO.Unbind();
+    m_SpriteVBO.Unbind();
+    m_SpriteEBO.Unbind();
+
+    m_Render2DReady = true;
+}
 
 void Renderer::CheckRendererAPIVersion() const {
     const unsigned char* convert = static_cast<const unsigned char*>(glGetString(GL_VERSION));

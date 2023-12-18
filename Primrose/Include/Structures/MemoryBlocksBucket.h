@@ -37,15 +37,59 @@ public:
 		m_Block = allocate();
 		m_Mappings.assign(m_Capacity, false);
 	}
-	//Its not allocator aware
-	//Add Special member functions!
-
-
 
 	//TODO: Add some custom ctors
 	~MemoryBlockSpecification() {
 		deallocate();
 	}
+
+	//Its not allocator aware
+
+	MemoryBlockSpecification(const MemoryBlockSpecification& other) = delete;
+	MemoryBlockSpecification& operator=(const MemoryBlockSpecification& other) = delete;
+
+	//MemoryBlockSpecification(const MemoryBlockSpecification& other) noexcept {
+	//	*this = other;
+	//}
+	//MemoryBlockSpecification& operator=(const MemoryBlockSpecification& other) noexcept {
+	//	if (this == &other)
+	//		return *this;
+	//	else {
+
+	//		this->m_Block = other.m_Block;
+	//		this->m_Capacity = other.m_Capacity;
+	//		this->m_Size = other.m_Size;
+	//		this->m_Mappings = other.m_Mappings;
+	//		this->m_Allocator = other.m_Allocator;
+
+
+	//		return *this;
+	//	}
+	//}
+
+	MemoryBlockSpecification(MemoryBlockSpecification&& other) noexcept {
+		*this = std::move(other);
+	}
+	MemoryBlockSpecification& operator=(MemoryBlockSpecification&& other) noexcept {
+		if (this == &other)
+			return *this;
+		else {
+
+			this->m_Block     = other.m_Block;
+			this->m_Capacity  = other.m_Capacity;
+			this->m_Size      = other.m_Size;
+			this->m_Mappings  = std::move(other.m_Mappings);
+			this->m_Allocator = std::move(other.m_Allocator);
+
+			other.m_Block = nullptr;
+			other.m_Capacity = 0;
+			other.m_Size = 0;
+
+			return *this;
+		}
+	}
+
+
 
 
 	constexpr inline Reference operator[](SizeType index) noexcept { return m_Block[index]; }
@@ -97,6 +141,7 @@ public:
 		if (m_Size == 0)
 			return nullptr;
 
+		//NOTE: No need to check everything
 		for (Pointer index = m_Block; index < m_Block + m_Capacity; index++) {
 			if (index->GetOwnerID() == ID)
 				return index;
@@ -178,6 +223,12 @@ public:
 
 
 
+
+
+
+
+
+
 template<
 	class T,
 	class Alloc = CustomAllocator<T>
@@ -222,14 +273,14 @@ public: //Access
 
 	constexpr inline Reference operator[](SizeType index) noexcept { 
 
-		uint32 BlockIndex = floor(index / m_BlockSize);
-		uint32 ElementIndex = index % m_BlockSize;
-		return m_Blocks[m_BlockSize][ElementIndex];
+		uint32 BlockIndex = static_cast<uint32>(floor(index / m_BlockSize));
+		uint32 ElementIndex = static_cast<uint32>(index % m_BlockSize);
+		return m_Blocks[BlockIndex][ElementIndex];
 	}
 	constexpr inline ConstantReference operator[](SizeType index) const noexcept { 
 		
-		uint32 BlockIndex = static_cast<unsigned int>(floor(index / m_BlockSize));
-		uint32 ElementIndex = static_cast<unsigned int>(index % m_BlockSize);
+		uint32 BlockIndex = static_cast<uint32>(floor(index / m_BlockSize));
+		uint32 ElementIndex = static_cast<uint32>(index % m_BlockSize);
 		return m_Blocks[BlockIndex][ElementIndex];
 	}
 
@@ -257,7 +308,6 @@ public: //Insertion
 	//GetAll
 	template<class... args>
 	constexpr inline Pointer emplace_back(args&&... arguments) {
-
 		for (auto& block : m_Blocks) {
 			if (!block.is_full())
 				return block.add(std::forward<args>(arguments)...);
@@ -298,7 +348,6 @@ private:
 private: //Memory
 	constexpr inline MemoryBlockSpecification<Type>& add_block() {
 
-		//MemoryBlockSpecification<Type> NewMemoryBlock(m_Allocator, m_BlockSize);
 		return m_Blocks.emplace_back(MemoryBlockSpecification<Type>(m_Allocator, m_BlockSize));
 	}
 	constexpr inline Pointer allocate_block() {
@@ -335,7 +384,7 @@ private: //Memory
 	}
 
 private:
-	Marigold::Container<MemoryBlockSpecification<Type>> m_Blocks;
+	std::vector<MemoryBlockSpecification<Type>> m_Blocks; //IMPORTANT NOTE: Marigold container cannot move construct objects while the standard vector can!
 	CustomAllocator<Type> m_Allocator;
 	SizeType m_BlockSize = 0;
 };
