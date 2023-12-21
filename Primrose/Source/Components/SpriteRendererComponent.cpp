@@ -4,21 +4,9 @@
 SpriteRenderer::SpriteRenderer(GameObject& owner, uint64 ownerID) noexcept
 	: ComponentBase(owner, ownerID)
 {
-	//TODO: Clean this up. This looks messy!
-	//m_VAO.Bind();
-	//
-	//m_VBO.SetData(m_Primitive.m_Data, sizeof(m_Primitive.m_Data));
-	//m_EBO.SetData(m_Primitive.m_Indices, sizeof(m_Primitive.m_Indices), sizeof(m_Primitive.m_Indices) / sizeof(GLuint));
-	//
-	//m_VBO.Bind();
-	//m_EBO.Bind();
-	//
-	//m_VAO.Unbind();
-	//m_VBO.Unbind();
-	//m_EBO.Unbind();
+
+
 }
 SpriteRenderer::~SpriteRenderer() {
-	//delete m_VAO;
-	//delete m_VBO;
-	//delete m_EBO;
+
 }

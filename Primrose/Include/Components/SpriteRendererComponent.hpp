@@ -38,10 +38,6 @@ public:
 			this->m_FilteringModeMin = other.m_FilteringModeMin;
 			this->m_FilteringModeMag = other.m_FilteringModeMag;
 
-			//this->m_VAO = other.m_VAO;
-			//this->m_VBO = other.m_VBO;
-			//this->m_EBO = other.m_EBO;
-
 			return *this;
 		}
 	}
@@ -69,10 +65,6 @@ public:
 			this->m_FilteringModeMin = std::move(other.m_FilteringModeMin);
 			this->m_FilteringModeMag = std::move(other.m_FilteringModeMag);
 
-			//this->m_VAO = std::move(other.m_VAO);
-			//this->m_VBO = std::move(other.m_VBO);
-			//this->m_EBO = std::move(other.m_EBO);
-
 
 			other.m_Sprite = nullptr;
 			other.m_Tint = Colors::White;
@@ -88,10 +80,6 @@ public:
 			other.m_AddressingModeT = AddressingMode::REPEAT;
 			other.m_FilteringModeMin = FilteringModeMin::LINEAR_MIPMAP_LINEAR;
 			other.m_FilteringModeMag = FilteringModeMag::LINEAR;
-
-			//other.m_VAO	= nullptr;
-			//other.m_VBO	= nullptr;	
-			//other.m_EBO	= nullptr;
 
 			return *this;
 		}
@@ -132,11 +120,6 @@ public:
 	inline FilteringModeMag GetFilteringModeMag() const noexcept { return m_FilteringModeMag; }
 
 
-	//inline VAO& GetVAO() noexcept { return m_VAO; }
-	//inline EBO& GetEBO() noexcept { return m_EBO; }
-
-
-
 private:
 	BlendEquation m_BlendEquation = BlendEquation::ADDITIVE;
 	SourceBlendMode m_SourceBlendMode = SourceBlendMode::SOURCE_ALPHA;
@@ -153,10 +136,4 @@ private:
 	Material* m_Material = nullptr;
 	bool m_FlipX = false;
 	bool m_FlipY = false;
-
-private:
-	//Cube m_Primitive; //Change to square for 2D - Can be cached in renderer to avoid each sprite renderer containing this
-	//VAO m_VAO;
-	//VBO m_VBO;
-	//EBO m_EBO;
 };
