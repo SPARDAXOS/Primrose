@@ -113,6 +113,10 @@ void Core::Run() {
 		if (m_Input->GetKey(Keycode::R))
 			ModelTest->GetTransform().m_Rotation.m_Y += 1.0f;
 
+		GameObjectTest->GetTransform().m_Rotation.m_Y += 0.2f;
+		GameObjectTestChild->GetTransform().m_Rotation.m_Y += 0.21f;
+		GameObjectTestChildChild->GetTransform().m_Rotation.m_Y += 0.22f;
+
 		UpdateSystems();
 	}
 	

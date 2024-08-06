@@ -4,37 +4,37 @@
 #include "Systems/TextureStorage.hpp"
 #include "Systems/AssetManager.hpp"
 
-SelectionWindows::SelectionWindows(Core& core, Editor& editor) noexcept
+SelectionWindow::SelectionWindow(Core& core, Editor& editor) noexcept
 	:	m_Core(&core), m_Editor(&editor)
 {
 	m_TextureStorage = core.GetTextureStorage();
 	m_AssetManager = core.GetAssetManager();
 }
 
-void SelectionWindows::Update() {
+void SelectionWindow::Update() {
 
 	CheckViewportChanges();
 }
-void SelectionWindows::Render() {
+void SelectionWindow::Render() {
 
 	RenderSpriteSelector();
 	RenderMaterialSelector();
 }
-void SelectionWindows::Init() {
+void SelectionWindow::Init() {
 
 	m_ImGuiViewport = m_Editor->GetGUIViewport();
 
 
 	if (!m_TextureStorage->GetEditorTexture2DByName("MissingTexture.png", m_MissingTexture))
-		m_Core->SystemLog("SelectionWindows failed to save reference to engine texture [MissingTexture.png]");
+		m_Core->SystemLog("SelectionWindow failed to save reference to engine texture [MissingTexture.png]");
 
 	if (!m_TextureStorage->GetEditorTexture2DByName("MaterialAsset.png", m_MaterialAssetTexture))
-		m_Core->SystemLog("SelectionWindows failed to save reference to engine texture [MaterialAsset.png]");
+		m_Core->SystemLog("SelectionWindow failed to save reference to engine texture [MaterialAsset.png]");
 
 }
 
 
-void SelectionWindows::RenderSpriteSelector() {
+void SelectionWindow::RenderSpriteSelector() {
 
 	if (!m_SpriteSelectorOpened || m_SpriteSelectorTarget == nullptr)
 		return;
@@ -44,7 +44,7 @@ void SelectionWindows::RenderSpriteSelector() {
 
 	ImGuiWindowFlags Flags = 0;
 	Flags |= ImGuiWindowFlags_AlwaysVerticalScrollbar;
-	Flags |= ImGuiWindowFlags_NoSavedSettings;
+	//Flags |= ImGuiWindowFlags_NoSavedSettings;
 
 	//Open Popup
 	if (m_SpriteSelectorOpened) {
@@ -81,7 +81,7 @@ void SelectionWindows::RenderSpriteSelector() {
 	ImGui::PopStyleColor();
 	ImGui::PopStyleVar();
 }
-void SelectionWindows::UpdateSpriteSelectorEntries() {
+void SelectionWindow::UpdateSpriteSelectorEntries() {
 	for (auto& Texture : m_TextureStorage->GetTexture2DStorage()) {
 		if (!Texture) //Just in case even tho the responsibility over the ptrs validation falls to the TextureManager.
 			continue;
@@ -91,11 +91,11 @@ void SelectionWindows::UpdateSpriteSelectorEntries() {
 		AddSpriteEntryData(Texture->GetAsset().m_NameWithoutExtension);
 	}
 }
-void SelectionWindows::NewSpriteSelectorFrame() noexcept {
+void SelectionWindow::NewSpriteSelectorFrame() noexcept {
 	m_SpriteSelectorElementCursor = 0.0f;
 	m_SpriteSelectorLineElementsCount = 0;
 }
-void SelectionWindows::UpdateSpriteSelectorCursor() noexcept {
+void SelectionWindow::UpdateSpriteSelectorCursor() noexcept {
 
 	m_SpriteSelectorElementCursor = (m_SpriteSelectorElementPadding * (m_SpriteSelectorLineElementsCount + 1)) + m_SpriteSelectorElementSize.x * m_SpriteSelectorLineElementsCount;
 	if (m_SpriteSelectorElementCursor + m_SpriteSelectorElementSize.x >= m_SpriteSelectorWindowSize.x) {
@@ -104,7 +104,7 @@ void SelectionWindows::UpdateSpriteSelectorCursor() noexcept {
 		m_SpriteSelectorLineElementsCount = 0; //This means its a new line!
 	}
 }
-void SelectionWindows::CreateTextureSelectorEntry(Texture2D& texture) {
+void SelectionWindow::CreateTextureSelectorEntry(Texture2D& texture) {
 
 	std::string Name = texture.GetName().data();
 	std::string ID = "##" + Name;
@@ -158,11 +158,11 @@ void SelectionWindows::CreateTextureSelectorEntry(Texture2D& texture) {
 
 
 }
-void SelectionWindows::AddSpriteEntryData(const std::string_view& text) {
+void SelectionWindow::AddSpriteEntryData(const std::string_view& text) {
 	m_QueuedSpriteSelectorTexts.emplace_back(text);
 	m_SpriteSelectorLineElementsCount++;
 }
-void SelectionWindows::FlushSpriteSelectorTexts() {
+void SelectionWindow::FlushSpriteSelectorTexts() {
 
 	if (m_QueuedSpriteSelectorTexts.size() == 0)
 		return;
@@ -191,7 +191,7 @@ void SelectionWindows::FlushSpriteSelectorTexts() {
 }
 
 
-void SelectionWindows::RenderMaterialSelector() {
+void SelectionWindow::RenderMaterialSelector() {
 
 	if (!m_MaterialSelectorOpened || m_MaterialSelectorTarget == nullptr)
 		return;
@@ -236,7 +236,7 @@ void SelectionWindows::RenderMaterialSelector() {
 	ImGui::PopStyleColor();
 	ImGui::PopStyleVar();
 }
-void SelectionWindows::UpdateMaterialSelectorEntries() {
+void SelectionWindow::UpdateMaterialSelectorEntries() {
 
 	//Bind texture
 	void* TextureID = nullptr;
@@ -261,11 +261,11 @@ void SelectionWindows::UpdateMaterialSelectorEntries() {
 	else
 		m_MissingTexture->Unbind();
 }
-void SelectionWindows::NewMaterialSelectorFrame() noexcept {
+void SelectionWindow::NewMaterialSelectorFrame() noexcept {
 	m_MaterialSelectorElementCursor = 0.0f;
 	m_MaterialSelectorLineElementsCount = 0;
 }
-void SelectionWindows::UpdateMaterialSelectorCursor() noexcept {
+void SelectionWindow::UpdateMaterialSelectorCursor() noexcept {
 
 	//Calculate position and check if new line is necessary
 	m_MaterialSelectorElementCursor = (m_MaterialSelectorElementPadding * (m_MaterialSelectorLineElementsCount + 1)) + m_MaterialSelectorElementSize.x * m_MaterialSelectorLineElementsCount;
@@ -275,7 +275,7 @@ void SelectionWindows::UpdateMaterialSelectorCursor() noexcept {
 		m_MaterialSelectorLineElementsCount = 0; //This means its a new line!
 	}
 }
-void SelectionWindows::CreateMaterialSelectorEntry(Material& material, void* textureID) {
+void SelectionWindow::CreateMaterialSelectorEntry(Material& material, void* textureID) {
 
 	std::string Name = material.GetAsset().m_NameWithoutExtension.data();
 	std::string ID = "##" + Name;
@@ -312,11 +312,11 @@ void SelectionWindows::CreateMaterialSelectorEntry(Material& material, void* tex
 	if (AppliedStyle)
 		ImGui::PopStyleColor();
 }
-void SelectionWindows::AddMaterialEntryData(const std::string_view& text) {
+void SelectionWindow::AddMaterialEntryData(const std::string_view& text) {
 	m_QueuedMaterialSelectorTexts.emplace_back(text);
 	m_MaterialSelectorLineElementsCount++;
 }
-void SelectionWindows::FlushMaterialSelectorTexts() {
+void SelectionWindow::FlushMaterialSelectorTexts() {
 
 	if (m_QueuedMaterialSelectorTexts.size() == 0)
 		return;
@@ -344,7 +344,7 @@ void SelectionWindows::FlushMaterialSelectorTexts() {
 }
 
 
-void SelectionWindows::CheckChanges(const std::string& newName) noexcept {
+void SelectionWindow::CheckChanges(const std::string& newName) noexcept {
 
 	if (!m_ChangesCheckTarget)
 		return;
@@ -357,7 +357,7 @@ void SelectionWindows::CheckChanges(const std::string& newName) noexcept {
 	m_ChangesCheckName = "";
 	m_ChangesCheckTarget = nullptr;
 }
-void SelectionWindows::CheckViewportChanges() {
+void SelectionWindow::CheckViewportChanges() {
 
 	if (!m_SpriteSelectorOpened)
 		m_SpriteSelectorWindowSize = ImVec2(m_ImGuiViewport->Size.x * 0.2f, m_ImGuiViewport->Size.y * 0.6f);
@@ -366,13 +366,13 @@ void SelectionWindows::CheckViewportChanges() {
 		m_MaterialSelectorWindowSize = ImVec2(m_ImGuiViewport->Size.x * 0.2f, m_ImGuiViewport->Size.y * 0.6f);
 }
 
-void SelectionWindows::SetupStyle() {
+void SelectionWindow::SetupStyle() {
 
 	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
 	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.5f, 0.5f, 0.5f, 0.5f));
 	ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.3f, 0.3f, 0.3f, 0.5f));
 }
-void SelectionWindows::ClearStyle() {
+void SelectionWindow::ClearStyle() {
 
 	//Make sure its the same amount of PushStyleColor() calls in SetupContentBrowserStyle();
 	ImGui::PopStyleColor(3);

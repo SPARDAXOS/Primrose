@@ -4,7 +4,7 @@
 
 class Core;
 class Editor;
-class SelectionWindows;
+class SelectionWindow;
 class HierarchyWindow;
 class ContentBrowser;
 class MainMenuBar;
@@ -110,7 +110,7 @@ private:
 	Core* m_Core							{ nullptr };
 	Editor* m_Editor						{ nullptr };
 	ImGuiViewport* m_ImGuiViewport			{ nullptr };
-	SelectionWindows* m_SelectionWindows	{ nullptr };
+	SelectionWindow* m_SelectionWindows	{ nullptr };
 	ContentBrowser* m_ContentBrowser		{ nullptr };
 	HierarchyWindow* m_HierarchyWindow		{ nullptr }; //?
 	MainMenuBar* m_MainMenuBar				{ nullptr };

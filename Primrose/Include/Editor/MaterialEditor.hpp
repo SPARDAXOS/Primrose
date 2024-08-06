@@ -4,7 +4,7 @@
 
 class Core;
 class Editor;
-class SelectionWindows;
+class SelectionWindow;
 class Material;
 
 struct ImVec2;
@@ -88,6 +88,6 @@ private:
 private:
 	Core* m_Core							{ nullptr };
 	Editor* m_Editor						{ nullptr };
-	SelectionWindows* m_SelectionWindows	{ nullptr };
+	SelectionWindow* m_SelectionWindows	{ nullptr };
 	ImGuiViewport* m_ImGuiViewport			{ nullptr };
 };

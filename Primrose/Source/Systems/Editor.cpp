@@ -48,7 +48,7 @@ Editor::Editor(Core& core)
 	ImGui_ImplOpenGL3_Init();
 
 
-	m_SelectionWindows = std::make_unique<SelectionWindows>(core, *this);
+	m_SelectionWindows = std::make_unique<SelectionWindow>(core, *this);
 	m_MaterialEditor = std::make_unique<MaterialEditor>(core, *this);
 	m_DetailsWindow = std::make_unique<DetailsWindow>(core, *this);
 	m_MainMenuBar = std::make_unique<MainMenuBar>(core, *this);

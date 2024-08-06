@@ -144,7 +144,7 @@ public: //Reconsider these functions and whether they should be marked like this
 
 public:
 	[[nodiscard]] inline ImGuiViewport* GetGUIViewport() noexcept { return m_ImGuiViewport; }
-	[[nodiscard]] inline SelectionWindows* GetSelectionWindows() noexcept { return m_SelectionWindows.get(); }
+	[[nodiscard]] inline SelectionWindow* GetSelectionWindows() noexcept { return m_SelectionWindows.get(); }
 	[[nodiscard]] inline MaterialEditor* GetMaterialEditor() noexcept { return m_MaterialEditor.get(); }
 	[[nodiscard]] inline DetailsWindow* GetDetailsWindow() noexcept { return m_DetailsWindow.get(); }
 	[[nodiscard]] inline MainMenuBar* GetMainMenuBar() noexcept { return m_MainMenuBar.get(); }
@@ -197,7 +197,7 @@ private:
 	EditorRedStyle m_EditorStyle;
 
 private:
-	std::unique_ptr<SelectionWindows> m_SelectionWindows	{ nullptr };
+	std::unique_ptr<SelectionWindow> m_SelectionWindows	{ nullptr };
 	std::unique_ptr<MaterialEditor> m_MaterialEditor		{ nullptr };
 	std::unique_ptr<DetailsWindow> m_DetailsWindow			{ nullptr };
 	std::unique_ptr<MainMenuBar> m_MainMenuBar				{ nullptr };

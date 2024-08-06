@@ -12,17 +12,17 @@ class Material;
 
 struct ImVec2;
 
-class SelectionWindows final {
+class SelectionWindow final {
 public:
-	SelectionWindows() = delete;
-	SelectionWindows(Core& core, Editor& editor) noexcept;
-	~SelectionWindows() = default;
+	SelectionWindow() = delete;
+	SelectionWindow(Core& core, Editor& editor) noexcept;
+	~SelectionWindow() = default;
 
-	SelectionWindows(const SelectionWindows&) = delete;
-	SelectionWindows& operator=(const SelectionWindows&) = delete;
+	SelectionWindow(const SelectionWindow&) = delete;
+	SelectionWindow& operator=(const SelectionWindow&) = delete;
 
-	SelectionWindows(SelectionWindows&&) = delete;
-	SelectionWindows& operator=(SelectionWindows&&) = delete;
+	SelectionWindow(SelectionWindow&&) = delete;
+	SelectionWindow& operator=(SelectionWindow&&) = delete;
 
 public:
 	void Update();
